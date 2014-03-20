@@ -41,6 +41,13 @@ public class Population {
 	}
 	
 	/**
+	 * Update the population.
+	 */
+	public void update() {
+		// TODO
+	}
+	
+	/**
 	 * Add a Hopper to the Population.
 	 * 
 	 * @return True if successful; false otherwise.

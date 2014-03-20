@@ -20,6 +20,7 @@ import creature.phenotype.*;
  * @group Marcos Lemus
  */
 public class Hopper {
+	private final String name;
 	private final Genotype genotype;
 	private final Creature phenotype;
 	private float fitness;
@@ -33,8 +34,19 @@ public class Hopper {
 	public Hopper(Genotype genotype) {
 		this.genotype = genotype;
 		this.phenotype = genotype.getPhenotype();
+		// TODO
+		name = "";
 	}
 	
+	/**
+	 * Getter for name.
+	 * 
+	 * @return Hopper's name as a String.
+	 */
+	public String getName() {
+		return name;
+	}
+
 	/**
 	 * Getter for genotype.
 	 * 
@@ -50,20 +62,27 @@ public class Hopper {
 	 * @return The Hopper's Creature (phenotype).
 	 */
 	public Creature getPhenotype() {
+		if (phenotype == null) {
+			// TODO
+		}
+		
 		return phenotype;
 	}
 	
 	/**
 	 * Breed two Hoppers.
 	 * 
-	 * @param parent1 First parent Hopper.
-	 * @param parent2 Second parent Hopper.
-	 * @return A child Hopper resulting from the crossover of the parents'
-	 *         genotypes.
+	 * @param parentA First parent Hopper.
+	 * @param parentB Second parent Hopper.
+	 * @return An array of twin child Hoppers resulting from the crossover of
+	 *         the parents' genotypes.
 	 */
-	public static Hopper breed(Hopper parent1, Hopper parent2) {
-		return new Hopper(new Genotype(parent1.getGenotype(),
-				                       parent2.getGenotype()));
+	public static Hopper[] breed(Hopper parentA, Hopper parentB) {
+		Genotype[] children = Genotype.crossover(parentA.getGenotype(),
+												 parentB.getGenotype());
+		Hopper[] hoppers = {new Hopper(children[0]), new Hopper(children[1])};
+
+		return hoppers;
 	}
 	
 	/**
@@ -72,8 +91,7 @@ public class Hopper {
 	 * @return String representation of this Hopper.
 	 */
 	@Override
-	public String toString() {
-		// TODO
-		return "";
+	public String toString() {		
+		return "<genotype>" + genotype.toString() + "</genotype>";
 	}
 }
