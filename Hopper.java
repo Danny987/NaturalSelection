@@ -61,11 +61,7 @@ public class Hopper {
 	 * 
 	 * @return The Hopper's Creature (phenotype).
 	 */
-	public Creature getPhenotype() {
-		if (phenotype == null) {
-			// TODO
-		}
-		
+	public Creature getPhenotype() {		
 		return phenotype;
 	}
 	
@@ -92,6 +88,9 @@ public class Hopper {
 	 */
 	@Override
 	public String toString() {		
-		return "<genotype>" + genotype.toString() + "</genotype>";
+		return "<creature>" +
+			   "    <name>" + name + "</name>" +
+			   "    <genotype>" + genotype.toString() + "</genotype>" +
+			   "</creature>";
 	}
 }

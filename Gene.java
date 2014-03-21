@@ -19,49 +19,71 @@ package creature.geeksquad.genetics;
 public class Gene {
 	/*
 	 * 16 gene types (from project specs):
-	 * L (length)
-	 * W (width)
-	 * H (height)
-	 * I (index to parent)
-	 * T (joint Type)
-	 * O (joint orientation)
-	 * P (joint site on Parent)
-	 * C (joint site on Child)
-	 * a, b, c, d, e (the five inputs to a rule)
-	 * 1 (binary operator in the 1st neuron of a rule)
-	 * 2 (unary operator in the 1st neuron of a rule)
-	 * 3 (binary operator in the 2nd neuron of a rule)
-	 * 2 (unary operator in the 2nd neuron of a rule)
+	 *   L (length)
+	 *   W (width)
+	 *   H (height)
+	 *   I (index to parent)
+	 *   T (joint Type)
+	 *   O (joint orientation)
+	 *   P (joint site on Parent)
+	 *   C (joint site on Child)
+	 *   a, b, c, d, e (the five inputs to a rule)
+	 *   1 (binary operator in the 1st neuron of a rule)
+	 *   2 (unary operator in the 1st neuron of a rule)
+	 *   3 (binary operator in the 2nd neuron of a rule)
+	 *   4 (unary operator in the 2nd neuron of a rule)
+	 *   ...etc.
 	 */
-	private Allele[] alleles = new Allele[2];
+	private final Allele[] alleles = new Allele[2];
 	private Allele dominant;
+	private String trait;
+	private float value;
 	
 	/**
-	 * Instantiate a Gene with provided Alleles.
-	 * 
-	 * @param Allele allele1 First allele.
-	 * @param Allele allele2 Second allele.
+	 * Instantiate an empty Gene. Used as padding for strands of different
+	 * length during crossover.
 	 */
-	public Gene(Allele allele1, Allele allele2) {
-		alleles[0] = allele1;
-		alleles[1] = allele2;
-		dominant = (alleles[0].getWeight() >= alleles[1].getWeight() ?
-				    alleles[0] : alleles[1]);
+	public Gene() {
+		this(new Allele(), new Allele());
 	}
 	
 	/**
-	 * Instantiate a Gene with provided Allele array.
+	 * Instantiate a Gene with provided Alleles. The traits of the two Alleles
+	 * should match.
 	 * 
-	 * @param Allele allele1 First allele.
-	 * @param Allele allele2 Second allele.
+	 * @param Allele alleleA First allele - trait must match second allele.
+	 * @param Allele alleleB Second allele - trait must match first allele.
+	 */
+	public Gene(Allele alleleA, Allele alleleB) {
+		// The traits of the Genes should never be mismatched.
+		if (!alleleA.getTrait().equals(alleleB.getTrait())) {
+			alleles[0] = null;
+			alleles[1] = null;
+			dominant = null;
+			trait = null;
+			value = 0;
+			System.err.println("Error: Gene trait mismatch.");
+		} else {
+			alleles[0] = alleleA;
+			alleles[1] = alleleB;
+			dominant = (alleles[0].getWeight() >= alleles[1].getWeight() ?
+					    alleles[0] : alleles[1]);
+			trait = dominant.getTrait();
+			value = dominant.getValue();
+		}
+	}
+	
+	/**
+	 * Instantiate a Gene with provided Allele array. The traits of the two
+	 * Alleles should match.
+	 * 
+	 * @param Allele allele1 First allele - trait must match second allele.
+	 * @param Allele allele2 Second allele - trait must match first allele.
 	 */
 	public Gene(Allele[] alleles) {
-		this.alleles[0] = alleles[0];
-		this.alleles[1] = alleles[1];
-		dominant = (alleles[0].getWeight() >= alleles[1].getWeight() ?
-				    alleles[0] : alleles[1]);
+		this(alleles[0], alleles[1]);
 	}
-	
+
 	/**
 	 * Getter for alleles.
 	 * 
@@ -81,6 +103,26 @@ public class Gene {
 	}
 	
 	/**
+	 * Getter for this Gene's trait. The traits of the two Alleles should
+	 * always be the same. If they're mismatched on instantiation, the trait
+	 * gets set to null.
+	 * 
+	 * @return Returns trait as String (null if two Alleles are mismatched).
+	 */
+	public String getTrait() {
+		return trait;
+	}
+	
+	/**
+	 * Getter for the value of this Gene's dominant trait.
+	 * 
+	 * @return The value of this Gene's dominant Allele as a float.
+	 */
+	public float getValue() {
+		return value;
+	}
+	
+	/**
 	 * Override of equals.
 	 * 
 	 * @param other Gene to compare to.
@@ -90,12 +132,21 @@ public class Gene {
 	public boolean equals(Object other) {
 		if (other instanceof Gene) {
 			Allele[] otherAlleles = ((Gene) other).getAlleles();
-			
-			
-			return alleles[0].getTrait() == otherAlleles[0].getTrait() &&
-				   alleles[0].getValue() == otherAlleles[0].getValue() &&
-				   alleles[1].getTrait() == otherAlleles[1].getTrait() &&
-				   alleles[1].getValue() == otherAlleles[1].getValue();
+			boolean firstPair = false;
+			boolean secondPair = false;
+			// Evaluate across and diagonally.
+			if (alleles[0].equals(otherAlleles[0])) {
+				firstPair = true;
+				if (alleles[1].equals(otherAlleles[1])) {
+					secondPair = true;
+				}
+			} else if (alleles[0].equals(otherAlleles[1])) {
+				firstPair = true;
+				if (alleles[1].equals(otherAlleles[0])) {
+					secondPair = true;
+				}
+			}
+			return firstPair && secondPair;
 		} else {
 			return false;
 		}
