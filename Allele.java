@@ -202,7 +202,7 @@ public class Allele {
 				this.value = new Float(value);
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
-					"cannot be assigned value of type float.");
+				" cannot be assigned value of type float.");
 		}
 	}
 	
@@ -217,7 +217,7 @@ public class Allele {
 				this.value = new Integer(value);
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
-					"cannot be assigned value of type int.");
+				" cannot be assigned value of type int.");
 		}
 	}
 	
@@ -232,7 +232,7 @@ public class Allele {
 			this.value = value;
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				"cannot be assigned value of type EnumJointType.");
+				" cannot be assigned value of type EnumJointType.");
 		}
 	}
 	
@@ -248,7 +248,7 @@ public class Allele {
 			this.value = value;
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				"cannot be assigned value of type EnumJointSite.");
+				" cannot be assigned value of type EnumJointSite.");
 		}
 	}
 	
@@ -264,7 +264,7 @@ public class Allele {
 			this.value = value;
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				"cannot be assigned value of type EnumOperatorBinary.");
+				" cannot be assigned value of type EnumOperatorBinary.");
 		}
 	}
 	
@@ -280,7 +280,7 @@ public class Allele {
 			this.value = value;
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				"cannot be assigned value of type EnumOperatorUnary.");
+				" cannot be assigned value of type EnumOperatorUnary.");
 		}
 	}
 	
@@ -300,7 +300,7 @@ public class Allele {
 			this.value = value;
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				"cannot be assigned value of type EnumJointType.");
+				" cannot be assigned value of type EnumJointType.");
 		}
 	}
 	
@@ -406,6 +406,13 @@ public class Allele {
 				default:
 					break;
 			}
+		}
+		
+		// Check to make sure the setters throw exceptions properly.
+		try {
+			alleles.get(0).setValue(EnumJointType.HINGE);
+		} catch (IllegalArgumentException ex) {
+			ex.printStackTrace();
 		}
 		
 	}
