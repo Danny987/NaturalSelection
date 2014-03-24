@@ -34,7 +34,9 @@ public class Hopper {
 	public Hopper(Genotype genotype) {
 		this.genotype = genotype;
 		this.phenotype = genotype.getPhenotype();
+		//
 		// TODO
+		//
 		name = "";
 	}
 	
@@ -92,5 +94,16 @@ public class Hopper {
 			   "    <name>" + name + "</name>" +
 			   "    <genotype>" + genotype.toString() + "</genotype>" +
 			   "</creature>";
+	}
+	
+	/**
+	 * Nested Attractor class for helping with two-stage selection.
+	 * 
+	 * @author Ramon A. Lovato
+	 */
+	public static class Attractor {
+		//
+		// TODO
+		//
 	}
 }

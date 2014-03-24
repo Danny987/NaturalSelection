@@ -163,24 +163,7 @@ public class Genotype implements Cloneable {
 		// Set once we find the root Block (where indexToParent is null).
 		boolean rootFound = false;
 		
-		/*
-		 * 16 gene types (from project specs):
-		 *   L (length)
-		 *   W (width)
-		 *   H (height)
-		 *   I (index to parent)
-		 *   T (joint Type)
-		 *   O (joint orientation)
-		 *   P (joint site on Parent)
-		 *   C (joint site on Child)
-		 *   a, b, c, d, e (the five inputs to a rule)
-		 *   1 (binary operator in the 1st neuron of a rule)
-		 *   2 (unary operator in the 1st neuron of a rule)
-		 *   3 (binary operator in the 2nd neuron of a rule)
-		 *   4 (unary operator in the 2nd neuron of a rule)
-		 *   ...etc.
-		 */
-		// Variables used for building the Blocks and Joints.
+		// Variables used for building the Blocks, Joints, and Rules.
 		Rule rule = null;
 		float length = 0.0f;
 		float width = 0.0f;
@@ -215,7 +198,10 @@ public class Genotype implements Cloneable {
 						Block block = new Block(indexToParent, jointToParent,
 								 				length, width, height);						
 						body.add(block);
-						jointsThisBlock = 0; // TODO
+						jointsThisBlock = 0;
+						//
+						// TODO
+						//
 					}
 					blockCount++;
 					length = (Float) value;
@@ -243,7 +229,9 @@ public class Genotype implements Cloneable {
 				// JOINT_TYPE is the first Gene of a Joint set, so we need to
 				// close the previous Joint and add it before we continue.
 				case JOINT_TYPE:
+					//
 					// TODO
+					//
 					if (jointsThisBlock > 0) {
 						Joint joint = new Joint(jointType, jointSiteOnParent,
 					             				jointSiteOnChild,
@@ -261,23 +249,22 @@ public class Genotype implements Cloneable {
 					break;
 				// Joint orientation.
 				case JOINT_ORIENTATION:
-					// TODO
 					jointOrientation = (Float) value;
 					break;
 				// Joint site on parent.
 				case JOINT_SITE_ON_PARENT:
-					// TODO
 					jointSiteOnParent = (EnumJointSite) value;
 					break;
 				// Joint site on child.
 				case JOINT_SITE_ON_CHILD:
-					// TODO
 					jointSiteOnChild = (EnumJointSite) value;
 					break;
 				// Rule input A marks the beginning of a new Rule definition.
 				// Like Block and Joint, the old one needs to be closed first.
 				case RULE_INPUT_A:
+					//
 					// TODO
+					//
 					if (rulesThisJoint > 0) {
 						rules.add(rule);
 					}
@@ -288,37 +275,31 @@ public class Genotype implements Cloneable {
 					break;
 				// Rule input B.
 				case RULE_INPUT_B:
-					// TODO
 					ruleInputB = (NeuronInput) value;
 					rule.setInput(ruleInputB, 1);
 					break;
 				// Rule input C.
 				case RULE_INPUT_C:
-					// TODO
 					ruleInputC = (NeuronInput) value;
 					rule.setInput(ruleInputC, 2);
 					break;
 				// Rule input D.
 				case RULE_INPUT_D:
-					// TODO
 					ruleInputD = (NeuronInput) value;
 					rule.setInput(ruleInputD, 3);
 					break;
 				// Rule input E.
 				case RULE_INPUT_E:
-					// TODO
 					ruleInputE = (NeuronInput) value;
 					rule.setInput(ruleInputE, 4);
 					break;
 				// Binary operator 1.
 				case BINARY_OPERATOR_1:
-					// TODO
 					binaryOperator1 = (EnumOperatorBinary) value;
 					rule.setOp1(binaryOperator1);						
 					break;
 				// Unary operator 2.
 				case UNARY_OPERATOR_2:
-					// TODO
 					unaryOperator2 = (EnumOperatorUnary) value;
 					rule.setOp2(unaryOperator2);
 					break;
@@ -337,6 +318,18 @@ public class Genotype implements Cloneable {
 					break;
 			}
 		}
+		//
+		// TODO close everything else
+		//
+		Joint joint = new Joint(jointType, jointSiteOnParent,
+ 				jointSiteOnChild,
+ 				jointOrientation);
+		// Add the currently open Rule list to the Joint.
+		for (Rule r : rules) {
+			joint.addRule(r, jointType.getDoF());
+		}
+		jointToParent = joint;
+		
 		// Since there's no LENGTH trait at the end, the final block is still
 		// open, so it needs to be added to the list.
 		body.add(new Block(indexToParent, jointToParent, length, width,
