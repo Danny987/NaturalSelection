@@ -154,6 +154,15 @@ public class Allele {
 	}
 	
 	/**
+	 * Check if this Allele is empty.
+	 * 
+	 * @return True if Allele is empty; false otherwise.
+	 */
+	public boolean isEmpty() {
+		return trait.equals(Trait.EMPTY);
+	}
+	
+	/**
 	 * Getter for the Allele's trait.
 	 * 
 	 * @return The Allele's trait.

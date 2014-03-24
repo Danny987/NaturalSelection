@@ -9,6 +9,10 @@
  */
 package creature.geeksquad.genetics;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
 import creature.geeksquad.genetics.Allele.Trait;
 import creature.phenotype.Block;
 import creature.phenotype.EnumJointType;
@@ -53,7 +57,7 @@ public class Gene {
 	
 	/**
 	 * Instantiate a Gene with provided Alleles. The traits of the two Alleles
-	 * should match.
+	 * should match (or one can be empty).
 	 * 
 	 * @param Allele alleleA First allele - trait must match second allele.
 	 * @param Allele alleleB Second allele - trait must match first allele.
@@ -61,8 +65,10 @@ public class Gene {
 	 */
 	public Gene(Allele alleleA, Allele alleleB)
 							throws IllegalArgumentException {
-		// The traits of the Genes should never be mismatched.
-		if (!alleleA.getTrait().equals(alleleB.getTrait())) {
+		// The traits of the Genes should never be mismatched. Check if the
+		// Alleles' traits differ and if both Alleles are nonempty.
+		if (!alleleA.getTrait().equals(alleleB.getTrait()) &&
+				!alleleA.isEmpty() && !alleleB.isEmpty()) {
 			alleles[0] = null;
 			alleles[1] = null;
 			dominant = null;
@@ -90,6 +96,15 @@ public class Gene {
 	 */
 	public Gene(Allele[] alleles) {
 		this(alleles[0], alleles[1]);
+	}
+	
+	/**
+	 * Check if the Gene is empty (if both Alleles are empty).
+	 * 
+	 * @return True if both Alleles are empty; false otherwise.
+	 */
+	public boolean isEmpty() {
+		return alleles[0].isEmpty() && alleles[1].isEmpty();
 	}
 
 	/**
@@ -129,6 +144,33 @@ public class Gene {
 	 */
 	public Object getValue() {
 		return value;
+	}
+	
+	/**
+	 * Creates an ArrayList of Genes from a passed List of Alleles. Doesn't
+	 * check for trait matching, so if Allele pairs don't match, the Gene
+	 * constructor will throw an exception. If the list contains an odd number
+	 * of Alleles, the final element is ignored.
+	 * 
+	 * @param alleles List of Alleles. Allele pairs must be trait matched.
+	 * @return ArrayList<Gene> containing the generated Genes. Returns null if
+	 *         there was problem trait matching any of the Genes.
+	 */
+	public static ArrayList<Gene> allelesToGenes(List<Allele> alleles) {
+		ArrayList<Gene> genes = new ArrayList<Gene>();
+		
+		try {
+			for (Iterator<Allele> it = alleles.iterator(); it.hasNext(); ) {
+				Allele allele = it.next();
+				if (it.hasNext()) {
+					genes.add(new Gene(allele, it.next()));
+				}
+			}
+		} catch (IllegalArgumentException ex) {
+			return null;
+		}
+		
+		return genes;
 	}
 	
 	/**
