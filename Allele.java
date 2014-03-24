@@ -259,4 +259,40 @@ public class Allele {
 		}
 	}
 	
+	/**
+	 * Allele main method for testing.
+	 */
+	public static void main(String[] args) {
+		java.util.ArrayList<Allele> alleles = new java.util.ArrayList<Allele>();
+		// Adding some dummy Alleles to the list.
+		alleles.add(new Allele(Trait.HEIGHT, 42.5f, 0.5f));
+		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
+				               0.4f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.3f));
+		
+		// Iterating over the list with for-each.
+		for (Allele a : alleles) {
+			Allele.Trait trait = a.getTrait();
+			// Switch off the Allele's trait.
+			switch (trait) {
+				case HEIGHT: case WIDTH: case LENGTH:
+					float f = (Float) a.getValue();
+					System.out.println("Allele " + a + " --> (Float) " + f);
+					break;
+				case INDEX_TO_PARENT:
+					int i = (Integer) a.getValue();
+					System.out.println("Allele " + a + " --> (Integer) " + i);
+					break;
+				case JOINT_TYPE:
+					EnumJointType j = (EnumJointType) a.getValue();
+					System.out.println("Allele " + a + " --> (EnumJointType) "
+									    + j);
+					break;
+				default:
+					break;
+			}
+		}
+		
+	}
+	
 }

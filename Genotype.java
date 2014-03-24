@@ -163,26 +163,30 @@ public class Genotype implements Cloneable {
 		for (Gene gene : chromosome) {
 			Trait trait = gene.getTrait();
 			Object value = gene.getValue();
-
-			// Trait LENGTH is a special case: it marks the beginning of the
-			// encoding for a new Block, so close construction of the previous
-			// block and add it to the list.
-			if (trait.equals(Trait.LENGTH)) {
-				if (count > 0) {
-					body.add(new Block(indexToParent, jointToParent, length,
-							 width, height));
-				}
-				count++;
-			// If the trait is INDEX_TO_PARENT, since the body  must have
-			// exactly one root, whose indexToParent is null, we need
-			// to check if rootFound has already been set.
-			} else if (trait.equals(Trait.INDEX_TO_PARENT)) {
-				if (rootFound) {
-					// If multiple roots, the Genotype is invalid. Return null.
-					return null;
-				} else {
-					rootFound = true;
-				}
+			
+			switch(trait) {
+				// Trait LENGTH is a special case: it marks the beginning of
+				// the encoding for a new Block, so close construction of the
+				// previous block and add it to the list.
+				case LENGTH:
+					if (count > 0) {
+						body.add(new Block(indexToParent, jointToParent, length,
+								 width, height));
+					}
+					count++;
+					break;
+				// If the trait is INDEX_TO_PARENT, since the body must have
+				// exactly one root, whose indexToParent is null, we need
+				// to check if rootFound has already been set.
+				case INDEX_TO_PARENT:
+					if (rootFound) {
+						// If multiple roots, Genotype is invalid. Return null.
+						return null;
+					} else {
+						rootFound = true;
+					}
+					break;
+				// 
 			}
 			
 			// TODO update variables.
@@ -191,7 +195,12 @@ public class Genotype implements Cloneable {
 		body.add(new Block(indexToParent, jointToParent, length, width,
 				 height));
 
-		return (Block[]) body.toArray();
+		// A final check to confirm that the root block was found.
+		if (!rootFound) {
+			return null;
+		} else {
+			return (Block[]) body.toArray();
+		}
 	}
 
 	/**
