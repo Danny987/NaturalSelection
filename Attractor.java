@@ -14,7 +14,7 @@ import java.util.*;
 import creature.phenotype.*;
 
 /**
- * A class for a Population of creatures.
+ * An Attractor class for Hoppers.
  * 
  * @author Ramon A. Lovato
  * @group Danny Gomez

@@ -10,7 +10,7 @@
 package creature.geeksquad.genetics;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.Random;
 
 import creature.geeksquad.genetics.Allele.Trait;
@@ -135,10 +135,15 @@ public class Genotype implements Cloneable {
 	 */
 	public Creature getPhenotype() {
 		Block[] body = getBody();
-		Vector3 rootForwardStart = Vector3.FORWARD;
-		Vector3 rootUpStart = Vector3.UP;
-		// Return a new Creature (phenotype) with the calculated values.
-		return new Creature(body, rootForwardStart, rootUpStart);
+		// If body is null, the Genotype is invalid.
+		if (body == null) {
+			return null;
+		} else {
+			Vector3 rootForwardStart = Vector3.FORWARD;
+			Vector3 rootUpStart = Vector3.UP;
+			// Return a new Creature (phenotype) with the calculated values.
+			return new Creature(body, rootForwardStart, rootUpStart);
+		}
 	}
 
 	/**
@@ -148,16 +153,53 @@ public class Genotype implements Cloneable {
 	 */
 	public Block[] getBody() {
 		ArrayList<Block> body = new ArrayList<Block>();
-		// Number of blocks added so far.
-		int count = 0;
+		ArrayList<Rule> rules = new ArrayList<Rule>();
+		// Number of Blocks added so far.
+		int blockCount = 0;
+		// Number of Joints added to this Block so far.
+		int jointsThisBlock = 0;
+		// Number of Rules added to this Joint's rule list so far.
+		int rulesThisJoint = 0;
 		// Set once we find the root Block (where indexToParent is null).
 		boolean rootFound = false;
-		// Variables used for building the Blocks.
-		float length = 0;
-		float width = 0;
-		float height = 0;
-		Joint jointToParent = null;
+		
+		/*
+		 * 16 gene types (from project specs):
+		 *   L (length)
+		 *   W (width)
+		 *   H (height)
+		 *   I (index to parent)
+		 *   T (joint Type)
+		 *   O (joint orientation)
+		 *   P (joint site on Parent)
+		 *   C (joint site on Child)
+		 *   a, b, c, d, e (the five inputs to a rule)
+		 *   1 (binary operator in the 1st neuron of a rule)
+		 *   2 (unary operator in the 1st neuron of a rule)
+		 *   3 (binary operator in the 2nd neuron of a rule)
+		 *   4 (unary operator in the 2nd neuron of a rule)
+		 *   ...etc.
+		 */
+		// Variables used for building the Blocks and Joints.
+		Rule rule = null;
+		float length = 0.0f;
+		float width = 0.0f;
+		float height = 0.0f;
 		int indexToParent = Block.PARENT_INDEX_NONE;
+		Joint jointToParent = null;
+		EnumJointType jointType = null;
+		EnumJointSite jointSiteOnParent = null;
+        EnumJointSite jointSiteOnChild = null;
+        float jointOrientation = 0.0f;
+        NeuronInput ruleInputA = null;
+        NeuronInput ruleInputB = null;
+        NeuronInput ruleInputC = null;
+        NeuronInput ruleInputD = null;
+        NeuronInput ruleInputE = null;
+        EnumOperatorBinary binaryOperator1 = null;
+        EnumOperatorUnary unaryOperator2 = null;
+        EnumOperatorBinary binaryOperator3 = null;
+        EnumOperatorUnary unaryOperator4 = null;
 
 		// Iterate over the list and grab the metadata.
 		for (Gene gene : chromosome) {
@@ -169,29 +211,134 @@ public class Genotype implements Cloneable {
 				// the encoding for a new Block, so close construction of the
 				// previous block and add it to the list.
 				case LENGTH:
-					if (count > 0) {
-						body.add(new Block(indexToParent, jointToParent, length,
-								 width, height));
+					if (blockCount > 0) {
+						Block block = new Block(indexToParent, jointToParent,
+								 				length, width, height);						
+						body.add(block);
+						jointsThisBlock = 0; // TODO
 					}
-					count++;
+					blockCount++;
+					length = (Float) value;
+					break;
+				// Width.
+				case WIDTH:
+					width = (Float) value;
+					break;
+				// Height.
+				case HEIGHT:
+					height = (Float) value;
 					break;
 				// If the trait is INDEX_TO_PARENT, since the body must have
 				// exactly one root, whose indexToParent is null, we need
 				// to check if rootFound has already been set.
 				case INDEX_TO_PARENT:
-					if (rootFound) {
+					indexToParent = (Integer) value;
+					if (rootFound && indexToParent == Block.PARENT_INDEX_NONE) {
 						// If multiple roots, Genotype is invalid. Return null.
 						return null;
 					} else {
 						rootFound = true;
 					}
 					break;
-				// 
+				// JOINT_TYPE is the first Gene of a Joint set, so we need to
+				// close the previous Joint and add it before we continue.
+				case JOINT_TYPE:
+					// TODO
+					if (jointsThisBlock > 0) {
+						Joint joint = new Joint(jointType, jointSiteOnParent,
+					             				jointSiteOnChild,
+					             				jointOrientation);
+						// Add the currently open Rule list to the Joint.
+						for (Rule r : rules) {
+							joint.addRule(r, jointType.getDoF());
+						}
+						jointToParent = joint;
+						rulesThisJoint = 0;
+						rules.clear();
+					}
+					jointsThisBlock++;
+					jointType = (EnumJointType) value;
+					break;
+				// Joint orientation.
+				case JOINT_ORIENTATION:
+					// TODO
+					jointOrientation = (Float) value;
+					break;
+				// Joint site on parent.
+				case JOINT_SITE_ON_PARENT:
+					// TODO
+					jointSiteOnParent = (EnumJointSite) value;
+					break;
+				// Joint site on child.
+				case JOINT_SITE_ON_CHILD:
+					// TODO
+					jointSiteOnChild = (EnumJointSite) value;
+					break;
+				// Rule input A marks the beginning of a new Rule definition.
+				// Like Block and Joint, the old one needs to be closed first.
+				case RULE_INPUT_A:
+					// TODO
+					if (rulesThisJoint > 0) {
+						rules.add(rule);
+					}
+					rule = new Rule();
+					rulesThisJoint++;
+					ruleInputA = (NeuronInput) value;
+					rule.setInput(ruleInputA, 0);
+					break;
+				// Rule input B.
+				case RULE_INPUT_B:
+					// TODO
+					ruleInputB = (NeuronInput) value;
+					rule.setInput(ruleInputB, 1);
+					break;
+				// Rule input C.
+				case RULE_INPUT_C:
+					// TODO
+					ruleInputC = (NeuronInput) value;
+					rule.setInput(ruleInputC, 2);
+					break;
+				// Rule input D.
+				case RULE_INPUT_D:
+					// TODO
+					ruleInputD = (NeuronInput) value;
+					rule.setInput(ruleInputD, 3);
+					break;
+				// Rule input E.
+				case RULE_INPUT_E:
+					// TODO
+					ruleInputE = (NeuronInput) value;
+					rule.setInput(ruleInputE, 4);
+					break;
+				// Binary operator 1.
+				case BINARY_OPERATOR_1:
+					// TODO
+					binaryOperator1 = (EnumOperatorBinary) value;
+					rule.setOp1(binaryOperator1);						
+					break;
+				// Unary operator 2.
+				case UNARY_OPERATOR_2:
+					// TODO
+					unaryOperator2 = (EnumOperatorUnary) value;
+					rule.setOp2(unaryOperator2);
+					break;
+				// Binary operator 3.
+				case BINARY_OPERATOR_3:
+					binaryOperator3 = (EnumOperatorBinary) value;
+					rule.setOp3(binaryOperator3);
+					break;
+				// Unary operator 4.
+				case UNARY_OPERATOR_4:
+					unaryOperator4 = (EnumOperatorUnary) value;
+					rule.setOp4(unaryOperator4);
+					break;
+				// Default case catches EMPTY. EMPTY genes aren't expressed.
+				default:
+					break;
 			}
-			
-			// TODO update variables.
 		}
-		// Add the final, unclosed Block to the list.
+		// Since there's no LENGTH trait at the end, the final block is still
+		// open, so it needs to be added to the list.
 		body.add(new Block(indexToParent, jointToParent, length, width,
 				 height));
 
@@ -199,7 +346,7 @@ public class Genotype implements Cloneable {
 		if (!rootFound) {
 			return null;
 		} else {
-			return (Block[]) body.toArray();
+			return Arrays.copyOf(body.toArray(), body.size(), Block[].class);
 		}
 	}
 
@@ -216,16 +363,18 @@ public class Genotype implements Cloneable {
 	 * Override of toString. Formats the returned String as the genes list
 	 * enclosed in square brackets.
 	 * 
-	 * @return String containing genes list enclosed in curly braces:
-	 *         {([alleleA1][alleleA2])([alleleB1][alleleB2])...}.
+	 * @return String containing genes list separated by spaces, enclosed in
+	 *         curly braces:
+	 *             {[(alleleA1)(alleleA2])] [(alleleB1)(alleleB2)] ...}.
 	 */
 	@Override
 	public String toString() {
 		StringBuilder gString = new StringBuilder("");
 		gString.append('{');
 		for (Gene g : chromosome) {
-			gString.append(g.toString());
+			gString.append(g.toString() + " ");
 		}
+		gString.deleteCharAt(gString.length() - 1);
 		gString.append('}');
 
 		return gString.toString();
@@ -239,6 +388,47 @@ public class Genotype implements Cloneable {
 	@Override
 	public Object clone() {
 		return new ArrayList<Gene>(chromosome);
+	}
+	
+	/**
+	 * Main method for testing purposes.
+	 */
+	public static void main(String[] args) {
+		java.util.ArrayList<Allele> alleles = new java.util.ArrayList<Allele>();
+		java.util.ArrayList<Gene> genes = new java.util.ArrayList<Gene>();
+		// Adding some dummy Alleles to the list.
+		alleles.add(new Allele(Trait.LENGTH, 35.4f, 0.3f));
+		alleles.add(new Allele(Trait.LENGTH, 13.3f, 0.64f));
+		alleles.add(new Allele(Trait.HEIGHT, 42.5f, 0.5f));
+		alleles.add(new Allele(Trait.HEIGHT, 20.5f, 0.35f));
+		alleles.add(new Allele(Trait.WIDTH, 42.5f, 0.5f));
+		alleles.add(new Allele(Trait.WIDTH, 20.5f, 0.35f));
+		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
+				               0.63f));
+		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.3f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+		alleles.add(new Allele(Trait.LENGTH, 21.4f, 0.2f));
+		alleles.add(new Allele(Trait.LENGTH, 20.0f, 0.199f));
+		alleles.add(new Allele(Trait.HEIGHT, 40.5f, 0.1f));
+		alleles.add(new Allele(Trait.HEIGHT, 45.5f, 0.4f));
+		alleles.add(new Allele(Trait.WIDTH, 19.5f, 0.5f));
+		alleles.add(new Allele(Trait.WIDTH, 25.5f, 0.6f));
+		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.63f));
+		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.3f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+		
+		// Build some Genes from the Alleles.
+		for (int i = 0; i < alleles.size(); i++) {
+			genes.add(new Gene(alleles.get(i), alleles.get(++i)));
+		}
+		
+		// Create a Genotype from the Genes.
+		Genotype genotype = new Genotype(genes);
+		System.out.println("Genotype " + genotype);
+		Creature phenotype = genotype.getPhenotype();
+		System.out.println("Phenotype " + phenotype);
 	}
 
 }

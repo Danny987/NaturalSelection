@@ -10,6 +10,8 @@
 package creature.geeksquad.genetics;
 
 import creature.geeksquad.genetics.Allele.Trait;
+import creature.phenotype.Block;
+import creature.phenotype.EnumJointType;
 
 /**
  * A Gene class for the creatures.
@@ -55,8 +57,10 @@ public class Gene {
 	 * 
 	 * @param Allele alleleA First allele - trait must match second allele.
 	 * @param Allele alleleB Second allele - trait must match first allele.
+	 * @throws IllegalArgumentException if allele traits don't match.
 	 */
-	public Gene(Allele alleleA, Allele alleleB) {
+	public Gene(Allele alleleA, Allele alleleB)
+							throws IllegalArgumentException {
 		// The traits of the Genes should never be mismatched.
 		if (!alleleA.getTrait().equals(alleleB.getTrait())) {
 			alleles[0] = null;
@@ -64,7 +68,9 @@ public class Gene {
 			dominant = null;
 			trait = null;
 			value = 0;
-			System.err.println("Error: Invalid mismatched alleles in gene.");
+			throw new IllegalArgumentException(
+						"Cannot pair Allele of Trait." + alleleA.getTrait() + 
+						" with Allele of Trait." + alleleB.getTrait() + ".");
 		} else {
 			alleles[0] = alleleA;
 			alleles[1] = alleleB;
@@ -89,7 +95,7 @@ public class Gene {
 	/**
 	 * Getter for alleles.
 	 * 
-	 * @return Two-element Allele array.
+	 * @return Two-element Allele array (both null if traits are mismatched).
 	 */
 	public Allele[] getAlleles() {
 		return alleles;
@@ -98,7 +104,8 @@ public class Gene {
 	/**
 	 * Getter for dominant allele.
 	 * 
-	 * @return The dominant Allele being expressed (with the highest weight).
+	 * @return The dominant Allele being expressed, with the highest weight 
+	 *         (null if traits of Alleles are mismatched).
 	 */
 	public Allele getDominant() {
 		return dominant;
@@ -173,6 +180,38 @@ public class Gene {
 	public String toString() {
 		return new String("[" + alleles[0].toString() +
 				                alleles[1].toString() + "]");
+	}
+	
+	/**
+	 * Main method for testing purposes.
+	 */
+	public static void main(String[] args) {
+		java.util.ArrayList<Allele> alleles = new java.util.ArrayList<Allele>();
+		// Adding some dummy Alleles to the list.
+		alleles.add(new Allele(Trait.HEIGHT, 42.5f, 0.5f));
+		alleles.add(new Allele(Trait.HEIGHT, 20.5f, 0.35f));
+		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
+				               0.4f));
+		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 5, 0.63f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.3f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+		
+		// Build some Genes from the Alleles.
+		for (int i = 0; i < alleles.size(); i++) {
+			Gene gene = new Gene(alleles.get(i), alleles.get(++i));
+			System.out.println("Gene " + gene + " --> (Dominant) " +
+								gene.getDominant());
+		}
+		
+		// Test to make sure mismatched trait exception handling is working.
+		try {
+			@SuppressWarnings("unused")
+			Gene badGene = new Gene(alleles.get(0), alleles.get(2));
+		} catch (IllegalArgumentException ex) {
+			System.out.println();
+			System.out.println("***** THIS EXCEPTION MEANS IT'S WORKING *****");
+			ex.printStackTrace();
+		}
 	}
 	
 }

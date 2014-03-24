@@ -46,7 +46,7 @@ public class Allele {
 	 */
 	public Allele() {
 		trait = Trait.EMPTY;
-		value = "N/A";
+		value = " ";
 		weight = 0.0f;
 	}
 	
@@ -125,14 +125,14 @@ public class Allele {
 	}
 	
 	/**
-	 * Instantiate Allele with value as an EnumNeuronInputType (neuron inputs).
+	 * Instantiate Allele with value as a NeuronInput (neuron inputs).
 	 * 
 	 * @param trait The Trait for this Allele.
-	 * @param value The value for this Allele as an EnumNeuronInputType.
+	 * @param value The value for this Allele as an NeuronInput.
 	 * @param weight The Allele's dominance as a float (between 0 and 1).
 	 *               smaller = more recessive; larger = more dominant.
 	 */
-	public Allele(Trait trait, EnumNeuronInputType value, float weight) {
+	public Allele(Trait trait, NeuronInput value, float weight) {
 		this(trait, (Object) value, weight);
 	}
 	
@@ -260,7 +260,8 @@ public class Allele {
 	 */
 	public void setValue(EnumOperatorBinary value)
 								throws IllegalArgumentException {
-		if (trait.equals(Trait.BINARY_OPERATOR)) {
+		if (trait.equals(Trait.BINARY_OPERATOR_1) ||
+				trait.equals(Trait.BINARY_OPERATOR_3)) {
 			this.value = value;
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
@@ -276,7 +277,8 @@ public class Allele {
 	 */
 	public void setValue(EnumOperatorUnary value)
 								throws IllegalArgumentException {
-		if (trait.equals(Trait.UNARY_OPERATOR)) {
+		if (trait.equals(Trait.UNARY_OPERATOR_2) ||
+				trait.equals(Trait.UNARY_OPERATOR_4)) {
 			this.value = value;
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
@@ -285,12 +287,12 @@ public class Allele {
 	}
 	
 	/**
-	 * An EnumNeuronInputType setter for the Allele's value.
+	 * An NeuronInput setter for the Allele's value.
 	 * 
-	 * @param value EnumNeuronInputType to assign to this Allele's value.
+	 * @param value NeuronInput to assign to this Allele's value.
 	 * @throws IllegalArgumentException if input is invalid for this type.
 	 */
-	public void setValue(EnumNeuronInputType value)
+	public void setValue(NeuronInput value)
 								throws IllegalArgumentException {
 		if (trait.equals(Trait.RULE_INPUT_A) ||
 				trait.equals(Trait.RULE_INPUT_B) ||
@@ -337,7 +339,7 @@ public class Allele {
 	 */
 	@Override
 	public String toString() {
-		return new String("[" + trait + ":" + value + ":" + weight + "]");
+		return new String("(" + trait + ":" + value + ":" + weight + ")");
 	}
 	
 	/**
@@ -360,8 +362,10 @@ public class Allele {
 		RULE_INPUT_C, // c (the five inputs to a rule)
 		RULE_INPUT_D, // d (the five inputs to a rule)
 		RULE_INPUT_E, // e (the five inputs to a rule)
-		BINARY_OPERATOR, // 1 (binary operator for a neuron of a rule)
-		UNARY_OPERATOR; // 2 (unary operator for a neuron of a rule)
+		BINARY_OPERATOR_1, // 1 (binary operator in the 1st neuron of a rule)
+		UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule)
+		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
+		UNARY_OPERATOR_4; // 4 (unary operator in the 2nd neuron of a rule)
 		
 		/**
 		 * Override of toString.
