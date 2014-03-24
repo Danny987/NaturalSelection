@@ -400,7 +400,7 @@ public class Allele {
 					break;
 				case JOINT_TYPE:
 					EnumJointType j = (EnumJointType) a.getValue();
-					System.out.println("Allele " + a + " --> (EnumJointType "
+					System.out.println("Allele " + a + " --> (EnumJointType) "
 									    + j);
 					break;
 				default:
@@ -412,6 +412,8 @@ public class Allele {
 		try {
 			alleles.get(0).setValue(EnumJointType.HINGE);
 		} catch (IllegalArgumentException ex) {
+			System.out.println();
+			System.out.println("***** THIS EXCEPTION MEANS IT'S WORKING *****");
 			ex.printStackTrace();
 		}
 		
