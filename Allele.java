@@ -34,28 +34,30 @@ public class Allele {
 	 *   4 (unary operator in the 2nd neuron of a rule)
 	 *   ...etc.
 	 */
-	private String trait;
-	private float value;
+	private Trait trait;
+	private Object value;
 	private float weight;
 	
 	/**
 	 * Instantiates an empty Allele. Used for padding when strand lengths
-	 * differ between parent.s
+	 * differ between parent.
 	 */
 	public Allele() {
-		trait = "";
-		value = 0.0f;
+		trait = Trait.EMPTY;
+		value = "N/A";
 		weight = 0.0f;
 	}
 	
 	/**
-	 * Instantiates Allele with the passed trait and weight values.
+	 * Instantiates Allele with the passed trait, value, and weight.
 	 * 
-	 * @param trait The trait for this Allele as a String.
+	 * @param trait The Trait for this Allele.
+	 * @param value The value for this Allele as any one of a number of
+	 *              different Objects.
 	 * @param weight The Allele's dominance as a float (between 0 and 1).
 	 *               smaller = more recessive; larger = more dominant.
 	 */
-	public Allele(String trait, float value, float weight) {
+	public Allele(Trait trait, Object value, float weight) {
 		this.trait = trait;
 		this.value = value;
 		this.weight = weight;
@@ -64,9 +66,9 @@ public class Allele {
 	/**
 	 * Getter for the Allele's trait.
 	 * 
-	 * @return The Allele's traits.
+	 * @return The Allele's trait.
 	 */
-	public String getTrait() {
+	public Trait getTrait() {
 		return trait;
 	}
 	
@@ -75,7 +77,7 @@ public class Allele {
 	 * 
 	 * @return The Allele's value.
 	 */
-	public float getValue() {
+	public Object getValue() {
 		return value;
 	}
 	
@@ -132,4 +134,39 @@ public class Allele {
 	public String toString() {
 		return new String("[" + trait + ":" + value + ":" + weight + "]");
 	}
+	
+	/**
+	 * A nested Trait enum for the Alleles.
+	 * 
+	 * @author Ramon A. Lovato
+	 */
+	public static enum Trait {
+		EMPTY, // E (empty Allele)
+		LENGTH, // L (length)
+		WIDTH, // W (width)
+		HEIGHT, // H (height)
+		INDEX_TO_PARENT, // I (index to parent)
+		JOINT_TYPE, // T (joint Type)
+		JOINT_ORIENTATION, // O (joint orientation)
+		JOINT_SITE_ON_PARENT, // P (joint site on Parent)
+		JOINT_SITE_ON_CHILD, // C (joint site on Child)
+		RULE_INPUT_A, // a (the five inputs to a rule)
+		RULE_INPUT_B, // b (the five inputs to a rule)
+		RULE_INPUT_C, // c (the five inputs to a rule)
+		RULE_INPUT_D, // d (the five inputs to a rule)
+		RULE_INPUT_E, // e (the five inputs to a rule)
+		BINARY_OPERATOR, // 1 (binary operator for a neuron of a rule)
+		UNARY_OPERATOR; // 2 (unary operator for a neuron of a rule)
+		
+		/**
+		 * Override of toString.
+		 * 
+		 * @return Trait identifier as a String.
+		 */
+		@Override
+		public String toString() {
+			return name();
+		}
+	}
+	
 }

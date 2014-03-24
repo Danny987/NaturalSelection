@@ -9,6 +9,8 @@
  */
 package creature.geeksquad.genetics;
 
+import creature.geeksquad.genetics.Allele.Trait;
+
 /**
  * A Gene class for the creatures.
  * 
@@ -36,8 +38,8 @@ public class Gene {
 	 */
 	private final Allele[] alleles = new Allele[2];
 	private Allele dominant;
-	private String trait;
-	private float value;
+	private Trait trait;
+	private Object value;
 	
 	/**
 	 * Instantiate an empty Gene. Used as padding for strands of different
@@ -62,7 +64,7 @@ public class Gene {
 			dominant = null;
 			trait = null;
 			value = 0;
-			System.err.println("Error: Gene trait mismatch.");
+			System.err.println("Error: Invalid mismatched alleles in gene.");
 		} else {
 			alleles[0] = alleleA;
 			alleles[1] = alleleB;
@@ -107,18 +109,18 @@ public class Gene {
 	 * always be the same. If they're mismatched on instantiation, the trait
 	 * gets set to null.
 	 * 
-	 * @return Returns trait as String (null if two Alleles are mismatched).
+	 * @return Returns trait as Trait (null if two Alleles are mismatched).
 	 */
-	public String getTrait() {
+	public Trait getTrait() {
 		return trait;
 	}
 	
 	/**
 	 * Getter for the value of this Gene's dominant trait.
 	 * 
-	 * @return The value of this Gene's dominant Allele as a float.
+	 * @return The value of this Gene's dominant Allele as an Object.
 	 */
-	public float getValue() {
+	public Object getValue() {
 		return value;
 	}
 	

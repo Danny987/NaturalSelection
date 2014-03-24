@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
+import creature.geeksquad.genetics.Allele.Trait;
 import creature.phenotype.*;
 
 /**
@@ -149,32 +150,33 @@ public class Genotype implements Cloneable {
 		ArrayList<Block> body = new ArrayList<Block>();
 		// Number of blocks added so far.
 		int count = 0;
-		// Set once we find the root Block (where indexOfParent is null).
+		// Set once we find the root Block (where indexToParent is null).
 		boolean rootFound = false;
-		// Map of trait (String) to value (float) used for building the blocks.
-		HashMap<String, Float> blocklets = new HashMap<String, Float>();
+		// Variables used for building the Blocks.
+		float length = 0;
+		float width = 0;
+		float height = 0;
 		Joint jointToParent = null;
-		int indexOfParent = Block.PARENT_INDEX_NONE;
+		int indexToParent = Block.PARENT_INDEX_NONE;
 
 		// Iterate over the list and grab the metadata.
 		for (Gene gene : chromosome) {
-			String trait = gene.getTrait();
-			float value = gene.getValue();
+			Trait trait = gene.getTrait();
+			Object value = gene.getValue();
 
-			// Trait 'L' is a special case: it marks the beginning of the
+			// Trait LENGTH is a special case: it marks the beginning of the
 			// encoding for a new Block, so close construction of the previous
 			// block and add it to the list.
-			if (trait == "L") {
+			if (trait.equals(Trait.LENGTH)) {
 				if (count > 0) {
-					body.add(new Block(indexOfParent, jointToParent,
-							 blocklets.get("L"), blocklets.get("W"),
-							 blocklets.get("H")));
+					body.add(new Block(indexToParent, jointToParent, length,
+							 width, height));
 				}
 				count++;
-			// If the trait is 'I', it marks the indexOfParent. Since the body
-			// must have exactly one root, whose indexOfParent is null, we need
+			// If the trait is INDEX_TO_PARENT, since the body  must have
+			// exactly one root, whose indexToParent is null, we need
 			// to check if rootFound has already been set.
-			} else if (trait == "I") {
+			} else if (trait.equals(Trait.INDEX_TO_PARENT)) {
 				if (rootFound) {
 					// If multiple roots, the Genotype is invalid. Return null.
 					return null;
@@ -183,11 +185,11 @@ public class Genotype implements Cloneable {
 				}
 			}
 			
-			blocklets.put(trait, value);
+			// TODO update variables.
 		}
 		// Add the final, unclosed Block to the list.
-		body.add(new Block(indexOfParent, jointToParent, blocklets.get('L'),
-				 blocklets.get('W'), blocklets.get('H')));
+		body.add(new Block(indexToParent, jointToParent, length, width,
+				 height));
 
 		return (Block[]) body.toArray();
 	}
