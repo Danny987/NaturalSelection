@@ -190,6 +190,121 @@ public class Allele {
 	}
 	
 	/**
+	 * A float setter for the Allele's value.
+	 * 
+	 * @param value Float to assign to this Allele's value.
+	 * @throws IllegalArgumentException if input is invalid for this type.
+	 */
+	public void setValue(float value) throws IllegalArgumentException {
+		if (trait.equals(Trait.HEIGHT) || trait.equals(Trait.WIDTH) ||
+			trait.equals(Trait.LENGTH) ||
+			trait.equals(Trait.JOINT_ORIENTATION)) {
+				this.value = new Float(value);
+		} else {
+			throw new IllegalArgumentException("Allele of type Trait." + trait +
+					"cannot be assigned value of type float.");
+		}
+	}
+	
+	/**
+	 * An int setter for the Allele's value.
+	 * 
+	 * @param value Int to assign to this Allele's value.
+	 * @throws IllegalArgumentException if input is invalid for this type.
+	 */
+	public void setValue(int value) throws IllegalArgumentException {
+		if (trait.equals(Trait.INDEX_TO_PARENT)) {
+				this.value = new Integer(value);
+		} else {
+			throw new IllegalArgumentException("Allele of type Trait." + trait +
+					"cannot be assigned value of type int.");
+		}
+	}
+	
+	/**
+	 * An EnumJointType setter for the Allele's value.
+	 * 
+	 * @param value EnumJointType to assign to this Allele's value.
+	 * @throws IllegalArgumentException if input is invalid for this type.
+	 */
+	public void setValue(EnumJointType value) throws IllegalArgumentException {
+		if (trait.equals(Trait.JOINT_TYPE)) {
+			this.value = value;
+		} else {
+			throw new IllegalArgumentException("Allele of type Trait." + trait +
+				"cannot be assigned value of type EnumJointType.");
+		}
+	}
+	
+	/**
+	 * An EnumJointSite setter for the Allele's value.
+	 * 
+	 * @param value EnumJointSite to assign to this Allele's value.
+	 * @throws IllegalArgumentException if input is invalid for this type.
+	 */
+	public void setValue(EnumJointSite value) throws IllegalArgumentException {
+		if (trait.equals(Trait.JOINT_SITE_ON_PARENT) ||
+				trait.equals(Trait.JOINT_SITE_ON_CHILD)) {
+			this.value = value;
+		} else {
+			throw new IllegalArgumentException("Allele of type Trait." + trait +
+				"cannot be assigned value of type EnumJointSite.");
+		}
+	}
+	
+	/**
+	 * An EnumOperatorBinary setter for the Allele's value.
+	 * 
+	 * @param value EnumOperatorBinary to assign to this Allele's value.
+	 * @throws IllegalArgumentException if input is invalid for this type.
+	 */
+	public void setValue(EnumOperatorBinary value)
+								throws IllegalArgumentException {
+		if (trait.equals(Trait.BINARY_OPERATOR)) {
+			this.value = value;
+		} else {
+			throw new IllegalArgumentException("Allele of type Trait." + trait +
+				"cannot be assigned value of type EnumOperatorBinary.");
+		}
+	}
+	
+	/**
+	 * An EnumOperatorUnary setter for the Allele's value.
+	 * 
+	 * @param value EnumOperatorUnary to assign to this Allele's value.
+	 * @throws IllegalArgumentException if input is invalid for this type.
+	 */
+	public void setValue(EnumOperatorUnary value)
+								throws IllegalArgumentException {
+		if (trait.equals(Trait.UNARY_OPERATOR)) {
+			this.value = value;
+		} else {
+			throw new IllegalArgumentException("Allele of type Trait." + trait +
+				"cannot be assigned value of type EnumOperatorUnary.");
+		}
+	}
+	
+	/**
+	 * An EnumNeuronInputType setter for the Allele's value.
+	 * 
+	 * @param value EnumNeuronInputType to assign to this Allele's value.
+	 * @throws IllegalArgumentException if input is invalid for this type.
+	 */
+	public void setValue(EnumNeuronInputType value)
+								throws IllegalArgumentException {
+		if (trait.equals(Trait.RULE_INPUT_A) ||
+				trait.equals(Trait.RULE_INPUT_B) ||
+				trait.equals(Trait.RULE_INPUT_C) ||
+				trait.equals(Trait.RULE_INPUT_D) ||
+				trait.equals(Trait.RULE_INPUT_E)) {
+			this.value = value;
+		} else {
+			throw new IllegalArgumentException("Allele of type Trait." + trait +
+				"cannot be assigned value of type EnumJointType.");
+		}
+	}
+	
+	/**
 	 * Override of equals.
 	 * 
 	 * @param other Allele to compare to.
@@ -285,7 +400,7 @@ public class Allele {
 					break;
 				case JOINT_TYPE:
 					EnumJointType j = (EnumJointType) a.getValue();
-					System.out.println("Allele " + a + " --> (EnumJointType) "
+					System.out.println("Allele " + a + " --> (EnumJointType "
 									    + j);
 					break;
 				default:
