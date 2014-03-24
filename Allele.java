@@ -9,6 +9,8 @@
  */
 package creature.geeksquad.genetics;
 
+import creature.phenotype.*;
+
 /**
  * An Allele class for the Genotype.
  * 
@@ -49,7 +51,95 @@ public class Allele {
 	}
 	
 	/**
-	 * Instantiates Allele with the passed trait, value, and weight.
+	 * Instantiate Allele with value as a float (length, width, height, joint
+	 * orientation).
+	 * 
+	 * @param trait The Trait for this Allele.
+	 * @param value The value for this Allele as a float.
+	 * @param weight The Allele's dominance as a float (between 0 and 1).
+	 *               smaller = more recessive; larger = more dominant.
+	 */
+	public Allele(Trait trait, float value, float weight) {
+		this(trait, new Float(value), weight);
+	}
+	
+	/**
+	 * Instantiate Allele with value as an int (index to parent).
+	 * 
+	 * @param trait The Trait for this Allele.
+	 * @param value The value for this Allele as an int.
+	 * @param weight The Allele's dominance as a float (between 0 and 1).
+	 *               smaller = more recessive; larger = more dominant.
+	 */
+	public Allele(Trait trait, int value, float weight) {
+		this(trait, new Integer(value), weight);
+	}
+	
+	/**
+	 * Instantiate Allele with value as an EnumJointType (joint type).
+	 * 
+	 * @param trait The Trait for this Allele.
+	 * @param value The value for this Allele as an EnumJointType.
+	 * @param weight The Allele's dominance as a float (between 0 and 1).
+	 *               smaller = more recessive; larger = more dominant.
+	 */
+	public Allele(Trait trait, EnumJointType value, float weight) {
+		this(trait, (Object) value, weight);
+	}
+	
+	/**
+	 * Instantiate Allele with value as an EnumJointSite (joint site on parent,
+	 * joint site on child).
+	 * 
+	 * @param trait The Trait for this Allele.
+	 * @param value The value for this Allele as an EnumJointSite.
+	 * @param weight The Allele's dominance as a float (between 0 and 1).
+	 *               smaller = more recessive; larger = more dominant.
+	 */
+	public Allele(Trait trait, EnumJointSite value, float weight) {
+		this(trait, (Object) value, weight);
+	}
+	
+	/**
+	 * Instantiate Allele with value as an EnumOperatorBinary (binary operator).
+	 * 
+	 * @param trait The Trait for this Allele.
+	 * @param value The value for this Allele as an EnumOperatorBinary.
+	 * @param weight The Allele's dominance as a float (between 0 and 1).
+	 *               smaller = more recessive; larger = more dominant.
+	 */
+	public Allele(Trait trait, EnumOperatorBinary value, float weight) {
+		this(trait, (Object) value, weight);
+	}
+	
+	/**
+	 * Instantiate Allele with value as an EnumOperatorUnary (unary operator).
+	 * 
+	 * @param trait The Trait for this Allele.
+	 * @param value The value for this Allele as an EnumOperatorUnary.
+	 * @param weight The Allele's dominance as a float (between 0 and 1).
+	 *               smaller = more recessive; larger = more dominant.
+	 */
+	public Allele(Trait trait, EnumOperatorUnary value, float weight) {
+		this(trait, (Object) value, weight);
+	}
+	
+	/**
+	 * Instantiate Allele with value as an EnumNeuronInputType (neuron inputs).
+	 * 
+	 * @param trait The Trait for this Allele.
+	 * @param value The value for this Allele as an EnumNeuronInputType.
+	 * @param weight The Allele's dominance as a float (between 0 and 1).
+	 *               smaller = more recessive; larger = more dominant.
+	 */
+	public Allele(Trait trait, EnumNeuronInputType value, float weight) {
+		this(trait, (Object) value, weight);
+	}
+	
+	/**
+	 * A private constructor for Allele with the passed trait, value, and
+	 * weight. Called by other constructors only since there need to be bounds
+	 * on what type of Object value can be.
 	 * 
 	 * @param trait The Trait for this Allele.
 	 * @param value The value for this Allele as any one of a number of
@@ -57,7 +147,7 @@ public class Allele {
 	 * @param weight The Allele's dominance as a float (between 0 and 1).
 	 *               smaller = more recessive; larger = more dominant.
 	 */
-	public Allele(Trait trait, Object value, float weight) {
+	private Allele(Trait trait, Object value, float weight) {
 		this.trait = trait;
 		this.value = value;
 		this.weight = weight;
