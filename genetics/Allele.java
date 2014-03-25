@@ -50,6 +50,14 @@ public class Allele {
 		weight = 0.0f;
 	}
 	
+	/**
+	 * Instantiates an Allele as a deep copy of a passed source Allele.
+	 * 
+	 * @param source Allele to deep copy.
+	 */
+	public Allele(Allele source) {
+		this(source.getTrait(), source.getValue(), source.getWeight());
+	}
 	
 	
 	/**
