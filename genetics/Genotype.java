@@ -16,6 +16,7 @@ import java.util.Random;
 
 import creature.geeksquad.genetics.Allele.Trait;
 import creature.phenotype.*;
+import creature.geeksquad.library.Helper;
 
 /**
  * A Genotype class for the creatures.
@@ -451,14 +452,15 @@ public class Genotype implements Cloneable {
 	 * 
 	 * @return String containing genes list separated by spaces, enclosed in
 	 *         curly braces:
-	 *             {[(alleleA1)(alleleA2])] [(alleleB1)(alleleB2)] ...}.
+	 *             {[(alleleA1)(alleleA2])]%n[(alleleB1)(alleleB2)] ...}.
 	 */
 	@Override
 	public String toString() {
 		StringBuilder gString = new StringBuilder("");
 		gString.append('{');
 		for (Gene g : chromosome) {
-			gString.append(g.toString() + " ");
+			gString.append(g.toString());
+			gString.append(Helper.NEWLINE);
 		}
 		gString.deleteCharAt(gString.length() - 1);
 		gString.append('}');

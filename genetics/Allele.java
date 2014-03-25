@@ -50,6 +50,8 @@ public class Allele {
 		weight = 0.0f;
 	}
 	
+	
+	
 	/**
 	 * Instantiate Allele with value as a float (length, width, height, joint
 	 * orientation).
@@ -133,7 +135,7 @@ public class Allele {
 	 *               smaller = more recessive; larger = more dominant.
 	 */
 	public Allele(Trait trait, NeuronInput value, float weight) {
-		this(trait, (Object) value, weight);
+		this(trait, (Object) copyNeuron(value), weight);
 	}
 	
 	/**
@@ -171,6 +173,42 @@ public class Allele {
 		this.trait = trait;
 		this.value = value;
 		this.weight = weight;
+	}
+	
+	/**
+	 * A helper method for the constructor, which clones the passed NeuronInput.
+	 * 
+	 * @param original NeuronInput to clone.
+	 */
+	public static NeuronInput copyNeuron(NeuronInput original) {
+		NeuronInput neuron;
+		// Fields from original NeuronInput.
+		EnumNeuronInputType type = original.getType();
+		// Used only for CONSTANT type.
+		float constantValue = original.getConstantValue();
+		// Used for HEIGHT, TOUCH and JOINT types.
+		int boxIndex = original.getBoxIndex();
+		// Used only for JOINT type.
+		int degreeOfFreedom = original.getBoxIndex();
+
+		switch (type) {
+			case TIME:
+				neuron = new NeuronInput(type);
+				break;
+			case CONSTANT:
+				neuron = new NeuronInput(type, constantValue);
+				break;
+			case HEIGHT: case TOUCH:
+				neuron = new NeuronInput(type, boxIndex);
+				break;
+			case JOINT:
+				neuron = new NeuronInput(type, boxIndex, degreeOfFreedom);
+				break;
+			default:
+				neuron = null;
+		}
+		
+		return neuron;
 	}
 	
 	/**
@@ -336,6 +374,100 @@ public class Allele {
 	}
 	
 	/**
+	 * Create a completely fresh Allele built from an input String. Used
+	 * when importing Hoppers from a file.
+	 * 
+	 * @param alleleString String representation from which to build the new
+	 *                     Allele, formatted according to the toString rules:
+	 *                         (trait:value:weight)
+	 */
+	public static Allele stringToAllele(String alleleString) {
+		// Trim the parentheses off the string.
+		String trimmedString = alleleString.substring(1,
+					alleleString.length() - 1);
+		// Split the string on the colon.
+		//   substrings[0] trait
+		//   substrings[1] value
+		//   substrings[2] weight
+		String[] substrings = trimmedString.split(":");
+		Trait trait = Trait.valueOf(substrings[0]);
+		float weight = Float.valueOf(substrings[2]);
+		Object value;
+		
+		switch (trait) {
+			case LENGTH: case WIDTH: case HEIGHT: case JOINT_ORIENTATION:
+				value = new Float(Float.valueOf(substrings[1]));
+				break;
+			case INDEX_TO_PARENT:
+				value = new Integer(Integer.valueOf(substrings[1]));
+				break;
+			case JOINT_TYPE:
+				value = EnumJointType.valueOf(substrings[1]);
+				break;
+			case JOINT_SITE_ON_PARENT: case JOINT_SITE_ON_CHILD:
+				value = EnumJointSite.valueOf(substrings[1]);
+				break;
+			case RULE_INPUT_A: case RULE_INPUT_B: case RULE_INPUT_C:
+			case RULE_INPUT_D: case RULE_INPUT_E:
+				value = stringToNeuron(substrings[1]);
+				break;
+			case BINARY_OPERATOR_1: case BINARY_OPERATOR_3:
+				value = EnumOperatorBinary.valueOf(substrings[1]);
+				break;
+			case UNARY_OPERATOR_2: case UNARY_OPERATOR_4:
+				value = EnumOperatorUnary.valueOf(substrings[1]);
+				break;
+			default:
+				value = null;
+		}
+		
+		return new Allele(trait, value, weight);
+	}
+	
+	/**
+	 * Makes a NeuronInput from a String formatted according to NeuronInput's
+	 * toString.
+	 * 
+	 * @param neuronString String representing a NeuronInput.
+	 * @return NeuronInput indicated by the passed String.
+	 */
+	public static NeuronInput stringToNeuron(String neuronString) {
+		NeuronInput neuron;
+		// Trim parentheses.
+		String trimmedString = neuronString.substring(1,
+					neuronString.length() - 1);
+		// Since the NeuronInput toString is formatted differently for the
+		// different types, we need to use regex to split it.
+		String[] strings = trimmedString.split("[\\W&&[^\\.]]+");
+		
+		EnumNeuronInputType inputType = EnumNeuronInputType.valueOf(strings[0]);
+		int boxIndex;
+		
+		switch (inputType) {
+			case TIME:
+				neuron = new NeuronInput(inputType);
+				break;
+			case CONSTANT:
+				float constantValue = Float.valueOf(strings[1]);
+				neuron = new NeuronInput(inputType, constantValue);
+				break;
+			case HEIGHT: case TOUCH:
+				boxIndex = Integer.valueOf(strings[1]);
+				neuron = new NeuronInput(inputType, boxIndex);
+				break;
+			case JOINT:
+				boxIndex = Integer.valueOf(strings[1]);
+				int degreeOfFreedom = Integer.valueOf(strings[2]);
+				neuron = new NeuronInput(inputType, boxIndex, degreeOfFreedom);
+				break;
+			default:
+				neuron = null;
+		}	
+		
+		return neuron;
+	}
+	
+	/**
 	 * Override of equals.
 	 * 
 	 * @param other Allele to compare to.
@@ -449,6 +581,33 @@ public class Allele {
 			System.out.println("***** THIS EXCEPTION MEANS IT'S WORKING *****");
 			ex.printStackTrace();
 		}
+		
+		System.out.println("-------------------------------------------------");
+		Allele timeNeuron = new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.5f);
+		System.out.println("timeNeuron " + timeNeuron);
+		Allele constantNeuron = new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+					EnumNeuronInputType.CONSTANT, 0.01f), 0.5f);
+		System.out.println("constantNeuron " + constantNeuron);
+		Allele heightNeuron = new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+					EnumNeuronInputType.HEIGHT, 0), 0.5f);
+		System.out.println("heightNeuron " + heightNeuron);
+		Allele touchNeuron = new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+					EnumNeuronInputType.TOUCH, 0), 0.5f);
+		System.out.println("touchNeuron " + touchNeuron);
+		Allele jointNeuron = new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+					EnumNeuronInputType.JOINT, 0, 0), 0.5f);
+		System.out.println("jointNeuron " + jointNeuron);
+		System.out.println("-------------------------------------------------");
+		System.out.println();
+		Allele newTimeNeuron = stringToAllele("(RULE_INPUT_A:(TIME):0.5)");
+		Allele newConstantNeuron = stringToAllele(
+					"(RULE_INPUT_B:(CONSTANT=0.01):0.5)");
+		Allele newHeightNeuron = stringToAllele(
+					"(RULE_INPUT_C:(HEIGHT[0]):0.5)");
+		Allele newTouchNeuron = stringToAllele("(RULE_INPUT_D:(TOUCH[0]):0.5)");
+		Allele newJointNeuron = stringToAllele(
+					"(RULE_INPUT_E:(JOINT[0][0]):0.5)");
 		
 	}
 	

@@ -9,7 +9,9 @@
  */
 package creature.geeksquad.genetics;
 
+import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
+import creature.geeksquad.library.Helper;
 
 /**
  * A wrapper class for the Genotype and associated Creature (phenotype),
@@ -28,21 +30,38 @@ public class Hopper {
 	private float fitness;
 	
 	/**
-	 * Instantiates a new Hopper according to the passed Genotype.
+	 * Instantiate a new Hopper with the passed Genotype and provided name.
 	 * 
 	 * @param genotype Genotype of the new Hopper.
+	 * @param name String to use as the Hopper's name.
 	 */
-	public Hopper(Genotype genotype) {
+	public Hopper(Genotype genotype, String name) {
 		this.genotype = genotype;
 		this.phenotype = genotype.getPhenotype();
 		if (phenotype == null) {
 			System.err.println("Error: phenotype invalid.");
 		}
-		//
-		// TODO
-		//
-		name = "";
+		this.name = name;
 		age = 0;
+	}
+	
+	/**
+	 * Instantiate a new Hopper with the passed Genotype and random name.
+	 * 
+	 * @param genotype Genotype of the new Hopper.
+	 */
+	public Hopper(Genotype genotype) {
+		this(genotype, randomName());
+	}
+	
+	/**
+	 * Gets a random name for the Hopper.
+	 * 
+	 * @return String containing a random name for the Hopper.
+	 */
+	public static String randomName() {
+		// TODO
+		return "";
 	}
 	
 	/**
@@ -139,10 +158,14 @@ public class Hopper {
 	 * @return String representation of this Hopper.
 	 */
 	@Override
-	public String toString() {		
-		return "<creature>" +
-			   "    <name>" + name + "</name>" +
-			   "    <genotype>" + genotype.toString() + "</genotype>" +
+	public String toString() {
+		return "<creature>" + Helper.NEWLINE +
+			   "<name>" + Helper.NEWLINE +
+			   name + Helper.NEWLINE +
+			   "</name>" + Helper.NEWLINE +
+			   "<genotype>" + Helper.NEWLINE + 
+			   genotype.toString() + Helper.NEWLINE +
+			   "</genotype>" + Helper.NEWLINE +
 			   "</creature>";
 	}
 	
