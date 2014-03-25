@@ -11,7 +11,7 @@ package creature.geeksquad.genetics;
 
 import java.util.*;
 
-import creature.phenotype.*;
+import creature.geeksquad.genetics.Hopper.Attractor;
 
 /**
  * A class for a Population of creatures.
@@ -21,22 +21,53 @@ import creature.phenotype.*;
  * @group Marcos Lemus
  */
 public class Population {
-	private final Collection<Hopper> hoppers;
+	private final PriorityQueue<Hopper> hoppers;
+	private Attractor attractor;
+	private HashMap<Attractor, Float> attractorTable =
+				new HashMap<Attractor, Float>();
+	private Deque<Hopper> breeders;
+	private Deque<Hopper> hillClimbers;
 	
 	/**
 	 * The default constructor creates an empty Population.
 	 */
 	public Population() {
-		hoppers = new ArrayList<Hopper>();
+		hoppers = new PriorityQueue<Hopper>(0,
+					new HopperAgeComparator<Hopper>());
+		for (Attractor a : Attractor.values()) {
+			attractorTable.put(a, 0.0f);
+		}
+	}
+	
+	/**
+	 * An age Comparator for Hoppers.
+	 */
+	public static class HopperAgeComparator<Hopper> implements
+						Comparator<Hopper> {
+		/**
+		 * Override of Comparator's compare method. Compares the ages of two
+		 * Hoppers.
+		 * 
+		 * @param hopperA First Hopper whose age should be compared.
+		 * @param hopperB Second Hopper whose age should be compared.
+		 * @return Negative int, 0, or positive int if hopperA's age is less
+		 *             than, equal to, or greater than hopperB's, respectively.
+		 */
+		@Override
+		public int compare(Hopper hopperA, Hopper hopperB) {
+			return ((creature.geeksquad.genetics.Hopper) hopperA).getAge() -
+				   ((creature.geeksquad.genetics.Hopper) hopperB).getAge();
+		}
+		
 	}
 	
 	/**
 	 * Instantiates a new Population containing the provided Collection of
 	 * Hoppers.
 	 * 
-	 * @param creatures A Collection of Hoppers.
+	 * @param creatures A PriorityQueue of Hoppers.
 	 */
-	public Population(Collection<Hopper> hoppers) {
+	public Population(PriorityQueue<Hopper> hoppers) {
 		this.hoppers = hoppers;
 	}
 	
@@ -70,6 +101,59 @@ public class Population {
 	 */
 	public void cull(int n) {
 		// TODO
+	}
+	
+	/**
+	 * Kill off the provided list of individuals from the Population.
+	 * 
+	 * @param victims ArrayList<Hoppers> list of Hoppers to kill off.
+	 */
+	public void cull(ArrayList<Hopper> victims) {
+		for (Hopper h : victims) {
+			hoppers.remove(h);
+		}
+	}
+	
+	/**
+	 * Getter for attractor.
+	 * 
+	 * @return This Hopper's Attractor.
+	 */
+	public Attractor getAttractor() {
+		return attractor;
+	}
+	
+	/**
+	 * Sets the Attractor for this Population and goes through the hoppers list
+	 * and updates it for each Hopper individually.
+	 * 
+	 * @param attractor Attractor to set for this population.
+	 */
+	public void setAttractor(Attractor attractor) {
+		this.attractor = attractor;
+		for (Hopper h : hoppers) {
+			h.setAttractor(attractor);
+		}
+	}
+	
+	/**
+	 * Getter for a particular value in the Attractor table.
+	 * 
+	 * @param attractor Attractor value to access in the Attractor table.
+	 * @return The requested Attractor's weight from the table as a float.
+	 */
+	public float getAttractorWeight(Attractor attractor) {
+		return attractorTable.get(attractor);
+	}
+	
+	/**
+	 * Setter for a particular value in the Attractor table.
+	 * 
+	 * @param attractor Attractor value to set in the Attractor table.
+	 * @param weight Float to use as Attractor's weight in the table.
+	 */
+	public void setAttractorWeight(Attractor attractor, float weight) {
+		attractorTable.put(attractor, weight);
 	}
 	
 	/**

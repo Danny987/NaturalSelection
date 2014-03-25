@@ -46,7 +46,7 @@ public class Allele {
 	 */
 	public Allele() {
 		trait = Trait.EMPTY;
-		value = " ";
+		value = "#";
 		weight = 0.0f;
 	}
 	
@@ -144,10 +144,30 @@ public class Allele {
 	 * @param trait The Trait for this Allele.
 	 * @param value The value for this Allele as any one of a number of
 	 *              different Objects.
-	 * @param weight The Allele's dominance as a float (between 0 and 1).
-	 *               smaller = more recessive; larger = more dominant.
+	 * @param weight The Allele's dominance as a float.
+	 *               Smaller = more recessive; larger = more dominant.
+	 * @throws IllegalArgumentException if arguments invalid for given trait.
 	 */
-	private Allele(Trait trait, Object value, float weight) {
+	private Allele(Trait trait, Object value, float weight) throws
+					IllegalArgumentException {
+		// Check for valid input.
+		switch (trait) {
+			case LENGTH: case WIDTH: case HEIGHT:
+				if ((Float) value < 1.0f) {
+					throw new IllegalArgumentException(
+							"Length, width, and height must be >= 1.0.");
+				}
+				break;
+			case INDEX_TO_PARENT:
+				if ((Integer) value < Block.PARENT_INDEX_NONE) {
+					throw new IllegalArgumentException(
+							"Index to parent must be >= -1.");
+				}
+				break;
+			default:
+				// Fall through.
+		}
+		
 		this.trait = trait;
 		this.value = value;
 		this.weight = weight;
