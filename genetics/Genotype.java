@@ -15,8 +15,8 @@ import java.util.Iterator;
 import java.util.Random;
 
 import creature.geeksquad.genetics.Allele.Trait;
-import creature.phenotype.*;
 import creature.geeksquad.library.Helper;
+import creature.phenotype.*;
 
 /**
  * A Genotype class for the creatures.
@@ -44,16 +44,30 @@ public class Genotype implements Cloneable {
 	 *   ...etc.
 	 */
 	private ArrayList<Gene> chromosome;
+	private Block[] body;
 	private static Random random = new Random();
 
 	/**
-	 * Instantiate a new Genotype from a passed chromosome list.
+	 * Instantiate a new Genotype as a deep clone of a passed chromosome list.
 	 * 
-	 * @param chromosome ArrayList<Gene> containing the chromosomes for this
-	 * 					 Genotype.
+	 * @param source ArrayList<Gene> containing the chromosomes for this
+	 * 			     Genotype.
 	 */
-	public Genotype(ArrayList<Gene> chromosome) {
-		this.chromosome = chromosome;
+	public Genotype(ArrayList<Gene> source) {
+		chromosome = new ArrayList<Gene>();
+		for (Gene g : source) {
+			chromosome.add(new Gene(g));
+		}
+		body = buildBody();
+	}
+	
+	/**
+	 * Instantiate a new Genotype as a deep clone of a passed Genotype.
+	 * 
+	 * @param source Genotype to deep clone.
+	 */
+	public Genotype(Genotype source) {
+		this(source.getChromosome());
 	}
 
 	/**
@@ -87,13 +101,13 @@ public class Genotype implements Cloneable {
 		
 		// Iterate over the lists and pick a random allele from each parent.
 		for (int i = 0; i < size; i++) {
-			Gene parentGeneA = chromosomeA.get(i);
+			Gene parentGeneA = new Gene(chromosomeA.get(i));
 			Gene parentGeneB = chromosomeB.get(i);
 			int a1 = random.nextInt(2);
 			int b1 = random.nextInt(2);
 			int a2 = (a1 == 1 ? 0 : 1);
 			int b2 = (b1 == 1 ? 0 : 1);
-			// Create the genes for the children.
+			// Create deep clones of the genes for the children.
 			try {
 				Gene childGeneA = new Gene(parentGeneA.getAlleles()[a1],
 						                   parentGeneB.getAlleles()[b1]);
@@ -168,6 +182,23 @@ public class Genotype implements Cloneable {
 		
 		return newStrands;
 	}
+	
+	/**
+	 * Adds a new Block with associated Joint to the end of the Genotype.
+	 * 
+	 * @param
+	 * @return
+	 */
+	//
+	// TODO
+	//
+	
+	/**
+	 * Adds a new Rule at the specified position to the rule list for block.
+	 */
+	//
+	// TODO
+	//
 
 	/**
 	 * Evaluates the Genotype to create the Creature (phenotype) with default
@@ -176,7 +207,6 @@ public class Genotype implements Cloneable {
 	 * @return Creature (phenotype) of the Genotype.
 	 */
 	public Creature getPhenotype() {
-		Block[] body = getBody();
 		Creature phenotype = null;
 		// If body is null, the Genotype is invalid.
 		if (body == null) {
@@ -203,7 +233,6 @@ public class Genotype implements Cloneable {
 	 */
 	public Creature getPhenotype(Vector3 rootForwardStart,
 								 Vector3 rootUpStart) {
-		Block[] body = getBody();
 		// If body is null, the Genotype is invalid.
 		if (body == null) {
 			return null;
@@ -218,23 +247,21 @@ public class Genotype implements Cloneable {
 	 * 
 	 * @return Block array representing this Genotype's body.
 	 */
-	public Block[] getBody() {
+	public Block[] buildBody() {
 		ArrayList<Block> body = new ArrayList<Block>();
 		ArrayList<Rule> rules = new ArrayList<Rule>();
-		// Number of Blocks added so far.
-		int blockCount = 0;
-		// Number of Joints added to this Block so far.
-		int jointsThisBlock = 0;
-		// Number of Rules added to this Joint's rule list so far.
-		int rulesThisJoint = 0;
+		// Flags for open elements.
+		boolean blockOpen = false;
+		boolean jointOpen = false;
+		boolean ruleOpen = false;
 		// Set once we find the root Block (where indexToParent is null).
 		boolean rootFound = false;
 		
 		// Variables used for building the Blocks, Joints, and Rules.
 		Rule rule = null;
 		float length = 0.0f;
-		float width = 0.0f;
 		float height = 0.0f;
+		float width = 0.0f;
 		int indexToParent = Block.PARENT_INDEX_NONE;
 		Joint jointToParent = null;
 		EnumJointType jointType = null;
@@ -261,30 +288,29 @@ public class Genotype implements Cloneable {
 				// the encoding for a new Block, so close construction of the
 				// previous block and add it to the list.
 				case LENGTH:
-					if (blockCount > 0) {
+					if (blockOpen) {
 						// Close the open joint.
-						if (jointsThisBlock > 0) {
+						if (jointOpen) {
 							Joint joint = new Joint(jointType, 
 													jointSiteOnParent,
 						             				jointSiteOnChild,
 						             				jointOrientation);
+							jointOpen = false;
 							// Add the currently open Rule list to the Joint.
 							for (Rule r : rules) {
 								joint.addRule(r, jointType.getDoF());
 							}
-							rulesThisJoint = 0;
 							rules.clear();
 						}
 						
 						Block block = new Block(indexToParent, jointToParent,
-								 				length, width, height);
+								 				length, height, width);
 						body.add(block);
-						jointsThisBlock = 0;
 						// Clear all variables.
 						rule = null;
 						length = 0.0f;
-						width = 0.0f;
 						height = 0.0f;
+						width = 0.0f;
 						indexToParent = Block.PARENT_INDEX_NONE;
 						jointToParent = null;
 						jointType = null;
@@ -301,15 +327,15 @@ public class Genotype implements Cloneable {
 				        binaryOperator3 = null;
 				        unaryOperator4 = null;
 					}
-					blockCount++;
+					blockOpen = true;
 					length = (Float) value;
 					break;
 				// Width and height.
-				case WIDTH:
-					width = (Float) value;
-					break;
 				case HEIGHT:
 					height = (Float) value;
+					break;
+				case WIDTH:
+					width = (Float) value;
 					break;
 				// If the trait is INDEX_TO_PARENT, since the body must have
 				// exactly one root, whose indexToParent is null, we need
@@ -326,7 +352,7 @@ public class Genotype implements Cloneable {
 				// JOINT_TYPE is the first Gene of a Joint set, so we need to
 				// close the previous Joint and add it before we continue.
 				case JOINT_TYPE:
-					if (jointsThisBlock > 0) {
+					if (jointOpen) {
 						Joint joint = new Joint(jointType, jointSiteOnParent,
 					             				jointSiteOnChild,
 					             				jointOrientation);
@@ -334,11 +360,11 @@ public class Genotype implements Cloneable {
 						for (Rule r : rules) {
 							joint.addRule(r, jointType.getDoF());
 						}
-						jointToParent = joint;
-						rulesThisJoint = 0;
 						rules.clear();
+						jointToParent = joint;
+						jointOpen = false;
 					}
-					jointsThisBlock++;
+					jointOpen = true;
 					jointType = (EnumJointType) value;
 					break;
 				// Joint orientation and sites.
@@ -354,11 +380,11 @@ public class Genotype implements Cloneable {
 				// Rule input A marks the beginning of a new Rule definition.
 				// Like Block and Joint, the old one needs to be closed first.
 				case RULE_INPUT_A:
-					if (rulesThisJoint > 0) {
+					if (ruleOpen) {
 						rules.add(rule);
 					}
+					ruleOpen = true;
 					rule = new Rule();
-					rulesThisJoint++;
 					ruleInputA = (NeuronInput) value;
 					rule.setInput(ruleInputA, 0);
 					break;
@@ -401,20 +427,35 @@ public class Genotype implements Cloneable {
 					// Fall through.
 			}
 		}
-		// Close everything.
+		
+		if (ruleOpen) {
+			rules.add(rule);
+			ruleOpen = false;
+		}
+		
+		// The final Block and Joint will always be open at the end.
 		Joint joint = new Joint(jointType, jointSiteOnParent,
  				jointSiteOnChild,
  				jointOrientation);
+		jointOpen = false;
+		System.out.println("joint: " + joint);
+		System.out.println("jointType: " + jointType);
+		System.out.println("jointSiteOnParent: " + jointSiteOnParent);
+		System.out.println("jointSiteOnChild: " + jointSiteOnChild);
+		System.out.println("jointOrientation: " + jointOrientation);
+		System.out.println("DoF: " + jointType.getDoF());
 		// Add the currently open Rule list to the Joint.
 		for (Rule r : rules) {
 			joint.addRule(r, jointType.getDoF());
 		}
 		jointToParent = joint;
+		jointOpen = false;
 		
 		// Since there's no LENGTH trait at the end, the final block is still
 		// open, so it needs to be added to the list.
-		body.add(new Block(indexToParent, jointToParent, length, width,
-				 height));
+		body.add(new Block(indexToParent, jointToParent, length, height,
+				 width));
+		blockOpen = false;
 
 		// A final check to confirm that the root block was found.
 		if (!rootFound) {
@@ -444,6 +485,15 @@ public class Genotype implements Cloneable {
 	 */
 	public ArrayList<Gene> getChromosome() {
 		return chromosome;
+	}
+	
+	/**
+	 * Getter for body.
+	 * 
+	 * @return Array of Blocks containing the body.
+	 */
+	public Block[] getBody() {
+		return body;
 	}
 
 	/**
@@ -494,7 +544,7 @@ public class Genotype implements Cloneable {
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				               0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.3f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.SPHERICAL, 0.0f));
 		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
 		// Second block.
 		alleles.add(new Allele(Trait.LENGTH, 21.4f, 0.2f));
@@ -505,7 +555,7 @@ public class Genotype implements Cloneable {
 		alleles.add(new Allele(Trait.WIDTH, 25.5f, 0.6f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.3f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
 		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
 		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
 		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
@@ -587,7 +637,8 @@ public class Genotype implements Cloneable {
 		alleles2.add(new Allele(Trait.WIDTH, 19.4f, 0.5f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.59f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.49f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.32f));
+		alleles2.add(new Allele(Trait.JOINT_TYPE,
+								EnumJointType.SPHERICAL,0.0f));
 		alleles2.add(new Allele(Trait.JOINT_TYPE,
 							    EnumJointType.SPHERICAL, 0.22f));
 		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
@@ -638,7 +689,7 @@ public class Genotype implements Cloneable {
 				0.2f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.59f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 2, 0.49f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.32f));
+		alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
 		alleles2.add(new Allele(Trait.JOINT_TYPE,
 							    EnumJointType.SPHERICAL, 0.22f));
 		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));

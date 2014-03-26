@@ -28,8 +28,8 @@ public class Gene {
 	/*
 	 * 16 gene types (from project specs):
 	 *   L (length)
-	 *   W (width)
 	 *   H (height)
+	 *   W (width)
 	 *   I (index to parent)
 	 *   T (joint Type)
 	 *   O (joint orientation)
@@ -56,6 +56,15 @@ public class Gene {
 	}
 	
 	/**
+	 * Instantiate a new Gene as a deep clone of a source Gene.
+	 * 
+	 * @param source Gene to clone.
+	 */
+	public Gene(Gene source) {
+		this(source.getAlleles());
+	}
+	
+	/**
 	 * Instantiate a Gene with provided Alleles. The traits of the two Alleles
 	 * should match (or one can be empty).
 	 * 
@@ -78,8 +87,9 @@ public class Gene {
 						"Cannot pair Allele of Trait." + alleleA.getTrait() + 
 						" with Allele of Trait." + alleleB.getTrait() + ".");
 		} else {
-			alleles[0] = alleleA;
-			alleles[1] = alleleB;
+			// Clone the Alleles.
+			alleles[0] = new Allele(alleleA);
+			alleles[1] = new Allele(alleleB);
 			dominant = (alleles[0].getWeight() >= alleles[1].getWeight() ?
 					    alleles[0] : alleles[1]);
 			trait = dominant.getTrait();

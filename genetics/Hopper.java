@@ -184,8 +184,8 @@ public class Hopper {
 		//
 		EMPTY, // E (empty Allele)
 		LENGTH, // L (length)
-		WIDTH, // W (width)
 		HEIGHT, // H (height)
+		WIDTH, // W (width)
 		INDEX_TO_PARENT, // I (index to parent)
 		JOINT_TYPE, // T (joint Type)
 		JOINT_ORIENTATION, // O (joint orientation)

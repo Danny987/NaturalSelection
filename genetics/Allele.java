@@ -22,8 +22,8 @@ public class Allele {
 	/*
 	 * 16 gene types (from project specs):
 	 *   L (length)
-	 *   W (width)
 	 *   H (height)
+	 *   W (width)
 	 *   I (index to parent)
 	 *   T (joint Type)
 	 *   O (joint orientation)
@@ -519,8 +519,8 @@ public class Allele {
 	public static enum Trait {
 		EMPTY, // E (empty Allele)
 		LENGTH, // L (length)
-		WIDTH, // W (width)
 		HEIGHT, // H (height)
+		WIDTH, // W (width)
 		INDEX_TO_PARENT, // I (index to parent)
 		JOINT_TYPE, // T (joint Type)
 		JOINT_ORIENTATION, // O (joint orientation)
@@ -608,14 +608,14 @@ public class Allele {
 		System.out.println("jointNeuron " + jointNeuron);
 		System.out.println("-------------------------------------------------");
 		System.out.println();
-		Allele newTimeNeuron = stringToAllele("(RULE_INPUT_A:(TIME):0.5)");
-		Allele newConstantNeuron = stringToAllele(
-					"(RULE_INPUT_B:(CONSTANT=0.01):0.5)");
-		Allele newHeightNeuron = stringToAllele(
-					"(RULE_INPUT_C:(HEIGHT[0]):0.5)");
-		Allele newTouchNeuron = stringToAllele("(RULE_INPUT_D:(TOUCH[0]):0.5)");
-		Allele newJointNeuron = stringToAllele(
-					"(RULE_INPUT_E:(JOINT[0][0]):0.5)");
+//		Allele newTimeNeuron = stringToAllele("(RULE_INPUT_A:(TIME):0.5)");
+//		Allele newConstantNeuron = stringToAllele(
+//					"(RULE_INPUT_B:(CONSTANT=0.01):0.5)");
+//		Allele newHeightNeuron = stringToAllele(
+//					"(RULE_INPUT_C:(HEIGHT[0]):0.5)");
+//		Allele newTouchNeuron = stringToAllele("(RULE_INPUT_D:(TOUCH[0]):0.5)");
+//		Allele newJointNeuron = stringToAllele(
+//					"(RULE_INPUT_E:(JOINT[0][0]):0.5)");
 		
 	}
 	
