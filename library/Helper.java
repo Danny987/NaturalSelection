@@ -10,6 +10,8 @@
 
 package creature.geeksquad.library;
 
+import java.util.Random;
+
 /**
  * An Allele class for the Genotype.
  * 
@@ -18,6 +20,7 @@ package creature.geeksquad.library;
  * @group Marcos Lemus
  */
 public class Helper {
+	public static final Random RANDOM = new Random();
 	public static final String NEWLINE = System.getProperty("line.separator");
 
 }

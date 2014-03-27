@@ -237,6 +237,8 @@ public class Gene {
 	
 	/**
 	 * Main method for testing purposes.
+	 * 
+	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
 		java.util.ArrayList<Allele> alleles = new java.util.ArrayList<Allele>();

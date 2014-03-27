@@ -9,6 +9,7 @@
  */
 package creature.geeksquad.genetics;
 
+import creature.geeksquad.genetics.Crossover.Strategy;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
 import creature.geeksquad.library.Helper;
@@ -69,12 +70,15 @@ public class Hopper {
 	 * 
 	 * @param parentA First parent Hopper.
 	 * @param parentB Second parent Hopper.
+	 * @param strategy Strategy of Crossover to use in breeding.
 	 * @return An array of twin child Hoppers resulting from the crossover of
 	 *         the parents' genotypes.
 	 */
-	public static Hopper[] breed(Hopper parentA, Hopper parentB) {
+	public static Hopper[] breed(Hopper parentA, Hopper parentB,
+							     Strategy strategy) {
 		Genotype[] children = Genotype.crossover(parentA.getGenotype(),
-												 parentB.getGenotype());
+												 parentB.getGenotype(),
+												 strategy);
 		Hopper[] hoppers = {new Hopper(children[0]), new Hopper(children[1])};
 
 		return hoppers;
@@ -172,8 +176,6 @@ public class Hopper {
 	/**
 	 * Nested Attractor class for helping with two-stage selection. Primary
 	 * selection is always based on fitness.
-	 * 
-	 * @author Ramon A. Lovato
 	 */
 	public static enum Attractor {
 		SURFACE_AREA,
@@ -214,6 +216,8 @@ public class Hopper {
 	
 	/**
 	 * Main method for testing.
+	 * 
+	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
 		//

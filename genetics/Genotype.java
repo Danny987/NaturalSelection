@@ -12,9 +12,9 @@ package creature.geeksquad.genetics;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.Random;
 
 import creature.geeksquad.genetics.Allele.Trait;
+import creature.geeksquad.genetics.Crossover.Strategy;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
 
@@ -45,7 +45,6 @@ public class Genotype implements Cloneable {
 	 */
 	private ArrayList<Gene> chromosome;
 	private Block[] body;
-	private static Random random = new Random();
 
 	/**
 	 * Instantiate a new Genotype as a deep clone of a passed chromosome list.
@@ -75,56 +74,27 @@ public class Genotype implements Cloneable {
 	 * 
 	 * @param Genotype parentA Genotype from parent A.
 	 * @param Genotype parentB Genotype from parent B.
+	 * @param Strategy strategy Crossover Strategy to use.
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
 	 */
-	public static Genotype[] crossover(Genotype parentA, Genotype parentB) {
-		ArrayList<Gene> chromosomeA = parentA.getChromosome();
-		ArrayList<Gene> chromosomeB = parentB.getChromosome();
-		// Get the size of the larger chromosome.
-		int sizeA = chromosomeA.size();
-		int sizeB = chromosomeB.size();
-		int size = (sizeA >= sizeB ? sizeA : sizeB);
-		// Create the chromosomes for the twin children.
-		ArrayList<Gene> childA = new ArrayList<Gene>();
-		ArrayList<Gene> childB = new ArrayList<Gene>();
-		
-		// Align the key genes.
-		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
-				chromosomeB);
-		chromosomeA = newChromosomes.get(0);
-		chromosomeB = newChromosomes.get(1);
-		
-		// Iterate over the lists and pick a random allele from each parent.
-		for (int i = 0; i < size; i++) {
-			Gene parentGeneA = new Gene(chromosomeA.get(i));
-			Gene parentGeneB = chromosomeB.get(i);
-			int a1 = random.nextInt(2);
-			int b1 = random.nextInt(2);
-			int a2 = (a1 == 1 ? 0 : 1);
-			int b2 = (b1 == 1 ? 0 : 1);
-			// Create deep clones of the genes for the children.
-			try {
-				Gene childGeneA = new Gene(parentGeneA.getAlleles()[a1],
-						                   parentGeneB.getAlleles()[b1]);
-				Gene childGeneB = new Gene(parentGeneA.getAlleles()[a2],
-						                   parentGeneB.getAlleles()[b2]);
-				childA.add(childGeneA);
-				childB.add(childGeneB);
-			// If there were problems creating any of the Genes, return null.
-			} catch (IllegalArgumentException ex) {
-				return null;
-			}
-		}
-		// If the child Gene pulled a matched pair of empty Alleles, trim it
-		// from the final strand.
-		trimEmpty(childA);
-		trimEmpty(childB);
-
-		Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-
-		return children;
+	public static Genotype[] crossover(Genotype parentA, Genotype parentB,
+									   Strategy strategy) {
+		return Crossover.crossover(parentA, parentB, strategy);
+	}
+	
+	/**
+	 * Perform crossover on two parents to create twin children.
+	 * 
+	 * @param Genotype[] Two-element array of Genotypes from parents.
+	 * @param Strategy strategy Crossover Strategy to use.
+	 * @return Two-element array of Genotypes for children. If there were
+	 *         problems creating any of the genes (e.g. if the alleles didn't
+	 *         trait match properly), returns null.
+	 */
+	public static Genotype[] crossover(Genotype[] parents, Strategy strategy) {
+		return Crossover.crossover(parents[0], parents[0], strategy);
 	}
 	
 	/**
@@ -148,18 +118,16 @@ public class Genotype implements Cloneable {
 		
 		int sizeA = strandA.size();
 		int sizeB = strandB.size();
-		int bigSize, smallSize;
+		int bigSize;
 		
 		if (sizeA >= sizeB) {
 			bigger = strandA;
 			smaller = strandB;
 			bigSize = sizeA;
-			smallSize = sizeB;
 		} else {
 			bigger = strandB;
 			smaller = strandA;
 			bigSize = sizeB;
-			smallSize = sizeA;
 		}
 		
 		// Clone bigger.
@@ -560,6 +528,8 @@ public class Genotype implements Cloneable {
 	
 	/**
 	 * Main method for testing purposes.
+	 * 
+	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
 		ArrayList<Allele> alleles = new ArrayList<Allele>();
@@ -684,145 +654,145 @@ public class Genotype implements Cloneable {
 		System.out.println("Phenotype " + phenotype);
 		
 		// Second test creature.
-		ArrayList<Allele> alleles2 = new ArrayList<Allele>();
-		ArrayList<Gene> genes2;
-		alleles2.add(new Allele(Trait.LENGTH, 45.4f, 0.37f));
-		alleles2.add(new Allele(Trait.LENGTH, 29.3f, 0.54f));
-		alleles2.add(new Allele(Trait.HEIGHT, 40.5f, 0.35f));
-		alleles2.add(new Allele(Trait.HEIGHT, 41.5f, 0.36f));
-		alleles2.add(new Allele(Trait.WIDTH, 56.5f, 0.5f));
-		alleles2.add(new Allele(Trait.WIDTH, 56.5f, 0.5f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
-				0.54f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.433f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE,
-							    EnumJointType.SPHERICAL,0.233f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE,
-				                EnumJointType.SPHERICAL, 0.86f));
-		alleles2.add(new Allele(Trait.LENGTH, 20.4f, 0.232f));
-		alleles2.add(new Allele(Trait.LENGTH, 21.3f, 0.855f));
-		alleles2.add(new Allele(Trait.HEIGHT, 60.0f, 0.125f));
-		alleles2.add(new Allele(Trait.HEIGHT, 60.0f, 0.115f));
-		alleles2.add(new Allele(Trait.WIDTH, 19.5f, 0.5f));
-		alleles2.add(new Allele(Trait.WIDTH, 19.4f, 0.5f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.59f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.49f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE,
-								EnumJointType.SPHERICAL,0.0f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE,
-							    EnumJointType.SPHERICAL, 0.22f));
-		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				EnumJointSite.EDGE_FRONT_WEST, 0.6f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				EnumJointSite.EDGE_MID_SOUTHWEST, 0.3f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-				EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.6f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-				EnumJointSite.VERTEX_BACK_NORTHEAST, 0.7f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
-				EnumOperatorBinary.ADD, 0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
-				EnumOperatorBinary.SUBTRACT, 0.1f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,
-				0.3f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,
-				0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
-				EnumOperatorBinary.MULTIPLY, 0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
-				EnumOperatorBinary.ARCTAN2, 0.1f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.LOG,
-				0.3f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.SIN,
-				0.2f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.59f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 2, 0.49f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE,
-							    EnumJointType.SPHERICAL, 0.22f));
-		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				EnumJointSite.EDGE_MID_NORTHWEST, 0.6f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				EnumJointSite.FACE_EAST, 0.3f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-				EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.6f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-				EnumJointSite.VERTEX_FRONT_SOUTHWEST, 0.7f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
-				EnumOperatorBinary.ADD, 0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
-				EnumOperatorBinary.SUBTRACT, 0.1f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,
-				0.3f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,
-				0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
-				EnumOperatorBinary.MULTIPLY, 0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
-				EnumOperatorBinary.ARCTAN2, 0.1f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.LOG,
-				0.3f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.SIN,
-				0.2f));
-		
-		genes2 = Gene.allelesToGenes(alleles2);
-		
-		Genotype genotype2 = new Genotype(genes2);
-		System.out.println("Genotype2 " + genotype2);
-		Creature phenotype2 = genotype2.getPhenotype();
-		System.out.println("Phenotype2 " + phenotype2);
-		
-		// Crossover test.
-		System.out.println("Starting crossover test.");
-		Genotype[] children = crossover(genotype, genotype2);
-		System.out.println("Child1 " + children[0]);
-		System.out.println("Child1 Phenotype " + children[0].getPhenotype());
-		System.out.println("Child2 " + children[1]);
-		System.out.println("Child2 Phenotype " + children[1].getPhenotype());
+//		ArrayList<Allele> alleles2 = new ArrayList<Allele>();
+//		ArrayList<Gene> genes2;
+//		alleles2.add(new Allele(Trait.LENGTH, 45.4f, 0.37f));
+//		alleles2.add(new Allele(Trait.LENGTH, 29.3f, 0.54f));
+//		alleles2.add(new Allele(Trait.HEIGHT, 40.5f, 0.35f));
+//		alleles2.add(new Allele(Trait.HEIGHT, 41.5f, 0.36f));
+//		alleles2.add(new Allele(Trait.WIDTH, 56.5f, 0.5f));
+//		alleles2.add(new Allele(Trait.WIDTH, 56.5f, 0.5f));
+//		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
+//				0.54f));
+//		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.433f));
+//		alleles2.add(new Allele(Trait.JOINT_TYPE,
+//							    EnumJointType.SPHERICAL,0.233f));
+//		alleles2.add(new Allele(Trait.JOINT_TYPE,
+//				                EnumJointType.SPHERICAL, 0.86f));
+//		alleles2.add(new Allele(Trait.LENGTH, 20.4f, 0.232f));
+//		alleles2.add(new Allele(Trait.LENGTH, 21.3f, 0.855f));
+//		alleles2.add(new Allele(Trait.HEIGHT, 60.0f, 0.125f));
+//		alleles2.add(new Allele(Trait.HEIGHT, 60.0f, 0.115f));
+//		alleles2.add(new Allele(Trait.WIDTH, 19.5f, 0.5f));
+//		alleles2.add(new Allele(Trait.WIDTH, 19.4f, 0.5f));
+//		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.59f));
+//		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.49f));
+//		alleles2.add(new Allele(Trait.JOINT_TYPE,
+//								EnumJointType.SPHERICAL,0.0f));
+//		alleles2.add(new Allele(Trait.JOINT_TYPE,
+//							    EnumJointType.SPHERICAL, 0.22f));
+//		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+//		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+//		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
+//				EnumJointSite.EDGE_FRONT_WEST, 0.6f));
+//		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
+//				EnumJointSite.EDGE_MID_SOUTHWEST, 0.3f));
+//		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
+//				EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.6f));
+//		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
+//				EnumJointSite.VERTEX_BACK_NORTHEAST, 0.7f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
+//				EnumOperatorBinary.ADD, 0.2f));
+//		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
+//				EnumOperatorBinary.SUBTRACT, 0.1f));
+//		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,
+//				0.3f));
+//		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,
+//				0.2f));
+//		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
+//				EnumOperatorBinary.MULTIPLY, 0.2f));
+//		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
+//				EnumOperatorBinary.ARCTAN2, 0.1f));
+//		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.LOG,
+//				0.3f));
+//		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.SIN,
+//				0.2f));
+//		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.59f));
+//		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 2, 0.49f));
+//		alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
+//		alleles2.add(new Allele(Trait.JOINT_TYPE,
+//							    EnumJointType.SPHERICAL, 0.22f));
+//		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+//		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+//		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
+//				EnumJointSite.EDGE_MID_NORTHWEST, 0.6f));
+//		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
+//				EnumJointSite.FACE_EAST, 0.3f));
+//		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
+//				EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.6f));
+//		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
+//				EnumJointSite.VERTEX_FRONT_SOUTHWEST, 0.7f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.3f));
+//		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+//				EnumNeuronInputType.TIME), 0.25f));
+//		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
+//				EnumOperatorBinary.ADD, 0.2f));
+//		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
+//				EnumOperatorBinary.SUBTRACT, 0.1f));
+//		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,
+//				0.3f));
+//		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,
+//				0.2f));
+//		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
+//				EnumOperatorBinary.MULTIPLY, 0.2f));
+//		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
+//				EnumOperatorBinary.ARCTAN2, 0.1f));
+//		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.LOG,
+//				0.3f));
+//		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.SIN,
+//				0.2f));
+//		
+//		genes2 = Gene.allelesToGenes(alleles2);
+//		
+//		Genotype genotype2 = new Genotype(genes2);
+//		System.out.println("Genotype2 " + genotype2);
+//		Creature phenotype2 = genotype2.getPhenotype();
+//		System.out.println("Phenotype2 " + phenotype2);
+//		
+//		// Crossover test.
+//		System.out.println("Starting crossover test.");
+//		Genotype[] children = crossover(genotype, genotype2, Strategy.RANDOM);
+//		System.out.println("Child1 " + children[0]);
+//		System.out.println("Child1 Phenotype " + children[0].getPhenotype());
+//		System.out.println("Child2 " + children[1]);
+//		System.out.println("Child2 Phenotype " + children[1].getPhenotype());
 	}
 
 }

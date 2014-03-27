@@ -42,9 +42,10 @@ public class Allele {
 	
 	/**
 	 * Instantiates an empty Allele. Used for padding when strand lengths
-	 * differ between parent.
+	 * differ between parent. Declared deliberately as package-private so that
+	 * other genetics modules can access it but hill-climbing cannot.
 	 */
-	public Allele() {
+	Allele() {
 		trait = Trait.EMPTY;
 		value = "#";
 		weight = 0.0f;
@@ -522,8 +523,6 @@ public class Allele {
 	
 	/**
 	 * A nested Trait enum for the Alleles.
-	 * 
-	 * @author Ramon A. Lovato
 	 */
 	public static enum Trait {
 		EMPTY, // E (empty Allele).
@@ -559,6 +558,8 @@ public class Allele {
 	
 	/**
 	 * Allele main method for testing.
+	 * 
+	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
 		java.util.ArrayList<Allele> alleles = new java.util.ArrayList<Allele>();
