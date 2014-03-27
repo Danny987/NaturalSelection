@@ -90,14 +90,11 @@ public class Genotype implements Cloneable {
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
 		
-		// If the sizes differ, we need to call our helper method to pad out
-		// the smaller strand.
-		if (sizeA != sizeB) {
-			ArrayList<ArrayList<Gene>> newChromosomes =
-						matchSize(chromosomeA, chromosomeB);
-			chromosomeA = newChromosomes.get(0);
-			chromosomeB = newChromosomes.get(1);
-		}
+		// Align the key genes.
+		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
+				chromosomeB);
+		chromosomeA = newChromosomes.get(0);
+		chromosomeB = newChromosomes.get(1);
 		
 		// Iterate over the lists and pick a random allele from each parent.
 		for (int i = 0; i < size; i++) {
@@ -131,56 +128,67 @@ public class Genotype implements Cloneable {
 	}
 	
 	/**
-	 * Helper method for crossover that matches size of two strands.
+	 * Helper method for crossover that matches the locations of the key genes
+	 * on two strands.
 	 * 
 	 * @param strandA ArrayList<Gene> of first strand.
 	 * @param strandB ArrayList<Gene> of second strand.
-	 * @return ArrayList<ArrayList<Gene>> containing length-matched copies of
+	 * @return ArrayList<ArrayList<Gene>> containing key-gene-matched copies of
 	 *         the strands.
 	 */
-	public static ArrayList<ArrayList<Gene>> matchSize(ArrayList<Gene> strandA,
+	public static ArrayList<ArrayList<Gene>> align(ArrayList<Gene> strandA,
 								 ArrayList<Gene> strandB) {
-		ArrayList<ArrayList<Gene>> newStrands =
+		ArrayList<ArrayList<Gene>> strands =
 					new ArrayList<ArrayList<Gene>>();
-		int sizeA = strandA.size();
-		int sizeB = strandB.size();
+		strands.add(new ArrayList<Gene>());
+		strands.add(new ArrayList<Gene>());
+		
 		ArrayList<Gene> bigger;
 		ArrayList<Gene> smaller;
-		// If the strands are already the same length, don't change anything;
-		// just return.
-		if (sizeA == sizeB) {
-			newStrands.add(strandA);
-			newStrands.add(strandB);
-			return newStrands;
-		} else if (sizeA > sizeB) {
-			bigger = new ArrayList<Gene>(strandA);
-			smaller = new ArrayList<Gene>(strandB);
+		
+		int sizeA = strandA.size();
+		int sizeB = strandB.size();
+		int bigSize, smallSize;
+		
+		if (sizeA >= sizeB) {
+			bigger = strandA;
+			smaller = strandB;
+			bigSize = sizeA;
+			smallSize = sizeB;
 		} else {
-			bigger = new ArrayList<Gene>(strandB);
-			smaller = new ArrayList<Gene>(strandA);
+			bigger = strandB;
+			smaller = strandA;
+			bigSize = sizeB;
+			smallSize = sizeA;
 		}
-		// Iterate over the strands.
-		Iterator<Gene> bigIt = bigger.iterator();
-		for (Iterator<Gene> it = smaller.iterator(); it.hasNext() &&
-					bigIt.hasNext(); ) {
-			Gene bigGene = bigIt.next();
-			Gene smallGene = it.next();
-			// If the two Traits don't match, pad the smaller strand with
-			// blank Genes.
-			if (!bigGene.getTrait().equals(smallGene.getTrait())) {
-				smaller.add(new Gene());
+		
+		// Clone bigger.
+		for (Gene g : bigger) {
+			strands.get(0).add(new Gene(g));
+			// Initialize smaller.
+			strands.get(1).add(new Gene());
+		}
+		
+		// For smaller, we need to clone each section individually and pad with
+		// empty genes where the strands don't line up.
+		int sI = 0;
+		for (int bI = 0; bI < bigSize; bI++) {
+			ArrayList<Gene> strand = strands.get(1);
+			Gene gB = bigger.get(bI);
+			Gene gS = smaller.get(sI);
+			Trait tB = gB.getTrait();
+			Trait tS = gS.getTrait();
+			
+			// If the traits are the same at the two indices, add the gene.
+			if (tB.equals(tS)) {
+				strand.add(new Gene(gS));
+				sI++;
+			} else {
+				strand.add(new Gene());
 			}
 		}
-		// If smaller is still shorter than bigger, the difference was at the
-		// end, so pad the end with empty Genes.
-		while (smaller.size() < bigger.size()) {
-			smaller.add(new Gene());
-		}
-		// Add the strand copies to the collection.
-		newStrands.add(bigger);
-		newStrands.add(smaller);
 		
-		return newStrands;
+		return strands;
 	}
 	
 	/**
@@ -249,7 +257,9 @@ public class Genotype implements Cloneable {
 	 */
 	public Block[] buildBody() {
 		ArrayList<Block> body = new ArrayList<Block>();
-		ArrayList<Rule> rules = new ArrayList<Rule>();
+		ArrayList<Rule> dof1 = new ArrayList<Rule>();
+		ArrayList<Rule> dof2 = new ArrayList<Rule>();
+		ArrayList<Rule> rules = dof1;
 		// Flags for open elements.
 		boolean blockOpen = false;
 		boolean jointOpen = false;
@@ -297,10 +307,14 @@ public class Genotype implements Cloneable {
 						             				jointOrientation);
 							jointOpen = false;
 							// Add the currently open Rule list to the Joint.
-							for (Rule r : rules) {
-								joint.addRule(r, jointType.getDoF());
+							for (Rule r : dof1) {
+								joint.addRule(r, EnumJointType.DOF_1 - 1);
 							}
-							rules.clear();
+							for (Rule r : dof2) {
+								joint.addRule(r, EnumJointType.DOF_2 - 1);
+							}
+							dof1.clear();
+							dof2.clear();
 						}
 						
 						Block block = new Block(indexToParent, jointToParent,
@@ -326,6 +340,7 @@ public class Genotype implements Cloneable {
 				        unaryOperator2 = null;
 				        binaryOperator3 = null;
 				        unaryOperator4 = null;
+				        rules = dof1;
 					}
 					blockOpen = true;
 					length = (Float) value;
@@ -356,11 +371,16 @@ public class Genotype implements Cloneable {
 						Joint joint = new Joint(jointType, jointSiteOnParent,
 					             				jointSiteOnChild,
 					             				jointOrientation);
-						// Add the currently open Rule list to the Joint.
-						for (Rule r : rules) {
-							joint.addRule(r, jointType.getDoF());
+						// Add the rule tables to the Joint
+						for (Rule r : dof1) {
+							joint.addRule(r, EnumJointType.DOF_1 - 1);
 						}
-						rules.clear();
+						for (Rule r : dof2) {
+							joint.addRule(r, EnumJointType.DOF_2 - 1);
+						}
+						dof1.clear();
+						dof2.clear();
+						rules = dof1;
 						jointToParent = joint;
 						jointOpen = false;
 					}
@@ -422,7 +442,16 @@ public class Genotype implements Cloneable {
 					unaryOperator4 = (EnumOperatorUnary) value;
 					rule.setOp4(unaryOperator4);
 					break;
-				// Default case catches EMPTY. EMPTY genes aren't expressed.
+				// If we find a degree of freedom Allele, switch rules to point
+				// to the second DoF list.
+				case DOF_MARKER:
+					if (ruleOpen) {
+						rules.add(rule);
+						ruleOpen = false;
+					}
+					rules = (value.equals(EnumJointType.DOF_1) ? dof1 : dof2);
+					break;
+				// Default case catches EMPTY. Empty genes aren't expressed.
 				default:
 					// Fall through.
 			}
@@ -438,18 +467,19 @@ public class Genotype implements Cloneable {
  				jointSiteOnChild,
  				jointOrientation);
 		jointOpen = false;
-		System.out.println("joint: " + joint);
-		System.out.println("jointType: " + jointType);
-		System.out.println("jointSiteOnParent: " + jointSiteOnParent);
-		System.out.println("jointSiteOnChild: " + jointSiteOnChild);
-		System.out.println("jointOrientation: " + jointOrientation);
-		System.out.println("DoF: " + jointType.getDoF());
-		// Add the currently open Rule list to the Joint.
-		for (Rule r : rules) {
-			joint.addRule(r, jointType.getDoF());
-		}
+		// Add the Rule lists to the Joint. For some reason, DOF_1 and DOF_2
+		// constants are one greater than the index to which they actually
+		// refer, so we need to subtract 1 every time.
 		jointToParent = joint;
 		jointOpen = false;
+		
+		// Add the rule list(s) to the Joint.
+		for (Rule r : dof1) {
+			joint.addRule(r, EnumJointType.DOF_1 - 1);
+		}
+		for (Rule r : dof2) {
+			joint.addRule(r, EnumJointType.DOF_2 - 1);
+		}
 		
 		// Since there's no LENGTH trait at the end, the final block is still
 		// open, so it needs to be added to the list.
@@ -519,13 +549,13 @@ public class Genotype implements Cloneable {
 	}
 
 	/**
-	 * Override of clone. Creates a clone of this Genotype.
+	 * Override of clone. Creates a deep clone of this Genotype.
 	 * 
-	 * @return Gene-level clone of this Genotype.
+	 * @return Deep clone of this Genotype.
 	 */
 	@Override
 	public Object clone() {
-		return new ArrayList<Gene>(chromosome);
+		return new Genotype(this);
 	}
 	
 	/**
@@ -544,8 +574,9 @@ public class Genotype implements Cloneable {
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				               0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.SPHERICAL, 0.0f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.SPHERICAL,
+								0.2f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.0f));
 		// Second block.
 		alleles.add(new Allele(Trait.LENGTH, 21.4f, 0.2f));
 		alleles.add(new Allele(Trait.LENGTH, 20.0f, 0.199f));
@@ -556,7 +587,8 @@ public class Genotype implements Cloneable {
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
 		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.SPHERICAL,
+							   0.2f));
 		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
 		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
 		alleles.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
@@ -603,10 +635,48 @@ public class Genotype implements Cloneable {
 					EnumOperatorUnary.ABS,0.3f));
 		alleles.add(new Allele(Trait.UNARY_OPERATOR_4,
 					EnumOperatorUnary.EXP,0.2f));
+		alleles.add(new Allele(Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f));
+		alleles.add(new Allele(Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f));
+		alleles.add(new Allele(Trait.RULE_INPUT_A,
+				new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
+		alleles.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.25f));
+		alleles.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.3f));
+		alleles.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.25f));
+		alleles.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.3f));
+		alleles.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.25f));
+		alleles.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.3f));
+		alleles.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.25f));
+		alleles.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.3f));
+		alleles.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+				EnumNeuronInputType.TIME), 0.25f));
+		alleles.add(new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD,
+				0.2f));
+		alleles.add(new Allele(Trait.BINARY_OPERATOR_1,
+				EnumOperatorBinary.SUBTRACT, 0.1f));
+		alleles.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,
+				0.3f));
+		alleles.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,
+				0.2f));
+		alleles.add(new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD,
+				0.2f));
+		alleles.add(new Allele(Trait.BINARY_OPERATOR_3,
+				EnumOperatorBinary.SUBTRACT, 0.1f));
+		alleles.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS,
+				0.3f));
+		alleles.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.EXP,
+				0.2f));
 		
-		// Build some Genes from the Alleles.
 		genes = Gene.allelesToGenes(alleles);
 		
+		// Build some Genes from the Alleles.
 		// Create a Genotype from the Genes.
 		Genotype genotype = new Genotype(genes);
 		System.out.println("Genotype " + genotype);
@@ -747,6 +817,7 @@ public class Genotype implements Cloneable {
 		System.out.println("Phenotype2 " + phenotype2);
 		
 		// Crossover test.
+		System.out.println("Starting crossover test.");
 		Genotype[] children = crossover(genotype, genotype2);
 		System.out.println("Child1 " + children[0]);
 		System.out.println("Child1 Phenotype " + children[0].getPhenotype());

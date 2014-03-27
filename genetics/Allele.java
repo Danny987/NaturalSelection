@@ -74,7 +74,8 @@ public class Allele {
 	}
 	
 	/**
-	 * Instantiate Allele with value as an int (index to parent).
+	 * Instantiate Allele with value as an int (index to parent, degree of
+	 * freedom marker).
 	 * 
 	 * @param trait The Trait for this Allele.
 	 * @param value The value for this Allele as an int.
@@ -174,6 +175,12 @@ public class Allele {
 							"Index to parent must be >= -1.");
 				}
 				break;
+			case DOF_MARKER:
+				int dof = (Integer) value;
+				if (dof < EnumJointType.DOF_1 || dof > EnumJointType.DOF_2) {
+					throw new IllegalArgumentException(
+							"Degree of freedom outside acceptible range.");
+				}
 			default:
 				// Fall through.
 		}
@@ -288,12 +295,14 @@ public class Allele {
 	 * @throws IllegalArgumentException if input is invalid for this type.
 	 */
 	public void setValue(int value) throws IllegalArgumentException {
-		if (trait.equals(Trait.INDEX_TO_PARENT)) {
+		if (trait.equals(Trait.INDEX_TO_PARENT) ||
+					(trait.equals((Trait.DOF_MARKER)))) {
 				this.value = new Integer(value);
 		} else {
 			throw new IllegalArgumentException("Allele of type Trait." + trait +
 				" cannot be assigned value of type int.");
 		}
+		
 	}
 	
 	/**
@@ -362,7 +371,7 @@ public class Allele {
 	}
 	
 	/**
-	 * An NeuronInput setter for the Allele's value.
+	 * A NeuronInput setter for the Allele's value.
 	 * 
 	 * @param value NeuronInput to assign to this Allele's value.
 	 * @throws IllegalArgumentException if input is invalid for this type.
@@ -406,7 +415,7 @@ public class Allele {
 			case LENGTH: case WIDTH: case HEIGHT: case JOINT_ORIENTATION:
 				value = new Float(Float.valueOf(substrings[1]));
 				break;
-			case INDEX_TO_PARENT:
+			case INDEX_TO_PARENT: case DOF_MARKER:
 				value = new Integer(Integer.valueOf(substrings[1]));
 				break;
 			case JOINT_TYPE:
@@ -517,24 +526,25 @@ public class Allele {
 	 * @author Ramon A. Lovato
 	 */
 	public static enum Trait {
-		EMPTY, // E (empty Allele)
-		LENGTH, // L (length)
-		HEIGHT, // H (height)
-		WIDTH, // W (width)
-		INDEX_TO_PARENT, // I (index to parent)
-		JOINT_TYPE, // T (joint Type)
-		JOINT_ORIENTATION, // O (joint orientation)
-		JOINT_SITE_ON_PARENT, // P (joint site on Parent)
-		JOINT_SITE_ON_CHILD, // C (joint site on Child)
-		RULE_INPUT_A, // a (the five inputs to a rule)
-		RULE_INPUT_B, // b (the five inputs to a rule)
-		RULE_INPUT_C, // c (the five inputs to a rule)
-		RULE_INPUT_D, // d (the five inputs to a rule)
-		RULE_INPUT_E, // e (the five inputs to a rule)
-		BINARY_OPERATOR_1, // 1 (binary operator in the 1st neuron of a rule)
-		UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule)
-		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
-		UNARY_OPERATOR_4; // 4 (unary operator in the 2nd neuron of a rule)
+		EMPTY, // E (empty Allele).
+		LENGTH, // L (length).
+		HEIGHT, // H (height).
+		WIDTH, // W (width).
+		INDEX_TO_PARENT, // I (index to parent).
+		JOINT_TYPE, // T (joint Type).
+		JOINT_ORIENTATION, // O (joint orientation).
+		JOINT_SITE_ON_PARENT, // P (joint site on Parent).
+		JOINT_SITE_ON_CHILD, // C (joint site on Child).
+		RULE_INPUT_A, // a (the five inputs to a rule).
+		RULE_INPUT_B, // b (the five inputs to a rule).
+		RULE_INPUT_C, // c (the five inputs to a rule).
+		RULE_INPUT_D, // d (the five inputs to a rule).
+		RULE_INPUT_E, // e (the five inputs to a rule).
+		BINARY_OPERATOR_1, // 1 (binary operator in the 1st neuron of a rule).
+		UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule).
+		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule).
+		UNARY_OPERATOR_4, // 4 (unary operator in the 2nd neuron of a rule).
+		DOF_MARKER; // End of a degree of freedom.
 		
 		/**
 		 * Override of toString.

@@ -177,6 +177,7 @@ public class Gene {
 				}
 			}
 		} catch (IllegalArgumentException ex) {
+			System.err.println("allelesToGenes error: " + ex.getMessage());
 			return null;
 		}
 		
