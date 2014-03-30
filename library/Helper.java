@@ -22,5 +22,14 @@ import java.util.Random;
 public class Helper {
 	public static final Random RANDOM = new Random();
 	public static final String NEWLINE = System.getProperty("line.separator");
+	
+	/**
+	 * Randomly choose 0 or 1.
+	 * 
+	 * @return 0 or 1.
+	 */
+	public static int binary() {
+		return RANDOM.nextInt(2);
+	}
 
 }

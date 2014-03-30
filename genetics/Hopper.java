@@ -12,7 +12,6 @@ package creature.geeksquad.genetics;
 import creature.geeksquad.genetics.Crossover.Strategy;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
-import creature.geeksquad.library.Helper;
 
 /**
  * A wrapper class for the Genotype and associated Creature (phenotype),
