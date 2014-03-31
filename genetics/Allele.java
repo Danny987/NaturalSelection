@@ -619,14 +619,6 @@ public class Allele {
 		System.out.println("jointNeuron " + jointNeuron);
 		System.out.println("-------------------------------------------------");
 		System.out.println();
-//		Allele newTimeNeuron = stringToAllele("(RULE_INPUT_A:(TIME):0.5)");
-//		Allele newConstantNeuron = stringToAllele(
-//					"(RULE_INPUT_B:(CONSTANT=0.01):0.5)");
-//		Allele newHeightNeuron = stringToAllele(
-//					"(RULE_INPUT_C:(HEIGHT[0]):0.5)");
-//		Allele newTouchNeuron = stringToAllele("(RULE_INPUT_D:(TOUCH[0]):0.5)");
-//		Allele newJointNeuron = stringToAllele(
-//					"(RULE_INPUT_E:(JOINT[0][0]):0.5)");
 		
 	}
 	

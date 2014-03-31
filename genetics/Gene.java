@@ -74,6 +74,10 @@ public class Gene {
 	 */
 	public Gene(Allele alleleA, Allele alleleB) throws
 				IllegalArgumentException {
+		if (alleleA == null || alleleB == null) {
+			throw new IllegalArgumentException(
+					"Gene constructor Alleles cannot be null");
+		}
 		Trait traitA = alleleA.getTrait();
 		Trait traitB = alleleB.getTrait();
 		// The traits of the Genes should never be mismatched. Check if the
@@ -127,7 +131,12 @@ public class Gene {
 	 * @return True if both Alleles are empty; false otherwise.
 	 */
 	public boolean isEmpty() {
-		return alleles[0].isEmpty() && alleles[1].isEmpty();
+		// Short-circuits if alleles.length != 2, preventing null pointer.
+		if (alleles.length == 2 && alleles[0] != null && alleles[1] != null) {
+			return alleles[0].isEmpty() && alleles[1].isEmpty();
+		} else {
+			return true;
+		}
 	}
 
 	/**

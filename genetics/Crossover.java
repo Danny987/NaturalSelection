@@ -293,12 +293,15 @@ public class Crossover {
 		// Create the chromosomes for the twin children.
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
-		
 		// Align the key genes.
 		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
 				chromosomeB);
 		chromosomeA = newChromosomes.get(0);
 		chromosomeB = newChromosomes.get(1);
+		
+		if (chromosomeA == null || chromosomeB == null) {
+			return null;
+		}
 		
 		// Iterate over the lists and pick a random allele from each parent.
 		for (int i = 0; i < size; i++) {
@@ -318,14 +321,12 @@ public class Crossover {
 				childB.add(childGeneB);
 			// If there were problems creating any of the Genes, return null.
 			} catch (IllegalArgumentException ex) {
+				ex.printStackTrace();
 				return null;
 			}
 		}
-		// If the child Gene pulled a matched pair of empty Alleles, trim it
-		// from the final strand.
-		trimEmpty(childA);
-		trimEmpty(childB);
-
+		// If the child Gene pulled a matched pair of empty Alleles, it will
+		// be trimmed when instantiating the new Genotypes.
 		Genotype[] children = {new Genotype(childA), new Genotype(childB)};
 
 		return children;
@@ -364,29 +365,27 @@ public class Crossover {
 			bigSize = sizeB;
 		}
 		
-		// Clone bigger.
-		for (Gene g : bigger) {
-			strands.get(0).add(new Gene(g));
-			// Initialize smaller.
-			strands.get(1).add(new Gene());
-		}
-		
 		// For smaller, we need to clone each section individually and pad with
 		// empty genes where the strands don't line up.
 		int sI = 0;
 		for (int bI = 0; bI < bigSize; bI++) {
-			ArrayList<Gene> strand = strands.get(1);
+			ArrayList<Gene> strand0 = strands.get(0);
+			ArrayList<Gene> strand1 = strands.get(1);
 			Gene gB = bigger.get(bI);
 			Gene gS = smaller.get(sI);
 			Trait tB = gB.getTrait();
 			Trait tS = gS.getTrait();
 			
-			// If the traits are the same at the two indices, add the gene.
+			// Clone the GEne from bigger.
+			strand0.add(new Gene(gB));
+			
+			// If the traits are the same at the two indices, add the gene from
+			// smaller.
 			if (tB.equals(tS)) {
-				strand.add(new Gene(gS));
+				strand1.add(new Gene(gS));
 				sI++;
 			} else {
-				strand.add(new Gene());
+				strand1.add(new Gene());
 			}
 		}
 		

@@ -9,6 +9,8 @@
  */
 package creature.geeksquad.genetics;
 
+import java.util.ArrayList;
+
 import creature.geeksquad.genetics.Crossover.Strategy;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
@@ -27,6 +29,9 @@ public class Hopper {
 	private final Genotype genotype;
 	private final Creature phenotype;
 	private Attractor attractor;
+	private int timesHillClimbed;
+	private int timesBred;
+	private int children;
 	private float fitness;
 	
 	/**
@@ -43,6 +48,9 @@ public class Hopper {
 		}
 		this.name = name;
 		age = 0;
+		timesHillClimbed = 0;
+		timesBred = 0;
+		children = 0;
 	}
 	
 	/**
@@ -84,12 +92,15 @@ public class Hopper {
 	 */
 	public static Hopper[] breed(Hopper parentA, Hopper parentB,
 							     Strategy strategy) {
-		Genotype[] children = Genotype.crossover(parentA.getGenotype(),
+		Genotype[] genotypes = Genotype.crossover(parentA.getGenotype(),
 												 parentB.getGenotype(),
 												 strategy);
-		Hopper[] hoppers = {new Hopper(children[0]), new Hopper(children[1])};
+		ArrayList<Hopper> hoppers = new ArrayList<Hopper>();
+		for (Genotype g : genotypes) {
+			hoppers.add(new Hopper(g));
+		}
 
-		return hoppers;
+		return (Hopper[]) hoppers.toArray();
 	}
 	
 	/**
@@ -162,6 +173,33 @@ public class Hopper {
 	 */
 	public void setAttractor(Attractor attractor) {
 		this.attractor = attractor;
+	}
+	
+	/**
+	 * Getter for timesHillClimbed.
+	 * 
+	 * @return Number of times this Hopper has been through hill climbing.
+	 */
+	public int getTimesHillClimbed() {
+		return timesHillClimbed;
+	}
+	
+	/**
+	 * Getter for timesBred.
+	 * 
+	 * @return Number of times this Hopper has been bred.
+	 */
+	public int getTimesBred() {
+		return timesBred;
+	}
+	
+	/**
+	 * Getter for children.
+	 * 
+	 * @return Number of children this Hopper has sired.
+	 */
+	public int getChildren() {
+		return children;
 	}
 	
 	/**
