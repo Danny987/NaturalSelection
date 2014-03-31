@@ -45,6 +45,7 @@ public class Genotype implements Cloneable {
 	 */
 	private ArrayList<Gene> chromosome;
 	private Block[] body;
+	private int size;
 
 	/**
 	 * Instantiate a new Genotype as a deep clone of a passed chromosome list.
@@ -160,21 +161,421 @@ public class Genotype implements Cloneable {
 	}
 	
 	/**
-	 * Adds a new Block with associated Joint to the end of the Genotype.
+	 * Adds a new Block with associated Joint to the end of the Genotype. It
+	 * adds all necessary Genes for a Block, including the Block structure,
+	 * index to parent, Joint specifications, and Joint rule table. When
+	 * inserting a Block, the newly created Genes start with matched pairs of
+	 * identical Alleles with their weights initialized to the mean of 0.5f.
 	 * 
-	 * @param
-	 * @return
+	 * Since the Blocks can be listed in any order, addBlock doesn't need a
+	 * position; it just adds the Block to the end of the Chromasome.
+	 * 
+	 * @param block Block to add.
 	 */
-	//
-	// TODO
-	//
+	public void addBlock(Block block) {
+		Allele length = new Allele(Trait.LENGTH, new Float(block.getLength()),
+					0.5f);
+		Allele height = new Allele(Trait.HEIGHT, new Float(block.getHeight()),
+					0.5f);
+		Allele width = new Allele(Trait.WIDTH, block.getWidth(), 0.5f);
+		Allele indexToParent = new Allele(Trait.INDEX_TO_PARENT,
+										  block.getIndexOfParent(), 0.5f);
+		Joint joint = block.getJointToParent();
+		Allele jointType = new Allele(Trait.JOINT_TYPE, joint.getType(), 0.5f);
+		Allele jointOrientation = new Allele(Trait.JOINT_ORIENTATION,
+											 joint.getOrientation(), 0.5f);
+		Allele jointSiteOnParent = new Allele(Trait.JOINT_SITE_ON_PARENT,
+											  joint.getSiteOnParent(), 0.5f);
+		Allele jointSiteOnChild = new Allele(Trait.JOINT_SITE_ON_CHILD,
+										     joint.getSiteOnChild(), 0.5f);
+		ArrayList<Rule> ruleList1 = new ArrayList<Rule>();
+		ArrayList<Rule> ruleList2 = new ArrayList<Rule>();
+		int maxDoF = joint.getType().getDoF();
+		
+		for (int dof = 0; dof < maxDoF; dof++) {
+			int i = 0;
+			// Since Joint has no way to get the size of the array, we have to
+			// use this annoying hack to index until we go out of bounds.
+			try {
+				Rule rule = joint.getRule(dof, i);
+				if (dof == 0) {
+					ruleList1.add(rule);
+				} else {
+					ruleList2.add(rule);
+				}
+			} catch (IllegalArgumentException ex){
+				continue;
+			}
+		}
+		
+		chromosome.add(new Gene(length));
+		chromosome.add(new Gene(height));
+		chromosome.add(new Gene(width));
+		chromosome.add(new Gene(indexToParent));
+		chromosome.add(new Gene(jointType));
+		chromosome.add(new Gene(jointOrientation));
+		chromosome.add(new Gene(jointSiteOnParent));
+		chromosome.add(new Gene(jointSiteOnChild));
+		
+		for (Rule r : ruleList1) {
+			Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, r.getInput(0),
+										   0.5f);
+			Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, r.getInput(1),
+										   0.5f);
+			Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, r.getInput(2),
+										   0.5f);
+			Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, r.getInput(3),
+										   0.5f);
+			Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, r.getInput(4),
+										   0.5f);
+			Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
+										   r.getOp1(), 0.5f);
+			Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
+					   					   r.getOp2(), 0.5f);
+			Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
+					   					   r.getOp3(), 0.5f);
+			Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
+					   					   r.getOp2(), 0.5f);
+			
+			chromosome.add(new Gene(ruleInputA));
+			chromosome.add(new Gene(ruleInputB));
+			chromosome.add(new Gene(ruleInputC));
+			chromosome.add(new Gene(ruleInputD));
+			chromosome.add(new Gene(ruleInputE));
+			chromosome.add(new Gene(binaryOperator1));
+			chromosome.add(new Gene(unaryOperator2));
+			chromosome.add(new Gene(binaryOperator3));
+			chromosome.add(new Gene(unaryOperator4));
+		}
+		
+		if (maxDoF > 1) {
+		for (Rule r : ruleList2) {
+				Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, r.getInput(0),
+											   0.5f);
+				Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, r.getInput(1),
+											   0.5f);
+				Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, r.getInput(2),
+											   0.5f);
+				Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, r.getInput(3),
+											   0.5f);
+				Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, r.getInput(4),
+											   0.5f);
+				Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
+											   r.getOp1(), 0.5f);
+				Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
+						   					   r.getOp2(), 0.5f);
+				Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
+						   					   r.getOp3(), 0.5f);
+				Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
+						   					   r.getOp2(), 0.5f);
+				
+				chromosome.add(new Gene(ruleInputA));
+				chromosome.add(new Gene(ruleInputB));
+				chromosome.add(new Gene(ruleInputC));
+				chromosome.add(new Gene(ruleInputD));
+				chromosome.add(new Gene(ruleInputE));
+				chromosome.add(new Gene(binaryOperator1));
+				chromosome.add(new Gene(unaryOperator2));
+				chromosome.add(new Gene(binaryOperator3));
+				chromosome.add(new Gene(unaryOperator4));
+			}
+		}
+		// Update the body array.
+		body = buildBody();
+	}
 	
 	/**
-	 * Adds a new Rule at the specified position to the rule list for block.
+	 * Remove a Block and all associated Alleles from the chromosome.
+	 * 
+	 * @param block Index of Block to remove.
 	 */
-	//
-	// TODO
-	//
+	public void removeBlock(int block) {
+		int i = findBlock(block);
+		// Removes all Genes at i, letting higher-indexed ones fall into
+		// position as Genes are deleted, until it reaches the start of the
+		// next Block.
+		while (i < chromosome.size() && 
+				chromosome.get(i).getTrait() != Trait.LENGTH) {
+			chromosome.remove(i);
+		}
+	}
+	
+	/**
+	 * Adds a new Rule at the specified position to the rule list for Block.
+	 * 
+	 * @param rule Rule to add to the rule list.
+	 * @param block Index of Block whose rule list should be modified.
+	 * @param dof Degree of freedom to which to add the rule (assuming more
+	 *            than one.
+	 * @param index Position in the DoF rule list at which to add the rule.
+	 * @param boolean True if add succeeded; false if unsuccessful (such as
+	 *                if adding to joint type that doesn't support rules).
+	 */
+	public boolean addRule(Rule rule, int block, int dof, int index) {
+		if (rule == null || block >= size) {
+			return false;
+		}
+		
+		// Get the insertion index.
+		int i = 0;
+		int maxDoF = -1;
+		// Increase i over Blocks.
+		for (int current = 0; current < block; ) {
+			if (chromosome.get(i).getTrait() == Trait.LENGTH) {
+				current++;
+			}
+			i++;
+		}
+		// Increase i over Joint.
+		while (maxDoF < 0) {
+			Gene gene = chromosome.get(i);
+			Trait trait = gene.getTrait();
+			if (trait == Trait.JOINT_TYPE) {
+				maxDoF = ((EnumJointType) gene.getValue()).getDoF();
+			}
+			i++;
+		}
+		
+		if (dof >= maxDoF) {
+			return false;
+		}
+		
+		// Increase i over DoF.
+		if (maxDoF > 1) {
+			while (chromosome.get(i).getTrait() != Trait.DOF_MARKER &&
+					chromosome.get(i).getTrait() != Trait.LENGTH) {
+				i++;
+			}
+		}
+		
+		// Add a DoF marker if needed.
+		if (chromosome.get(i).getTrait() == Trait.LENGTH) {
+			chromosome.add(--i, new Gene(
+					new Allele(Trait.DOF_MARKER, 2, 0.5f)));
+		}
+		i++;
+		
+		// Increase i over rule list until index.
+		for (int current = 0; current < index; ) {
+			if (i > chromosome.size()) {
+				return false;
+			} else {
+				Trait trait = chromosome.get(i).getTrait();
+				if (trait == Trait.LENGTH) {
+					return false;
+				} else if (trait == Trait.UNARY_OPERATOR_4) {
+					current++;
+				}
+			}
+			i++;
+		}
+		
+		Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, rule.getInput(0),
+						   0.5f);
+		Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, rule.getInput(1),
+						   0.5f);
+		Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, rule.getInput(2),
+						   0.5f);
+		Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, rule.getInput(3),
+						   0.5f);
+		Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, rule.getInput(4),
+						   0.5f);
+		Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
+						   rule.getOp1(), 0.5f);
+		Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
+						   rule.getOp2(), 0.5f);
+		Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
+						   rule.getOp3(), 0.5f);
+		Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
+						   rule.getOp2(), 0.5f);
+		
+		chromosome.add(i, new Gene(ruleInputA));
+		chromosome.add(++i, new Gene(ruleInputB));
+		chromosome.add(++i, new Gene(ruleInputC));
+		chromosome.add(++i, new Gene(ruleInputD));
+		chromosome.add(++i, new Gene(ruleInputE));
+		chromosome.add(++i, new Gene(binaryOperator1));
+		chromosome.add(++i, new Gene(unaryOperator2));
+		chromosome.add(++i, new Gene(binaryOperator3));
+		chromosome.add(++i, new Gene(unaryOperator4));
+		
+		// Update the body.
+		body = buildBody();
+		
+		return true;
+	}
+	
+	/**
+	 * Remove a new Rule at the specified position from the rule list for Block.
+	 * 
+	 * @param block Index of Block whose rule list should be modified.
+	 * @param dof Degree of freedom from which to remove the rule (if more
+	 *            than one.
+	 * @param index Position in the DoF rule list from which to remove the rule.
+	 * @param boolean True if remove succeeded; false if unsuccessful.
+	 */
+	public boolean removeRule(int block, int dof, int index) {
+		int i = findRule(block, dof, index);
+		if (i < 0 || i + 9 >= chromosome.size()) {
+			return false;
+		}
+		// A full Rule is nine Alleles.
+		for (int j = 0; j < 9; j++) {
+			Trait testTrait = chromosome.get(i).getTrait();
+			if (testTrait != Trait.RULE_INPUT_A &&
+					testTrait != Trait.RULE_INPUT_B &&
+					testTrait != Trait.RULE_INPUT_C &&
+					testTrait != Trait.RULE_INPUT_D &&
+					testTrait != Trait.RULE_INPUT_E &&
+					testTrait != Trait.BINARY_OPERATOR_1 &&
+					testTrait != Trait.UNARY_OPERATOR_2 &&
+					testTrait != Trait.BINARY_OPERATOR_3 &&
+					testTrait != Trait.UNARY_OPERATOR_4) {
+				return false;
+			}
+			// Since remove will shorten the chromosome every time, we can keep
+			// removing the Gene at i and having the next Gene fall into place.
+			chromosome.remove(i);
+		}
+		
+		// Check for orphaned DoF marker.
+		if (i > 0 && i < chromosome.size()) {
+			if (chromosome.get(i - 1).getTrait() == Trait.DOF_MARKER
+					&& chromosome.get(i).getTrait() == Trait.LENGTH) {
+				chromosome.remove(i - 1);
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * Shift a DoF marker left or right by a specified amount.
+	 * 
+	 * @param block Index of Block whose DoF marker should be shifted.
+	 * @param amount Number of rules to shift the marker (left is negative).
+	 * @return True if shift successful, false otherwise (such as if there is
+	 *              no DoF marker for the indicated Block or if shift would
+	 *              place DoF marker at an invalid position in the table).
+	 */
+	public boolean shiftDoF(int block, int amount) {
+		int dir = (amount < 0 ? -1 : 1);
+		// The shift has to happen in nine-Allele jumps since it takes nine to
+		// express a full Rule.
+		int interval = dir * 9;
+		int i = findBlock(block);
+		
+		while (chromosome.get(i).getTrait() != Trait.DOF_MARKER) {
+			// Short-circuits if i exceeds chromosome size, preventing out-of-
+			// bounds from chromosome.get.
+			if (++i >= chromosome.size() || chromosome.get(i).getTrait()
+					== Trait.LENGTH) {
+				return false;
+			}
+		}
+		
+		int j = 0;
+		while (j <= Math.abs(amount)) {
+			// Short-circuits if j exceeds chromosome size.
+			if (j >= chromosome.size() || chromosome.get(j).getTrait()
+					!= Trait.RULE_INPUT_A) {
+				return false;
+			} else if (j == Math.abs(amount) && chromosome.get(j).getTrait()
+					   == Trait.RULE_INPUT_A) {
+				Gene marker = chromosome.get(i);
+				chromosome.remove(i);
+				chromosome.add(j, marker);
+				return true;
+			} else {
+				j += interval;
+			}
+		}
+		
+		// If we get this far, the shift failed.
+		return false;
+	}
+	
+	/**
+	 * Get the chromosome index of the starting Allele of a Block.
+	 * 
+	 * @param block Index of Block to locate.
+	 * @return Chromosome index of the Block's LENGTH-Trait Allele or -1 if
+	 *                    index is invalid.
+	 */
+	public int findBlock(int block) {
+		if (block > size) {
+			return -1;
+		} else {
+			int index = 0;
+			int counter = 0;
+			
+			while (counter < block) {
+				if (chromosome.get(index).getTrait() == Trait.LENGTH) {
+					counter++;
+				}
+				index++;
+			}
+			
+			return index;
+		}
+	}
+	
+	/**
+	 * Get the index of the starting Allele of a Rule of a Block.
+	 * 
+	 * @param block Index of Block to locate.
+	 * @param dof Which degree-of-freedom to check.
+	 * @param rule Index of Rule to locate.
+	 * @return Chromosome index of Rule's RULE_INPUT_A-Trait Allele or -1 if
+	 *                    index is invalid.
+	 */
+	public int findRule(int block, int dof, int rule) {
+		// Increase i over Blocks.
+		int i = findBlock(block);
+		
+		if (i < 0) {
+			return -1;
+		}
+		
+		// Increase i to Joint type.
+		while (chromosome.get(i).getTrait() != Trait.JOINT_TYPE) {
+			i++;
+		}
+		
+		// Increase i over DoF if necessary and possible.
+		if (dof >= ((EnumJointType) chromosome.get(i).getValue()).getDoF()) {
+			return -1;
+		} else {
+			if (dof > 1) {
+				while (chromosome.get(i).getTrait() != Trait.DOF_MARKER
+						&& chromosome.get(i).getTrait() != Trait.LENGTH) {
+					i++;
+				}
+			}
+		}
+		
+		// Add a DoF marker if needed.
+		if (chromosome.get(i).getTrait() == Trait.LENGTH) {
+			chromosome.add(--i, new Gene(
+					new Allele(Trait.DOF_MARKER, 2, 0.5f)));
+		}
+		
+		// Increase i over Rule list until rule index is reached..
+		for (int current = 0; current < rule; ) {
+			if (++i > chromosome.size()) {
+				return -1;
+			} else {
+				Trait trait = chromosome.get(i).getTrait();
+				if (trait == Trait.LENGTH) {
+					return -1;
+				} else if (trait == Trait.BINARY_OPERATOR_1) {
+					current++;
+				}
+			}
+		}
+		
+		return i;
+	}
 
 	/**
 	 * Evaluates the Genotype to create the Creature (phenotype) with default
@@ -224,7 +625,8 @@ public class Genotype implements Cloneable {
 	 * @return Block array representing this Genotype's body.
 	 */
 	public Block[] buildBody() {
-		ArrayList<Block> body = new ArrayList<Block>();
+		int numBlocks = 0;
+		ArrayList<Block> blocks = new ArrayList<Block>();
 		ArrayList<Rule> dof1 = new ArrayList<Rule>();
 		ArrayList<Rule> dof2 = new ArrayList<Rule>();
 		ArrayList<Rule> rules = dof1;
@@ -273,21 +675,25 @@ public class Genotype implements Cloneable {
 													jointSiteOnParent,
 						             				jointSiteOnChild,
 						             				jointOrientation);
-							jointOpen = false;
 							// Add the currently open Rule list to the Joint.
 							for (Rule r : dof1) {
-								joint.addRule(r, EnumJointType.DOF_1 - 1);
+								if (r != null && jointType.getDoF() > 0) {
+									joint.addRule(r, EnumJointType.DOF_1 - 1);
+								}
 							}
 							for (Rule r : dof2) {
-								joint.addRule(r, EnumJointType.DOF_2 - 1);
+								if (r != null && jointType.getDoF() > 1) {
+									joint.addRule(r, EnumJointType.DOF_2 - 1);
+								}
 							}
+							jointToParent = joint;
 							dof1.clear();
 							dof2.clear();
 						}
 						
 						Block block = new Block(indexToParent, jointToParent,
 								 				length, height, width);
-						body.add(block);
+						blocks.add(block);
 						// Clear all variables.
 						rule = null;
 						length = 0.0f;
@@ -310,8 +716,11 @@ public class Genotype implements Cloneable {
 				        unaryOperator4 = null;
 				        rules = dof1;
 					}
+					jointOpen = false;
+					ruleOpen = false;
 					blockOpen = true;
 					length = (Float) value;
+					numBlocks++;
 					break;
 				// Width and height.
 				case HEIGHT:
@@ -341,10 +750,14 @@ public class Genotype implements Cloneable {
 					             				jointOrientation);
 						// Add the rule tables to the Joint
 						for (Rule r : dof1) {
-							joint.addRule(r, EnumJointType.DOF_1 - 1);
+							if (r != null && jointType.getDoF() > 0) {
+								joint.addRule(r, EnumJointType.DOF_1 - 1);
+							}
 						}
 						for (Rule r : dof2) {
-							joint.addRule(r, EnumJointType.DOF_2 - 1);
+							if (r != null && jointType.getDoF() > 0) {
+								joint.addRule(r, EnumJointType.DOF_2 - 1);
+							}
 						}
 						dof1.clear();
 						dof2.clear();
@@ -430,36 +843,46 @@ public class Genotype implements Cloneable {
 			ruleOpen = false;
 		}
 		
-		// The final Block and Joint will always be open at the end.
-		Joint joint = new Joint(jointType, jointSiteOnParent,
- 				jointSiteOnChild,
- 				jointOrientation);
-		jointOpen = false;
-		// Add the Rule lists to the Joint. For some reason, DOF_1 and DOF_2
-		// constants are one greater than the index to which they actually
-		// refer, so we need to subtract 1 every time.
-		jointToParent = joint;
-		jointOpen = false;
-		
-		// Add the rule list(s) to the Joint.
-		for (Rule r : dof1) {
-			joint.addRule(r, EnumJointType.DOF_1 - 1);
+		// The final Block and Joint should always be open at the end.
+		if (jointOpen) {
+			Joint joint = new Joint(jointType, jointSiteOnParent,
+ 				jointSiteOnChild, jointOrientation);
+			jointOpen = false;
+			// Add the Rule lists to the Joint. For some reason, DOF_1 and DOF_2
+			// constants are one greater than the index to which they actually
+			// refer, so we need to subtract 1 every time.
+			jointToParent = joint;
+			jointOpen = false;
+			
+			if (ruleOpen) {
+				// Add the rule list(s) to the Joint.
+				for (Rule r : dof1) {
+					if (r != null) {
+						joint.addRule(r, EnumJointType.DOF_1 - 1);
+					}
+				}
+				for (Rule r : dof2) {
+					if (r != null) {
+						joint.addRule(r, EnumJointType.DOF_2 - 1);
+					}
+				}
+			}
+		}	
+
+		// Since there's no LENGTH trait at the end, the final block should
+		// still be open, so it needs to be added to the list.
+		if (blockOpen) {
+			blocks.add(new Block(indexToParent, jointToParent, length, height,
+					 width));
+			blockOpen = false;
 		}
-		for (Rule r : dof2) {
-			joint.addRule(r, EnumJointType.DOF_2 - 1);
-		}
-		
-		// Since there's no LENGTH trait at the end, the final block is still
-		// open, so it needs to be added to the list.
-		body.add(new Block(indexToParent, jointToParent, length, height,
-				 width));
-		blockOpen = false;
 
 		// A final check to confirm that the root block was found.
 		if (!rootFound) {
 			return null;
 		} else {
-			return Arrays.copyOf(body.toArray(), body.size(), Block[].class);
+			size = numBlocks;
+			return Arrays.copyOf(blocks.toArray(), blocks.size(), Block[].class);
 		}
 	}
 	
@@ -492,6 +915,15 @@ public class Genotype implements Cloneable {
 	 */
 	public Block[] getBody() {
 		return body;
+	}
+	
+	/**
+	 * Getter for the size of the body (in blocks).
+	 * 
+	 * @return Size of the body (in blocks).
+	 */
+	public int getSize() {
+		return size;
 	}
 
 	/**
@@ -544,9 +976,6 @@ public class Genotype implements Cloneable {
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				               0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.SPHERICAL,
-								0.2f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.0f));
 		// Second block.
 		alleles.add(new Allele(Trait.LENGTH, 21.4f, 0.2f));
 		alleles.add(new Allele(Trait.LENGTH, 20.0f, 0.199f));
@@ -649,6 +1078,27 @@ public class Genotype implements Cloneable {
 		// Build some Genes from the Alleles.
 		// Create a Genotype from the Genes.
 		Genotype genotype = new Genotype(genes);
+		
+		// addBlock test.
+		Joint newJoint = new Joint(EnumJointType.RIGID,
+				EnumJointSite.FACE_SOUTH, EnumJointSite.EDGE_BACK_NORTH,
+				30.0f);
+		Block newBlock = new Block(1, newJoint, 1.0f, 2.0f, 3.0f);
+		genotype.addBlock(newBlock);
+		
+		// addRule test.
+		Rule newRule = new Rule();
+		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 0);
+		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 1);
+		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 2);
+		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 3);
+		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 4);
+		newRule.setOp1(EnumOperatorBinary.ADD);
+		newRule.setOp2(EnumOperatorUnary.ABS);
+		newRule.setOp3(EnumOperatorBinary.ADD);
+		newRule.setOp4(EnumOperatorUnary.ABS);
+		genotype.addRule(newRule, 1, 0, 0);
+		
 		System.out.println("Genotype " + genotype);
 		Creature phenotype = genotype.getPhenotype();
 		System.out.println("Phenotype " + phenotype);

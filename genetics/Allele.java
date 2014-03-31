@@ -205,7 +205,7 @@ public class Allele {
 		// Used for HEIGHT, TOUCH and JOINT types.
 		int boxIndex = original.getBoxIndex();
 		// Used only for JOINT type.
-		int degreeOfFreedom = original.getBoxIndex();
+		int degreeOfFreedom = original.getDOF();
 
 		switch (type) {
 			case TIME:

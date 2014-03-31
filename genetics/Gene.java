@@ -26,27 +26,18 @@ import creature.phenotype.EnumJointType;
  */
 public class Gene {
 	/*
-	 * 16 gene types (from project specs):
-	 *   L (length)
-	 *   H (height)
-	 *   W (width)
-	 *   I (index to parent)
-	 *   T (joint Type)
-	 *   O (joint orientation)
-	 *   P (joint site on Parent)
-	 *   C (joint site on Child)
-	 *   a, b, c, d, e (the five inputs to a rule)
-	 *   1 (binary operator in the 1st neuron of a rule)
-	 *   2 (unary operator in the 1st neuron of a rule)
-	 *   3 (binary operator in the 2nd neuron of a rule)
-	 *   4 (unary operator in the 2nd neuron of a rule)
-	 *   ...etc.
+	 * 16 gene types (from project specs): L (length) H (height) W (width) I
+	 * (index to parent) T (joint Type) O (joint orientation) P (joint site on
+	 * Parent) C (joint site on Child) a, b, c, d, e (the five inputs to a rule)
+	 * 1 (binary operator in the 1st neuron of a rule) 2 (unary operator in the
+	 * 1st neuron of a rule) 3 (binary operator in the 2nd neuron of a rule) 4
+	 * (unary operator in the 2nd neuron of a rule) ...etc.
 	 */
 	private final Allele[] alleles = new Allele[2];
 	private Allele dominant;
 	private Trait trait;
 	private Object value;
-	
+
 	/**
 	 * Instantiate an empty Gene. Used as padding for strands of different
 	 * length during crossover.
@@ -54,7 +45,7 @@ public class Gene {
 	public Gene() {
 		this(new Allele(), new Allele());
 	}
-	
+
 	/**
 	 * Instantiate a new Gene as a deep clone of a source Gene.
 	 * 
@@ -65,6 +56,15 @@ public class Gene {
 	}
 	
 	/**
+	 * Instantiate a new Gene with two copies of the passed Allele.
+	 * 
+	 * @param source Allele to clone.
+	 */
+	public Gene(Allele source) {
+		this(source, source);
+	}
+
+	/**
 	 * Instantiate a Gene with provided Alleles. The traits of the two Alleles
 	 * should match (or one can be empty).
 	 * 
@@ -72,42 +72,55 @@ public class Gene {
 	 * @param Allele alleleB Second allele - trait must match first allele.
 	 * @throws IllegalArgumentException if allele traits don't match.
 	 */
-	public Gene(Allele alleleA, Allele alleleB)
-							throws IllegalArgumentException {
+	public Gene(Allele alleleA, Allele alleleB) throws
+				IllegalArgumentException {
+		Trait traitA = alleleA.getTrait();
+		Trait traitB = alleleB.getTrait();
 		// The traits of the Genes should never be mismatched. Check if the
 		// Alleles' traits differ and if both Alleles are nonempty.
-		if (!alleleA.getTrait().equals(alleleB.getTrait()) &&
-				!alleleA.isEmpty() && !alleleB.isEmpty()) {
-			alleles[0] = null;
-			alleles[1] = null;
-			dominant = null;
-			trait = null;
-			value = 0;
-			throw new IllegalArgumentException(
-						"Cannot pair Allele of Trait." + alleleA.getTrait() + 
-						" with Allele of Trait." + alleleB.getTrait() + ".");
+		if (!traitA.equals(traitB)) {
+			if (traitA.equals(Trait.DOF_MARKER) && traitB.equals(Trait.EMPTY)) {
+				alleles[0] = new Allele(alleleA);
+				alleles[1] = new Allele(alleleA);
+			} else if (traitB.equals(Trait.DOF_MARKER) &&
+					traitA.equals(Trait.EMPTY)) {
+				alleles[0] = new Allele(alleleB);
+				alleles[1] = new Allele(alleleB);
+			} else if (!alleleA.isEmpty() && !alleleB.isEmpty()) {
+				alleles[0] = null;
+				alleles[1] = null;
+				dominant = null;
+				trait = null;
+				value = 0;
+				throw new IllegalArgumentException(
+						"Cannot pair Allele of Trait." + alleleA.getTrait()
+								+ " with Allele of Trait." + alleleB.getTrait()
+								+ ".");
+			}
 		} else {
 			// Clone the Alleles.
 			alleles[0] = new Allele(alleleA);
 			alleles[1] = new Allele(alleleB);
-			dominant = (alleles[0].getWeight() >= alleles[1].getWeight() ?
-					    alleles[0] : alleles[1]);
+			dominant = (alleles[0].getWeight() >= alleles[1].getWeight() ? alleles[0]
+					: alleles[1]);
 			trait = dominant.getTrait();
 			value = dominant.getValue();
 		}
 	}
-	
+
 	/**
 	 * Instantiate a Gene with provided Allele array. The traits of the two
 	 * Alleles should match.
 	 * 
-	 * @param Allele allele1 First allele - trait must match second allele.
-	 * @param Allele allele2 Second allele - trait must match first allele.
+	 * @param Allele
+	 *            allele1 First allele - trait must match second allele.
+	 * @param Allele
+	 *            allele2 Second allele - trait must match first allele.
 	 */
 	public Gene(Allele[] alleles) {
 		this(alleles[0], alleles[1]);
 	}
-	
+
 	/**
 	 * Check if the Gene is empty (if both Alleles are empty).
 	 * 
@@ -125,28 +138,28 @@ public class Gene {
 	public Allele[] getAlleles() {
 		return alleles;
 	}
-	
+
 	/**
 	 * Getter for dominant allele.
 	 * 
-	 * @return The dominant Allele being expressed, with the highest weight 
+	 * @return The dominant Allele being expressed, with the highest weight
 	 *         (null if traits of Alleles are mismatched).
 	 */
 	public Allele getDominant() {
 		return dominant;
 	}
-	
+
 	/**
-	 * Getter for this Gene's trait. The traits of the two Alleles should
-	 * always be the same. If they're mismatched on instantiation, the trait
-	 * gets set to null.
+	 * Getter for this Gene's trait. The traits of the two Alleles should always
+	 * be the same. If they're mismatched on instantiation, the trait gets set
+	 * to null.
 	 * 
 	 * @return Returns trait as Trait (null if two Alleles are mismatched).
 	 */
 	public Trait getTrait() {
 		return trait;
 	}
-	
+
 	/**
 	 * Getter for the value of this Gene's dominant trait.
 	 * 
@@ -155,22 +168,23 @@ public class Gene {
 	public Object getValue() {
 		return value;
 	}
-	
+
 	/**
 	 * Creates an ArrayList of Genes from a passed List of Alleles. Doesn't
 	 * check for trait matching, so if Allele pairs don't match, the Gene
 	 * constructor will throw an exception. If the list contains an odd number
 	 * of Alleles, the final element is ignored.
 	 * 
-	 * @param alleles List of Alleles. Allele pairs must be trait matched.
+	 * @param alleles
+	 *            List of Alleles. Allele pairs must be trait matched.
 	 * @return ArrayList<Gene> containing the generated Genes. Returns null if
 	 *         there was problem trait matching any of the Genes.
 	 */
 	public static ArrayList<Gene> allelesToGenes(List<Allele> alleles) {
 		ArrayList<Gene> genes = new ArrayList<Gene>();
-		
+
 		try {
-			for (Iterator<Allele> it = alleles.iterator(); it.hasNext(); ) {
+			for (Iterator<Allele> it = alleles.iterator(); it.hasNext();) {
 				Allele allele = it.next();
 				if (it.hasNext()) {
 					genes.add(new Gene(allele, it.next()));
@@ -180,14 +194,15 @@ public class Gene {
 			System.err.println("allelesToGenes error: " + ex.getMessage());
 			return null;
 		}
-		
+
 		return genes;
 	}
-	
+
 	/**
 	 * Override of equals.
 	 * 
-	 * @param other Gene to compare to.
+	 * @param other
+	 *            Gene to compare to.
 	 * @return True if Alleles' traits and values match; false otherwise.
 	 */
 	@Override
@@ -213,7 +228,7 @@ public class Gene {
 			return false;
 		}
 	}
-	
+
 	/**
 	 * Override of hashCode.
 	 * 
@@ -223,7 +238,7 @@ public class Gene {
 	public int hashCode() {
 		return super.hashCode();
 	}
-	
+
 	/**
 	 * Override of toString.
 	 * 
@@ -231,14 +246,15 @@ public class Gene {
 	 */
 	@Override
 	public String toString() {
-		return new String("[" + alleles[0].toString() +
-				                alleles[1].toString() + "]");
+		return new String("[" + alleles[0].toString() + alleles[1].toString()
+				+ "]");
 	}
-	
+
 	/**
 	 * Main method for testing purposes.
 	 * 
-	 * @param args Command-line arguments.
+	 * @param args
+	 *            Command-line arguments.
 	 */
 	public static void main(String[] args) {
 		java.util.ArrayList<Allele> alleles = new java.util.ArrayList<Allele>();
@@ -246,18 +262,18 @@ public class Gene {
 		alleles.add(new Allele(Trait.HEIGHT, 42.5f, 0.5f));
 		alleles.add(new Allele(Trait.HEIGHT, 20.5f, 0.35f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
-				               0.4f));
+				0.4f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 5, 0.63f));
 		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.3f));
 		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-		
+
 		// Build some Genes from the Alleles.
 		for (int i = 0; i < alleles.size(); i++) {
 			Gene gene = new Gene(alleles.get(i), alleles.get(++i));
-			System.out.println("Gene " + gene + " --> (Dominant) " +
-								gene.getDominant());
+			System.out.println("Gene " + gene + " --> (Dominant) "
+					+ gene.getDominant());
 		}
-		
+
 		// Test to make sure mismatched trait exception handling is working.
 		try {
 			@SuppressWarnings("unused")
@@ -268,5 +284,5 @@ public class Gene {
 			ex.printStackTrace();
 		}
 	}
-	
+
 }

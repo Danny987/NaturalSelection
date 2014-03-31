@@ -46,6 +46,15 @@ public class Hopper {
 	}
 	
 	/**
+	 * Instantiate a new deep clone of the passed Hopper.
+	 * 
+	 * @param source Hopper to deep clone.
+	 */
+	public Hopper(Hopper source) {
+		this(new Genotype(source.getGenotype()), new String(source.getName()));
+	}
+	
+	/**
 	 * Instantiate a new Hopper with the passed Genotype and random name.
 	 * 
 	 * @param genotype Genotype of the new Hopper.
