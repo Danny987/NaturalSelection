@@ -25,7 +25,7 @@ import creature.phenotype.*;
  * @group Danny Gomez
  * @group Marcos Lemus
  */
-public class Genotype implements Cloneable {
+public class Genotype {
 	/*
 	 * 16 gene types (from project specs):
 	 *   L (length)
@@ -52,10 +52,12 @@ public class Genotype implements Cloneable {
 	 * 
 	 * @param source ArrayList<Gene> containing the chromosomes for this
 	 * 			     Genotype.
-	 * @throws IllegalArgumentException if there was a problem generating the
-	 *                                  body.
+	 * @throws IllegalArgumentException if buildBody tried to pass an invalid
+	 * 		       argument to one of the Builders' setters.
+	 * @throws GeneticsException if buildBody detected an error.
 	 */
-	public Genotype(ArrayList<Gene> source) throws IllegalArgumentException {
+	public Genotype(ArrayList<Gene> source) throws IllegalArgumentException,
+			GeneticsException {
 		chromosome = new ArrayList<Gene>();
 		try {
 			for (Gene g : source) {
@@ -64,7 +66,7 @@ public class Genotype implements Cloneable {
 				}
 			}
 			body = buildBody();
-		} catch (IllegalArgumentException ex) {
+		} catch (IllegalArgumentException | GeneticsException ex) {
 			throw ex;
 		}
 	}
@@ -73,8 +75,12 @@ public class Genotype implements Cloneable {
 	 * Instantiate a new Genotype as a deep clone of a passed Genotype.
 	 * 
 	 * @param source Genotype to deep clone.
+	 * @throws GeneticsException if buildBody detected an error.
+	 * @throws IllegalArgumentException if buildBody tried to pass an invalid
+	 * 		       argument to one of the Builders' setters.
 	 */
-	public Genotype(Genotype source) {
+	public Genotype(Genotype source) throws IllegalArgumentException,
+			GeneticsException {
 		this(source.getChromosome());
 	}
 
@@ -87,9 +93,12 @@ public class Genotype implements Cloneable {
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	public static Genotype[] crossover(Genotype parentA, Genotype parentB,
-									   Strategy strategy) {
+			Strategy strategy) throws IllegalArgumentException,
+			GeneticsException {
 		return Crossover.crossover(parentA, parentB, strategy);
 	}
 	
@@ -101,8 +110,11 @@ public class Genotype implements Cloneable {
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	public static Genotype[] crossover(Genotype[] parents, Strategy strategy) {
+	public static Genotype[] crossover(Genotype[] parents, Strategy strategy)
+			throws IllegalArgumentException, GeneticsException {
 		return Crossover.crossover(parents[0], parents[1], strategy);
 	}
 	
@@ -122,8 +134,12 @@ public class Genotype implements Cloneable {
 	 *                 past the first are ignored.
 	 * @return True if add successful; false if not (e.g. if position is
 	 *                 invalid).
+	 * @throws IllegalArgumentException if one of the Builders' setters was
+	 * 		       passed an invalid argument.
+	 * @throws GeneticsException if buildBody detected an error.
 	 */
-	public boolean addBlock(Block block, int...position) {
+	public boolean addBlock(Block block, int...position) throws 
+			IllegalArgumentException, GeneticsException {
 		int index;
 		if (position.length > 0) {
 			index = findBlock(position[0]);
@@ -245,7 +261,11 @@ public class Genotype implements Cloneable {
 			}
 		}
 		// Update the body array.
-		body = buildBody();
+		try {
+			body = buildBody();
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
+		}
 		return true;
 	}
 	
@@ -273,10 +293,14 @@ public class Genotype implements Cloneable {
 	 * @param dof Degree of freedom to which to add the rule (assuming more
 	 *            than one.
 	 * @param index Position in the DoF rule list at which to add the rule.
-	 * @param boolean True if add succeeded; false if unsuccessful (such as
+	 * @return boolean True if add succeeded; false if unsuccessful (such as
 	 *                if adding to joint type that doesn't support rules).
+	 * @throws IllegalArgumentException if one of the Builders' setters
+	 * 		   was passed an invalid argument.
+	 * @throws GeneticsException if buildBody detected an error.
 	 */
-	public boolean addRule(Rule rule, int block, int dof, int index) {
+	public boolean addRule(Rule rule, int block, int dof, int index) throws
+			IllegalArgumentException, GeneticsException {
 		if (rule == null || block >= size) {
 			return false;
 		}
@@ -365,7 +389,11 @@ public class Genotype implements Cloneable {
 		chromosome.add(++i, new Gene(unaryOperator4));
 		
 		// Update the body.
-		body = buildBody();
+		try {
+			body = buildBody();
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
+		}
 		
 		return true;
 	}
@@ -548,25 +576,23 @@ public class Genotype implements Cloneable {
 	 * 
 	 * @return Creature (phenotype) of the Genotype.
 	 * @throws IllegalArgumentException if phenotype is invalid; caught and
-	 *                                  rethrown from phenotype.Creature.
+	 *             rethrown from phenotype.Creature.
 	 */
-	@SuppressWarnings("finally")
 	public Creature getPhenotype() throws IllegalArgumentException {
 		Creature phenotype = null;
 		// If body is null, the Genotype is invalid.
 		if (body == null) {
 			throw new IllegalArgumentException(
-					"Phenotype invalid, body creation returned null.");
+					"Can't create phenotype; content of field body was null.");
 		} else {
 			Vector3 rootForwardStart = Vector3.FORWARD;
 			Vector3 rootUpStart = Vector3.UP;
 			// Return a new Creature (phenotype) with the calculated values.
 			try {
 				phenotype = new Creature(body, rootForwardStart, rootUpStart);
+				return phenotype;
 			} catch (IllegalArgumentException ex) {;
 				throw ex;
-			} finally {
-				return phenotype;
 			}
 		}
 	}
@@ -595,292 +621,211 @@ public class Genotype implements Cloneable {
 			}
 		}
 	}
-
+	
 	/**
 	 * Gets the Block array representing this Genotype's body.
 	 * 
 	 * @return Block array representing this Genotype's body.
+	 * @throws GeneticsException if parsing detected an error.
+	 * @throws IllegalArgumentException if one of the Builder class setters
+	 * 		       was passed an invalid argument.
 	 */
-	public Block[] buildBody() {
-		int numBlocks = 0;
-		ArrayList<Block> blocks = new ArrayList<Block>();
+	public Block[] buildBody() throws GeneticsException,
+			IllegalArgumentException {
+		ArrayList<Block> body = new ArrayList<Block>();
 		ArrayList<Rule> dof1 = new ArrayList<Rule>();
 		ArrayList<Rule> dof2 = new ArrayList<Rule>();
-		ArrayList<Rule> rules = dof1;
-		// Flags for open elements.
-		boolean blockOpen = false;
-		boolean jointOpen = false;
-		boolean ruleOpen = false;
-		// Set once we find the root Block (where indexToParent is null).
+		int numBlocks = 0;
+		int dof = EnumJointType.DOF_1;
 		boolean rootFound = false;
+		BlockBuilder block = new BlockBuilder();
+		JointBuilder joint = new JointBuilder();
+		RuleBuilder rule = new RuleBuilder();
 		
-		// Variables used for building the Blocks, Joints, and Rules.
-		Rule rule = null;
-		float length = 0.0f;
-		float height = 0.0f;
-		float width = 0.0f;
-		int indexToParent = Block.PARENT_INDEX_NONE;
-		Joint jointToParent = null;
-		EnumJointType jointType = null;
-		EnumJointSite jointSiteOnParent = null;
-        EnumJointSite jointSiteOnChild = null;
-        float jointOrientation = 0.0f;
-        NeuronInput ruleInputA = null;
-        NeuronInput ruleInputB = null;
-        NeuronInput ruleInputC = null;
-        NeuronInput ruleInputD = null;
-        NeuronInput ruleInputE = null;
-        EnumOperatorBinary binaryOperator1 = null;
-        EnumOperatorUnary unaryOperator2 = null;
-        EnumOperatorBinary binaryOperator3 = null;
-        EnumOperatorUnary unaryOperator4 = null;
-
-		// Iterate over the list and grab the metadata.
-		for (Gene gene : chromosome) {
+		// Iterate over the chromosome and parse it into the body.
+		for (int i = 0; i < chromosome.size(); i++) {
+			Gene gene = chromosome.get(i);
 			Trait trait = gene.getTrait();
 			Object value = gene.getValue();
 			
+			Gene nextGene;
+			Trait nextTrait;
+			if (i + 1 < chromosome.size()) {
+				nextGene = chromosome.get(i + 1);
+				nextTrait = nextGene.getTrait();
+			} else {
+				nextGene = null;
+				nextTrait = null;
+			}
+			
 			switch (trait) {
 				// Trait LENGTH is a special case: it marks the beginning of
-				// the encoding for a new Block, so close construction of the
-				// previous block and add it to the list.
+				// the encoding for a new Block. Since the Block can't be
+				// closed until any Joint and Rules are accounted for, this
+				// Builder will remain open until the start of the next Block
+				// or the end of the strand.
 				case LENGTH:
-					if (blockOpen) {
-						// Close the open rule.
-						if (ruleOpen) {
-							rules.add(rule);
-						}
-						// Close the open joint.
-						if (jointOpen) {
-							Joint joint = new Joint(jointType, 
-													jointSiteOnParent,
-						             				jointSiteOnChild,
-						             				jointOrientation);
-							// Add the currently open Rule list to the Joint.
-						if (jointType.getDoF() > 0) {
-							for (Rule r : dof1) {
-								if (r != null) {
-									joint.addRule(r, EnumJointType.DOF_1);
-								}
-							}
-							if (jointType.getDoF() > 1) {
-								for (Rule r : dof2) {
-									if (r != null) {
-										joint.addRule(r, EnumJointType.DOF_2);
-									}
-								}
-							}
-						}
-							jointToParent = joint;
-						}
-						
-						Block block = new Block(indexToParent, jointToParent,
-								 				length, height, width);
-						blocks.add(block);
-						// Clear all variables.
-						rule = null;
-						length = 0.0f;
-						height = 0.0f;
-						width = 0.0f;
-						indexToParent = Block.PARENT_INDEX_NONE;
-						jointToParent = null;
-						jointType = null;
-						jointSiteOnParent = null;
-				        jointSiteOnChild = null;
-				        jointOrientation = 0.0f;
-				        ruleInputA = null;
-				        ruleInputB = null;
-				        ruleInputC = null;
-				        ruleInputD = null;
-				        ruleInputE = null;
-				        binaryOperator1 = null;
-				        unaryOperator2 = null;
-				        binaryOperator3 = null;
-				        unaryOperator4 = null;
-				        dof1.clear();
-				        dof2.clear();
-				        rules = dof1;
-					}
-					jointOpen = false;
-					ruleOpen = false;
-					blockOpen = true;
-					length = (Float) value;
+					block = new BlockBuilder();
+					block.setLength((Float) value);
 					numBlocks++;
 					break;
 				// Width and height.
 				case HEIGHT:
-					height = (Float) value;
+					block.setHeight((Float) value);
 					break;
 				case WIDTH:
-					width = (Float) value;
+					block.setWidth((Float) value);
 					break;
 				// If the trait is INDEX_TO_PARENT, since the body must have
 				// exactly one root, whose indexToParent is null, we need
 				// to check if rootFound has already been set.
 				case INDEX_TO_PARENT:
-					indexToParent = (Integer) value;
-					if (!rootFound && indexToParent ==
-							Block.PARENT_INDEX_NONE) {
-						rootFound = true;
-					} else if (rootFound && indexToParent ==
-							Block.PARENT_INDEX_NONE) {
-						// If multiple roots, Genotype is invalid. Return null.
-						return null;
+					int index = (Integer) value;
+					// If multiple roots, Genotype is invalid. Return null.
+					if (index == Block.PARENT_INDEX_NONE) {
+						if (rootFound) {
+							return null;
+						} else {
+							rootFound = true;
+						}
 					}
+					block.setIndexToParent(index);
 					break;
-				// JOINT_TYPE is the first Gene of a Joint set, so we need to
-				// close the previous Joint and add it before we continue.
+				// JOINT_TYPE is the first Gene of a Joint set. Like the
+				// BlockBuilder, this JointBuilder will remain open until the
+				// start of the next Block or the end of the strand.
 				case JOINT_TYPE:
-					if (jointOpen) {
-						if (ruleOpen) {
-							rules.add(rule);
-						}
-						Joint joint = new Joint(jointType, jointSiteOnParent,
-					             				jointSiteOnChild,
-					             				jointOrientation);
-						// Add the Rule tables to the Joint
-						if (jointType.getDoF() > 0) {
-							for (Rule r : dof1) {
-								if (r != null) {
-									joint.addRule(r, EnumJointType.DOF_1 - 1);
-								}
-							}
-							if (jointType.getDoF() > 1) {
-								for (Rule r : dof2) {
-									if (r != null) {
-										joint.addRule(r,
-												EnumJointType.DOF_2 - 1);
-									}
-								}
-							}
-						}
-						dof1.clear();
-						dof2.clear();
-						rules = dof1;
-						jointToParent = joint;
-						jointOpen = false;
-					}
-					ruleOpen = false;
-					jointOpen = true;
-					jointType = (EnumJointType) value;
+					joint = new JointBuilder();
+					joint.setType((EnumJointType) value);
 					break;
 				// Joint orientation and sites.
 				case JOINT_ORIENTATION:
-					jointOrientation = (Float) value;
+					joint.setOrientation((Float) value);
 					break;
 				case JOINT_SITE_ON_PARENT:
-					jointSiteOnParent = (EnumJointSite) value;
+					joint.setSiteOnParent((EnumJointSite) value);
 					break;
 				case JOINT_SITE_ON_CHILD:
-					jointSiteOnChild = (EnumJointSite) value;
+					joint.setSiteOnChild((EnumJointSite) value);
 					break;
 				// Rule input A marks the beginning of a new Rule definition.
-				// Like Block and Joint, the old one needs to be closed first.
+				// Unlike the BlockBuilder and JointBuilder, this RuleBuilder
+				// can be closed as soon as we encounter a UNARY_OPERATOR_4,
+				// which marks the end of the Rule.
 				case RULE_INPUT_A:
-					if (ruleOpen) {
-						rules.add(rule);
-					}
-					ruleOpen = true;
-					rule = new Rule();
-					ruleInputA = (NeuronInput) value;
-					rule.setInput(ruleInputA, 0);
+					rule = new RuleBuilder();
+					rule.setNeuronInputA((NeuronInput) value);
 					break;
 				// Rule inputs B-E.
 				case RULE_INPUT_B:
-					ruleInputB = (NeuronInput) value;
-					rule.setInput(ruleInputB, 1);
+					rule.setNeuronInputB((NeuronInput) value);
 					break;
 				case RULE_INPUT_C:
-					ruleInputC = (NeuronInput) value;
-					rule.setInput(ruleInputC, 2);
+					rule.setNeuronInputC((NeuronInput) value);
 					break;
 				case RULE_INPUT_D:
-					ruleInputD = (NeuronInput) value;
-					rule.setInput(ruleInputD, 3);
+					rule.setNeuronInputD((NeuronInput) value);
 					break;
 				case RULE_INPUT_E:
-					ruleInputE = (NeuronInput) value;
-					rule.setInput(ruleInputE, 4);
+					rule.setNeuronInputE((NeuronInput) value);
 					break;
 				// Binary and unary operators.
 				case BINARY_OPERATOR_1:
-					binaryOperator1 = (EnumOperatorBinary) value;
-					rule.setOp1(binaryOperator1);						
+					rule.setOp1((EnumOperatorBinary) value);
 					break;
 				case UNARY_OPERATOR_2:
-					unaryOperator2 = (EnumOperatorUnary) value;
-					rule.setOp2(unaryOperator2);
+					rule.setOp2((EnumOperatorUnary) value);
 					break;
 				case BINARY_OPERATOR_3:
-					binaryOperator3 = (EnumOperatorBinary) value;
-					rule.setOp3(binaryOperator3);
+					rule.setOp3((EnumOperatorBinary) value);
 					break;
+				// UNARY_OPERATOR_4 marks the end of a Rule, so it can close.
 				case UNARY_OPERATOR_4:
-					unaryOperator4 = (EnumOperatorUnary) value;
-					rule.setOp4(unaryOperator4);
+					rule.setOp4((EnumOperatorUnary) value);
+					Rule r = rule.toRule();
+					
+					if (r != null) {
+						if (dof == EnumJointType.DOF_1) {
+							dof1.add(r);
+						} else {
+							dof2.add(r);
+						}
+					} else {
+						throw new GeneticsException(
+								"Gene " + i + ": RuleBuilder was null.");
+					}
+					
+					rule = new RuleBuilder();
 					break;
 				// If we find a degree of freedom Allele, switch rules to point
 				// to the second DoF list.
 				case DOF_MARKER:
-					if (ruleOpen) {
-						rules.add(rule);
-						ruleOpen = false;
+					int numDoFs = joint.getNumDoFs();
+					// -1 is the error code for a null Joint type.
+					if (numDoFs == -1) {
+						throw new GeneticsException(
+								"Gene " + i + ": found DoF marker before " +
+								"assigning Joint type, or found DoF marker " +
+								"for null or empty Joint");
+					} else if (numDoFs < 2) {
+						throw new GeneticsException(
+								"Gene " + i + ": found DoF marker for " +
+								"non-spherical Joint.");
+					} else {
+						dof = EnumJointType.DOF_2;
 					}
-					rules = (value.equals(EnumJointType.DOF_1) ? dof1 : dof2);
 					break;
 				// Default case catches EMPTY. Empty genes aren't expressed.
 				default:
 					// Fall through.
 			}
-		}
-		
-		if (ruleOpen) {
-			rules.add(rule);
-			ruleOpen = false;
-		}
-		
-		// The final Block and Joint should always be open at the end.
-		if (jointOpen) {
-			Joint joint = new Joint(jointType, jointSiteOnParent,
- 				jointSiteOnChild, jointOrientation);
-			jointOpen = false;
-			// Add the Rule lists to the Joint. For some reason, DOF_1 and DOF_2
-			// constants are one greater than the index to which they actually
-			// refer, so we need to subtract 1 every time.
-			jointToParent = joint;
-			jointOpen = false;
 			
-			if (jointType.getDoF() > 0) {
-				// Add the rule list(s) to the Joint.
+			// If this is the last Gene in the strand or the next Gene is the
+			// start of a new Block, close the current Block and add it to
+			// the list.
+			if (nextGene == null || nextTrait == Trait.LENGTH) {
+				
 				for (Rule r : dof1) {
-					if (r != null) {
-						joint.addRule(r, EnumJointType.DOF_1);
-					}
+					joint.setRule(r, EnumJointType.DOF_1);
 				}
-				if (jointType.getDoF() > 1) {
-					for (Rule r : dof2) {
-						if (r != null) {
-							joint.addRule(r, EnumJointType.DOF_2);
-						}
-					}
+				dof1.clear();
+				
+				for (Rule r : dof2) {
+					joint.setRule(r, EnumJointType.DOF_2);
 				}
+				dof2.clear();
+				
+				Joint j = joint.toJoint();
+				// If j is null, check if this is the root block. If so, it's
+				// fine. Otherwise, the joint is invalid.
+				if (j != null || block.isRootBlock()) {
+					block.setJointToParent(j);
+				} else {
+					throw new GeneticsException(
+							"Gene " + i + ": JointBuilder was null on a " +
+							"non-root Block.");
+				}
+				
+				Block b = block.toBlock();
+				// If b is null, the Genes for the last Block were
+				// invalid, so the strand is invalid.
+				if (b != null) {
+					body.add(b);
+				} else {
+					throw new GeneticsException(
+							"Gene " + i + ": BlockBuilder was null.");
+				}
+				
+				joint = new JointBuilder();
+				block = new BlockBuilder();
 			}
 		}
 
-		// Since there's no LENGTH trait at the end, the final block should
-		// still be open, so it needs to be added to the list.
-		if (blockOpen) {
-			blocks.add(new Block(indexToParent, jointToParent, length, height,
-					 width));
-			blockOpen = false;
-		}
-
-		// A final check to confirm that the root block was found.
 		if (!rootFound) {
-			return null;
+			throw new GeneticsException("Didn't find root Block.");
 		} else {
 			size = numBlocks;
-			return Arrays.copyOf(blocks.toArray(), blocks.size(), Block[].class);
+			return Arrays.copyOf(body.toArray(), body.size(), Block[].class);
 		}
 	}
 	
@@ -956,16 +901,6 @@ public class Genotype implements Cloneable {
 
 		return gString.toString();
 	}
-
-	/**
-	 * Override of clone. Creates a deep clone of this Genotype.
-	 * 
-	 * @return Deep clone of this Genotype.
-	 */
-	@Override
-	public Object clone() {
-		return new Genotype(this);
-	}
 	
 	/**
 	 * Main method for testing purposes.
@@ -976,37 +911,37 @@ public class Genotype implements Cloneable {
 		ArrayList<Allele> alleles = new ArrayList<Allele>();
 		ArrayList<Gene> genes;
 		// Adding some dummy Alleles to the list.
-		alleles.add(new Allele(Trait.LENGTH, 1.35f, 0.3f));
-		alleles.add(new Allele(Trait.LENGTH, 1.19f, 0.64f));
-		alleles.add(new Allele(Trait.HEIGHT, 1.42f, 0.5f));
-		alleles.add(new Allele(Trait.HEIGHT, 1.2f, 0.35f));
-		alleles.add(new Allele(Trait.WIDTH, 1.42f, 0.5f));
-		alleles.add(new Allele(Trait.WIDTH, 1.2f, 0.35f));
+		alleles.add(new Allele(Trait.LENGTH, 20.0f, 0.3f));
+		alleles.add(new Allele(Trait.LENGTH, 18.0f, 0.64f));
+		alleles.add(new Allele(Trait.HEIGHT, 25.0f, 0.5f));
+		alleles.add(new Allele(Trait.HEIGHT, 24.0f, 0.35f));
+		alleles.add(new Allele(Trait.WIDTH, 22.0f, 0.5f));
+		alleles.add(new Allele(Trait.WIDTH, 23.0f, 0.35f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				               0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
 		// Second block.
-		alleles.add(new Allele(Trait.LENGTH, 1.21f, 0.2f));
-		alleles.add(new Allele(Trait.LENGTH, 1.22f, 0.199f));
-		alleles.add(new Allele(Trait.HEIGHT, 1.4f, 0.1f));
-		alleles.add(new Allele(Trait.HEIGHT, 1.45f, 0.4f));
-		alleles.add(new Allele(Trait.WIDTH, 1.19f, 0.5f));
-		alleles.add(new Allele(Trait.WIDTH, 1.25f, 0.6f));
+		alleles.add(new Allele(Trait.LENGTH, 10.0f, 0.2f));
+		alleles.add(new Allele(Trait.LENGTH, 13.9f, 0.199f));
+		alleles.add(new Allele(Trait.HEIGHT, 14.1f, 0.1f));
+		alleles.add(new Allele(Trait.HEIGHT, 14.2f, 0.4f));
+		alleles.add(new Allele(Trait.WIDTH, 13.9f, 0.5f));
+		alleles.add(new Allele(Trait.WIDTH, 13.9f, 0.6f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
 		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
 		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.SPHERICAL,
 							   0.2f));
-		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.0f, 0.5f));
+		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.0f, 0.5f));
 		alleles.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				               EnumJointSite.EDGE_FRONT_NORTH, 0.6f));
+				               EnumJointSite.FACE_NORTH, 0.6f));
 		alleles.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-	               			   EnumJointSite.EDGE_BACK_EAST, 0.3f));
+	               			   EnumJointSite.VERTEX_BACK_NORTHWEST, 0.3f));
 		alleles.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-	               			   EnumJointSite.EDGE_BACK_SOUTH, 0.6f));
+	               			   EnumJointSite.FACE_WEST, 0.6f));
 		alleles.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-    			   			   EnumJointSite.EDGE_BACK_WEST, 0.7f));
+    			   			   EnumJointSite.FACE_WEST, 0.7f));
 		alleles.add(new Allele(Trait.RULE_INPUT_A,
 					new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
 		alleles.add(new Allele(Trait.RULE_INPUT_A,
@@ -1032,7 +967,7 @@ public class Genotype implements Cloneable {
 		alleles.add(new Allele(Trait.BINARY_OPERATOR_1,
 					EnumOperatorBinary.SUBTRACT, 0.1f));
 		alleles.add(new Allele(Trait.UNARY_OPERATOR_2,
-					EnumOperatorUnary.ABS,0.3f));
+					EnumOperatorUnary.ABS, 0.3f));
 		alleles.add(new Allele(Trait.UNARY_OPERATOR_2,
 					EnumOperatorUnary.EXP,0.2f));
 		alleles.add(new Allele(Trait.BINARY_OPERATOR_3,
@@ -1086,206 +1021,208 @@ public class Genotype implements Cloneable {
 		
 		// Build some Genes from the Alleles.
 		// Create a Genotype from the Genes.
-		Genotype genotype = new Genotype(genes);
-		
-		// addBlock test.
-		Joint newJoint = new Joint(EnumJointType.RIGID,
-				EnumJointSite.FACE_SOUTH, EnumJointSite.EDGE_BACK_NORTH,
-				30.0f);
-		Block newBlock = new Block(1, newJoint, 1.1f, 1.2f, 1.3f);
-		genotype.addBlock(newBlock);
-		
-		// addRule test.
-		Rule newRule = new Rule();
-		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 0);
-		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 1);
-		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 2);
-		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 3);
-		newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 4);
-		newRule.setOp1(EnumOperatorBinary.ADD);
-		newRule.setOp2(EnumOperatorUnary.ABS);
-		newRule.setOp3(EnumOperatorBinary.ADD);
-		newRule.setOp4(EnumOperatorUnary.ABS);
-		genotype.addRule(newRule, 1, 0, 0);
-		
-		System.out.println("---Genotype 1---");
-		System.out.println(genotype);
-		Creature phenotype = genotype.getPhenotype();
-		System.out.println("---Phenotype 1---");
-		System.out.println(phenotype);
-		
-		// Second test creature.
-		ArrayList<Allele> alleles2 = new ArrayList<Allele>();
-		ArrayList<Gene> genes2;
-		// Box 1
-		alleles2.add(new Allele(Trait.LENGTH, 1.45f, 0.37f));
-		alleles2.add(new Allele(Trait.LENGTH, 1.43f, 0.54f));
-		alleles2.add(new Allele(Trait.HEIGHT, 1.39f, 0.35f));
-		alleles2.add(new Allele(Trait.HEIGHT, 1.31f, 0.36f));
-		alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
-		alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.1f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.433f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE,
-				EnumJointType.HINGE,0.0f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE,
-				0.22f));
-		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				EnumJointSite.EDGE_FRONT_WEST, 0.6f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				EnumJointSite.EDGE_MID_SOUTHWEST, 0.3f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-				EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.6f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-				EnumJointSite.VERTEX_BACK_NORTHEAST, 0.7f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
-				EnumOperatorBinary.ADD, 0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
-				EnumOperatorBinary.SUBTRACT, 0.1f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,
-				0.3f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,
-				0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
-				EnumOperatorBinary.MULTIPLY, 0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
-				EnumOperatorBinary.ARCTAN2, 0.1f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.LOG,
-				0.3f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.SIN,
-				0.2f));
-		// Box 2 (root)
-		alleles2.add(new Allele(Trait.LENGTH, 1.29f, 0.232f));
-		alleles2.add(new Allele(Trait.LENGTH, 1.31f, 0.855f));
-		alleles2.add(new Allele(Trait.HEIGHT, 1.35f, 0.125f));
-		alleles2.add(new Allele(Trait.HEIGHT, 1.35f, 0.115f));
-		alleles2.add(new Allele(Trait.WIDTH, 1.45f, 0.5f));
-		alleles2.add(new Allele(Trait.WIDTH, 1.45f, 0.5f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
-				0.59f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
-				0.49f));
-		// Box 3
-		alleles2.add(new Allele(Trait.LENGTH, 1.45f, 0.37f));
-		alleles2.add(new Allele(Trait.LENGTH, 1.29f, 0.54f));
-		alleles2.add(new Allele(Trait.HEIGHT, 1.40f, 0.35f));
-		alleles2.add(new Allele(Trait.HEIGHT, 1.41f, 0.36f));
-		alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
-		alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.59f));
-		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.49f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
-		alleles2.add(new Allele(Trait.JOINT_TYPE,
-							    EnumJointType.HINGE, 0.22f));
-		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				EnumJointSite.EDGE_MID_NORTHWEST, 0.6f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-				EnumJointSite.FACE_EAST, 0.3f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-				EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.6f));
-		alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
-				EnumJointSite.VERTEX_FRONT_SOUTHWEST, 0.7f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.3f));
-		alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
-				EnumNeuronInputType.TIME), 0.25f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
-				EnumOperatorBinary.ADD, 0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
-				EnumOperatorBinary.SUBTRACT, 0.1f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,
-				0.3f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,
-				0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
-				EnumOperatorBinary.MULTIPLY, 0.2f));
-		alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
-				EnumOperatorBinary.ARCTAN2, 0.1f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.LOG,
-				0.3f));
-		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.SIN,
-				0.2f));
-		
-		genes2 = Gene.allelesToGenes(alleles2);
-		
-		Genotype genotype2 = new Genotype(genes2);
-		System.out.println("---Genotype 2---");
-		System.out.println(genotype2);
-		Creature phenotype2 = genotype2.getPhenotype();
-		System.out.println("---Phenotype 2---");
-		System.out.println(phenotype2);
-		
-		// Crossover test.
-		System.out.println("Starting crossover test.");
-		Genotype[] children = crossover(genotype, genotype2, Strategy.RANDOM);
-		System.out.println("---Child 1---");
-		System.out.println(children[0]);
-		System.out.println("---Child 1 Phenotype---");
+		Genotype genotype = null;
 		try {
-			System.out.println(children[0].getPhenotype());
-		} catch (IllegalArgumentException ex) {
+			genotype = new Genotype(genes);
+			// addBlock test.
+			Joint newJoint = new Joint(EnumJointType.RIGID,
+					EnumJointSite.FACE_SOUTH, EnumJointSite.FACE_WEST,
+					30.0f);
+			Block newBlock = new Block(1, newJoint, 1.1f, 1.2f, 1.3f);
+			genotype.addBlock(newBlock);
+			// addRule test.
+			Rule newRule = new Rule();
+			newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 0);
+			newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 1);
+			newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 2);
+			newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 3);
+			newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 4);
+			newRule.setOp1(EnumOperatorBinary.ADD);
+			newRule.setOp2(EnumOperatorUnary.ABS);
+			newRule.setOp3(EnumOperatorBinary.ADD);
+			newRule.setOp4(EnumOperatorUnary.ABS);
+			genotype.addRule(newRule, 1, 0, 0);
+			
+			System.out.println("---Genotype 1---");
+			System.out.println(genotype);
+			Creature phenotype = genotype.getPhenotype();
+			System.out.println("---Phenotype 1---");
+			System.out.println(phenotype);
+		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
-		} finally {
+		}
+		
+		try {			
+			// Second test creature.
+			ArrayList<Allele> alleles2 = new ArrayList<Allele>();
+			ArrayList<Gene> genes2;
+			// Box 1
+			alleles2.add(new Allele(Trait.LENGTH, 1.45f, 0.37f));
+			alleles2.add(new Allele(Trait.LENGTH, 1.43f, 0.54f));
+			alleles2.add(new Allele(Trait.HEIGHT, 1.39f, 0.35f));
+			alleles2.add(new Allele(Trait.HEIGHT, 1.31f, 0.36f));
+			alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
+			alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.1f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.433f));
+			alleles2.add(new Allele(Trait.JOINT_TYPE,
+					EnumJointType.HINGE,0.0f));
+			alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE,
+					0.22f));
+			alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+			alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+			alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
+					EnumJointSite.EDGE_FRONT_WEST, 0.6f));
+			alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
+					EnumJointSite.EDGE_MID_SOUTHWEST, 0.3f));
+			alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
+					EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.6f));
+			alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
+					EnumJointSite.VERTEX_BACK_NORTHEAST, 0.7f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
+					EnumOperatorBinary.ADD, 0.2f));
+			alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
+					EnumOperatorBinary.SUBTRACT, 0.1f));
+			alleles2.add(new Allele(Trait.UNARY_OPERATOR_2,
+					EnumOperatorUnary.ABS, 0.3f));
+			alleles2.add(new Allele(Trait.UNARY_OPERATOR_2,
+					EnumOperatorUnary.EXP, 0.2f));
+			alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
+					EnumOperatorBinary.MULTIPLY, 0.2f));
+			alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
+					EnumOperatorBinary.ARCTAN2, 0.1f));
+			alleles2.add(new Allele(Trait.UNARY_OPERATOR_4,
+					EnumOperatorUnary.LOG, 0.3f));
+			alleles2.add(new Allele(Trait.UNARY_OPERATOR_4,
+					EnumOperatorUnary.SIN, 0.2f));
+			// Box 2 (root)
+			alleles2.add(new Allele(Trait.LENGTH, 1.29f, 0.232f));
+			alleles2.add(new Allele(Trait.LENGTH, 1.31f, 0.855f));
+			alleles2.add(new Allele(Trait.HEIGHT, 1.35f, 0.125f));
+			alleles2.add(new Allele(Trait.HEIGHT, 1.35f, 0.115f));
+			alleles2.add(new Allele(Trait.WIDTH, 1.45f, 0.5f));
+			alleles2.add(new Allele(Trait.WIDTH, 1.45f, 0.5f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT,
+					Block.PARENT_INDEX_NONE, 0.59f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT,
+					Block.PARENT_INDEX_NONE, 0.49f));
+			// Box 3
+			alleles2.add(new Allele(Trait.LENGTH, 1.45f, 0.37f));
+			alleles2.add(new Allele(Trait.LENGTH, 1.29f, 0.54f));
+			alleles2.add(new Allele(Trait.HEIGHT, 1.40f, 0.35f));
+			alleles2.add(new Allele(Trait.HEIGHT, 1.41f, 0.36f));
+			alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
+			alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.59f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.49f));
+			alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST,
+					0.0f));
+			alleles2.add(new Allele(Trait.JOINT_TYPE,
+								    EnumJointType.HINGE, 0.22f));
+			alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+			alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
+			alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
+					EnumJointSite.EDGE_MID_NORTHWEST, 0.6f));
+			alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
+					EnumJointSite.FACE_EAST, 0.3f));
+			alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
+					EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.6f));
+			alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
+					EnumJointSite.VERTEX_FRONT_SOUTHWEST, 0.7f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_A, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_B, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_C, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_D, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.3f));
+			alleles2.add(new Allele(Trait.RULE_INPUT_E, new NeuronInput(
+					EnumNeuronInputType.TIME), 0.25f));
+			alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
+					EnumOperatorBinary.ADD, 0.2f));
+			alleles2.add(new Allele(Trait.BINARY_OPERATOR_1,
+					EnumOperatorBinary.SUBTRACT, 0.1f));
+			alleles2.add(new Allele(Trait.UNARY_OPERATOR_2,
+					EnumOperatorUnary.ABS, 0.3f));
+			alleles2.add(new Allele(Trait.UNARY_OPERATOR_2,
+					EnumOperatorUnary.EXP, 0.2f));
+			alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
+					EnumOperatorBinary.MULTIPLY, 0.2f));
+			alleles2.add(new Allele(Trait.BINARY_OPERATOR_3,
+					EnumOperatorBinary.ARCTAN2, 0.1f));
+			alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, 
+					EnumOperatorUnary.LOG, 0.3f));
+			alleles2.add(new Allele(Trait.UNARY_OPERATOR_4,
+					EnumOperatorUnary.SIN, 0.2f));
+			
+			genes2 = Gene.allelesToGenes(alleles2);
+			
+			Genotype genotype2 = new Genotype(genes2);
+			
+			System.out.println("---Genotype 2---");
+			System.out.println(genotype2);
+			Creature phenotype2 = genotype2.getPhenotype();
+			System.out.println("---Phenotype 2---");
+			System.out.println(phenotype2);
+			
+			// Crossover test.
+			System.out.println("Starting crossover test.");
+			
+			Genotype[] children = crossover(genotype, genotype2,
+					Strategy.RANDOM);
+			System.out.println("---Child 1---");
+			System.out.println(children[0]);
+			System.out.println("---Child 1 Phenotype---");
+			System.out.println(children[0].getPhenotype());
 			System.out.println("---Child 2---");
 			System.out.println(children[1]);
-			try {
-				System.out.println("---Child 2 Phenotype---");
-				System.out.println(children[1].getPhenotype());
-			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
+			System.out.println("---Child 2 Phenotype---");
+			System.out.println(children[1].getPhenotype());
+			
+			System.out.println("---Genotype 1 Fitness Test---");
+			for (int i = 0; i < 20; i++) {
+				System.out.println("Fitness 1 @ " + i + " = "
+									+ phenotype2.advanceSimulation());
 			}
-		}
-		
-		System.out.println("---Genotype 1 Fitness Test---");
-		for (int i = 0; i < 20; i++) {
-			System.out.println("Fitness 1 @ " + i + " = "
-								+ phenotype.advanceSimulation());
-		}
-		
-		System.out.println("---Genotype 2 Fitness Test---");
-		for (int i = 0; i < 20; i++) {
-			System.out.println("Fitness 2 @ " + i + " = "
-								+ phenotype2.advanceSimulation());
+			
+			System.out.println("---Genotype 2 Fitness Test---");
+			for (int i = 0; i < 20; i++) {
+				System.out.println("Fitness 2 @ " + i + " = "
+									+ phenotype2.advanceSimulation());
+			}
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			ex.printStackTrace();
 		}
 		// NOTE: float test for NaN -> Float.isNaN(value);
 	}

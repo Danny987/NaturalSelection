@@ -35,26 +35,33 @@ public class Crossover {
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	public static Genotype[] crossover(Genotype parentA, Genotype parentB,
-									   Strategy strategy) {
+			Strategy strategy) throws IllegalArgumentException,
+			GeneticsException {
 		Genotype[] children = null;
 		
-		switch (strategy) {
-			case SINGLE_POINT:
-				children = singlePoint(parentA, parentB);
-				break;
-			case DOUBLE_POINT:
-				children = doublePoint(parentA, parentB);
-				break;
-			case CUT_AND_SPLICE:
-				children = cutAndSplice(parentA, parentB);
-				break;
-			case RANDOM:
-				children = randomCross(parentA, parentB);
-				break;
-			default:
-				// Fall through.
+		try {
+			switch (strategy) {
+				case SINGLE_POINT:
+					children = singlePoint(parentA, parentB);
+					break;
+				case DOUBLE_POINT:
+					children = doublePoint(parentA, parentB);
+					break;
+				case CUT_AND_SPLICE:
+					children = cutAndSplice(parentA, parentB);
+					break;
+				case RANDOM:
+					children = randomCross(parentA, parentB);
+					break;
+				default:
+					// Fall through.
+			}
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
 		}
 		
 		return children;
@@ -68,8 +75,11 @@ public class Crossover {
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] singlePoint(Genotype parentA, Genotype parentB) {
+	private static Genotype[] singlePoint(Genotype parentA, Genotype parentB)
+				throws IllegalArgumentException, GeneticsException {
 		ArrayList<Gene> chromosomeA = parentA.getChromosome();
 		ArrayList<Gene> chromosomeB = parentB.getChromosome();
 		// Get the size of the larger chromosome.
@@ -126,9 +136,12 @@ public class Crossover {
 		trimEmpty(childA);
 		trimEmpty(childB);
 
-		Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-
-		return children;
+		try {
+			Genotype[] children = {new Genotype(childA), new Genotype(childB)};
+			return children;
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
+		}
 	}
 	
 	/**
@@ -139,8 +152,11 @@ public class Crossover {
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] doublePoint(Genotype parentA, Genotype parentB) {
+	private static Genotype[] doublePoint(Genotype parentA, Genotype parentB)
+			throws IllegalArgumentException, GeneticsException {
 		ArrayList<Gene> chromosomeA = parentA.getChromosome();
 		ArrayList<Gene> chromosomeB = parentB.getChromosome();
 		// Get the size of the larger chromosome.
@@ -198,9 +214,12 @@ public class Crossover {
 		trimEmpty(childA);
 		trimEmpty(childB);
 
-		Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-
-		return children;
+		try {
+			Genotype[] children = {new Genotype(childA), new Genotype(childB)};
+			return children;
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
+		}
 	}
 	
 	/**
@@ -211,8 +230,11 @@ public class Crossover {
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] cutAndSplice(Genotype parentA, Genotype parentB) {
+	private static Genotype[] cutAndSplice(Genotype parentA, Genotype parentB)
+			throws IllegalArgumentException, GeneticsException {
 		ArrayList<Gene> chromosomeA = parentA.getChromosome();
 		ArrayList<Gene> chromosomeB = parentB.getChromosome();
 		// Get the size of the larger chromosome.
@@ -266,9 +288,12 @@ public class Crossover {
 		trimEmpty(childA);
 		trimEmpty(childB);
 
-		Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-
-		return children;
+		try {
+			Genotype[] children = {new Genotype(childA), new Genotype(childB)};
+			return children;
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
+		}
 	}
 	
 	/**
@@ -282,8 +307,11 @@ public class Crossover {
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] randomCross(Genotype parentA, Genotype parentB) {
+	private static Genotype[] randomCross(Genotype parentA, Genotype parentB)
+			throws IllegalArgumentException, GeneticsException {
 		ArrayList<Gene> chromosomeA = parentA.getChromosome();
 		ArrayList<Gene> chromosomeB = parentB.getChromosome();
 		// Get the size of the larger chromosome.
@@ -327,9 +355,12 @@ public class Crossover {
 		}
 		// If the child Gene pulled a matched pair of empty Alleles, it will
 		// be trimmed when instantiating the new Genotypes.
-		Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-
-		return children;
+		try {
+			Genotype[] children = {new Genotype(childA), new Genotype(childB)};
+			return children;
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
+		}
 	}
 	
 	/**

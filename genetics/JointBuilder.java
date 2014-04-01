@@ -20,7 +20,7 @@ import creature.phenotype.*;
  * @group Danny Gomez
  * @group Marcos Lemus
  */
-public class JointBuilder {
+public class JointBuilder implements Builder {
 	private EnumJointType type;
 	private EnumJointSite siteOnParent;
 	private EnumJointSite siteOnChild;
@@ -136,14 +136,12 @@ public class JointBuilder {
 		}
 		
 		int index;
-		
 		if (position.length > 0) {
 			if (position[0] > ruleTable[dof].size()) {
 				throw new IllegalArgumentException(
 						"Position " + position + " exceeds size of rule table."
 						+ "For degree of freedom " + dof + ", "
-						+ "valid positions are [0, " + ruleTable[dof].size()
-						+ "].");
+						+ "table size is " + ruleTable[dof].size() + ".");
 			} else {
 				index = position[0];
 			}
@@ -152,6 +150,20 @@ public class JointBuilder {
 		}
 		
 		ruleTable[dof].add(index, rule);
+	}
+	
+	/**
+	 * Getter for the degrees of freedom for this Joint's type.
+	 * 
+	 * @return Degrees of freedom of this Joint's type or -1 if type hasn't
+	 * 		   been assigned yet or is somehow otherwise null.
+	 */
+	public int getNumDoFs() {
+		if (type == null) {
+			return -1;
+		} else {
+			return type.getDoF();
+		}
 	}
 	
 	/**

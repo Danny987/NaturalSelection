@@ -20,7 +20,7 @@ import creature.phenotype.*;
  * @group Danny Gomez
  * @group Marcos Lemus
  */
-public class RuleBuilder {
+public class RuleBuilder implements Builder {
 	  private NeuronInput[] input = new NeuronInput[NeuronInput.TOTAL_INPUTS]; 
 	  private EnumOperatorBinary op1;
 	  private EnumOperatorUnary op2; 

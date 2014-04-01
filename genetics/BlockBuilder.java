@@ -18,11 +18,11 @@ import creature.phenotype.*;
  * @group Danny Gomez
  * @group Marcos Lemus
  */
-public class BlockBuilder {
+public class BlockBuilder implements Builder {
 	private float length = 0;
 	private float height = 0;
 	private float width = 0;
-	private int indexOfParent = -2;
+	private int indexToParent = -2;
 	private Joint jointToParent = null;
 	
 	/**
@@ -30,7 +30,7 @@ public class BlockBuilder {
 	 */
 	public BlockBuilder() {
 		length = height = width = 0;
-		indexOfParent = -2;
+		indexToParent = -2;
 		jointToParent = null;
 	}
 	
@@ -77,18 +77,18 @@ public class BlockBuilder {
 	}
 	
 	/**
-	 * Setter for indexOfParent.
+	 * Setter for indexToParent.
 	 * 
-	 * @param indexOfParent Array index of parent Block.
+	 * @param indexToParent Array index of parent Block.
 	 * @throws IllegalArgumentException if < 1.0.
 	 */
-	public void setIndexOfParent(int indexOfParent)
+	public void setIndexToParent(int indexToParent)
 				throws IllegalArgumentException {
-		if (indexOfParent < Block.PARENT_INDEX_NONE) {
+		if (indexToParent < Block.PARENT_INDEX_NONE) {
 			throw new IllegalArgumentException(
 					"Index of parent must be >= -1.");
 		} else {
-			this.indexOfParent = indexOfParent;
+			this.indexToParent = indexToParent;
 		}
 	}
 	
@@ -103,6 +103,17 @@ public class BlockBuilder {
 	}
 	
 	/**
+	 * Checks if this is a root block, if jointToParent is null and
+	 * indexToParent is -1.
+	 * 
+	 * @return True if this is a valid root block, false otherwise.
+	 */
+	public boolean isRootBlock() {
+		return jointToParent == null &&
+				indexToParent == Block.PARENT_INDEX_NONE;
+	}
+
+	/**
 	 * Converts the BlockBuilder into a Block. If any of the fields aren't set,
 	 * returns null.
 	 * 
@@ -111,13 +122,12 @@ public class BlockBuilder {
 	 */
 	public Block toBlock() {
 		if (length < 1 || height < 1 || width < 1 ||
-				indexOfParent < Block.PARENT_INDEX_NONE ||
-				jointToParent == null) {
+				indexToParent < Block.PARENT_INDEX_NONE) {
 			return null;
 		} else {
-			return new Block(indexOfParent, jointToParent, length,
+			return new Block(indexToParent, jointToParent, length,
 					height, width);
 		}
 	}
-
+	
 }

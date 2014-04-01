@@ -47,7 +47,7 @@ public class Allele {
 	 */
 	Allele() {
 		trait = Trait.EMPTY;
-		value = "#";
+		value = null;
 		weight = 0.0f;
 	}
 	
@@ -180,7 +180,8 @@ public class Allele {
 				int dof = (Integer) value;
 				if (dof < EnumJointType.DOF_1 || dof > EnumJointType.DOF_2) {
 					throw new IllegalArgumentException(
-							"Degree of freedom outside acceptible range.");
+							"Degree of freedom outside acceptible range; " +
+							"must be 0 or 1.");
 				}
 			default:
 				// Fall through.

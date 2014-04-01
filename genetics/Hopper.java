@@ -23,7 +23,7 @@ import creature.phenotype.*;
  * @group Danny Gomez
  * @group Marcos Lemus
  */
-public class Hopper implements Cloneable {
+public class Hopper {
 	private final String name;
 	private int age;
 	private Genotype genotype;
@@ -66,9 +66,11 @@ public class Hopper implements Cloneable {
 	 * Instantiate a new deep clone of the passed Hopper.
 	 * 
 	 * @param source Hopper to deep clone.
-	 * @throws IllegalArgumentException if Genotype or Phenotype is invalid.
+	 * @throws IllegalArgumentException if thrown by Genotype.
+	 * @throws GeneticsException if thrown by Genotype.
 	 */
-	public Hopper(Hopper source) throws IllegalArgumentException {
+	public Hopper(Hopper source) throws IllegalArgumentException,
+			GeneticsException {
 		this(new Genotype(source.getGenotype()), new String(source.getName()));
 	}
 
@@ -76,9 +78,11 @@ public class Hopper implements Cloneable {
 	 * Instantiate a new Hopper with the passed Genotype and random name.
 	 * 
 	 * @param genotype Genotype of the new Hopper.
-	 * @throws IllegalArgumentException if Genotype or Phenotype is invalid.
+	 * @throws IllegalArgumentException if thrown by Genotype.
+	 * @throws GeneticsException if thrown by Genotype.
 	 */
-	public Hopper(Genotype genotype) throws IllegalArgumentException {
+	public Hopper(Genotype genotype) throws IllegalArgumentException,
+			GeneticsException {
 		this(genotype, randomName());
 	}
 
@@ -102,23 +106,23 @@ public class Hopper implements Cloneable {
 	 *             the parents' genotypes.
 	 * @throws IllegalArgumentException if generated Genotypes/Phenotypes
 	 *             are invalid.
+	 * @throws GeneticsException if thrown by Genotype constructor.
 	 */
-	@SuppressWarnings("finally")
 	public static Hopper[] breed(Hopper parentA, Hopper parentB,
-							     Strategy strategy)
-							    		 throws IllegalArgumentException {
-		Genotype[] genotypes = Genotype.crossover(parentA.getGenotype(),
-												 parentB.getGenotype(),
-												 strategy);
-		ArrayList<Hopper> hoppers = new ArrayList<Hopper>();
+			Strategy strategy) throws IllegalArgumentException,
+			GeneticsException {
 		try {
+			Genotype[] genotypes = Genotype.crossover(parentA.getGenotype(),
+					parentB.getGenotype(), strategy);
+			ArrayList<Hopper> hoppers = new ArrayList<Hopper>();
+
 			for (Genotype g : genotypes) {
 				hoppers.add(new Hopper(g));
 			}
-		} catch (IllegalArgumentException ex) {
-			throw ex;
-		} finally {
+
 			return (Hopper[]) hoppers.toArray();
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
 		}
 	}
 	
@@ -240,16 +244,6 @@ public class Hopper implements Cloneable {
 	 */
 	public int getChildren() {
 		return children;
-	}
-	
-	/**
-	 * Override of clone for Cloneable interface.
-	 * 
-	 * @return Deep clone of this hopper.
-	 */
-	@Override
-	public Hopper clone() {
-		return new Hopper(this);
 	}
 
 	/**
