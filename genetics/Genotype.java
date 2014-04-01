@@ -866,7 +866,7 @@ public class Genotype implements Cloneable {
 					}
 				}
 			}
-		}	
+		}
 
 		// Since there's no LENGTH trait at the end, the final block should
 		// still be open, so it needs to be added to the list.
@@ -1279,8 +1279,14 @@ public class Genotype implements Cloneable {
 		
 		System.out.println("---Genotype 1 Fitness Test--");
 		for (int i = 0; i < 20; i++) {
-			System.out.println("Fitness @ " + i + " = "
+			System.out.println("Fitness 1 @ " + i + " = "
 								+ phenotype.advanceSimulation());
+		}
+		
+		System.out.println("---Genotype 2 Fitness Test--");
+		for (int i = 0; i < 20; i++) {
+			System.out.println("Fitness 2 @ " + i + " = "
+								+ phenotype2.advanceSimulation());
 		}
 		// NOTE: float test for NaN -> Float.isNaN(value);
 	}
