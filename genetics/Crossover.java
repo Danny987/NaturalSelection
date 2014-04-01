@@ -27,7 +27,9 @@ public class Crossover {
 	private static Random rand = Helper.RANDOM;
 	
 	/**
-	 * Perform crossover on two parents based on a provided strategy.
+	 * Perform crossover on two parents based on a provided strategy. Since the
+	 * positions of blocks don't matter and we need the key genes to line up,
+	 * first align the strands and shift the root block to the beginning.
 	 * 
 	 * @param Genotype parentA Genotype from parent A.
 	 * @param Genotype parentB Genotype from parent B.
@@ -43,19 +45,39 @@ public class Crossover {
 			GeneticsException {
 		Genotype[] children = null;
 		
+		ArrayList<Gene> chromosomeA = parentA.getChromosome();
+		ArrayList<Gene> chromosomeB = parentB.getChromosome();
+		// Get the size of the larger chromosome.
+		int sizeA = chromosomeA.size();
+		int sizeB = chromosomeB.size();
+		int size = (sizeA >= sizeB ? sizeA : sizeB);
+		
+		// Align the key genes.
+		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
+				chromosomeB);
+		
+		// Randomly choose the starting parent.
+		if (rand.nextInt(2) > 0) {
+			chromosomeA = newChromosomes.get(0);
+			chromosomeB = newChromosomes.get(1);			
+		} else {
+			chromosomeA = newChromosomes.get(1);
+			chromosomeB = newChromosomes.get(0);
+		}
+		
 		try {
 			switch (strategy) {
 				case SINGLE_POINT:
-					children = singlePoint(parentA, parentB);
+					children = singlePoint(chromosomeA, chromosomeB);
 					break;
 				case DOUBLE_POINT:
-					children = doublePoint(parentA, parentB);
+					children = doublePoint(chromosomeA, chromosomeB);
 					break;
 				case CUT_AND_SPLICE:
-					children = cutAndSplice(parentA, parentB);
+					children = cutAndSplice(chromosomeA, chromosomeB);
 					break;
 				case RANDOM:
-					children = randomCross(parentA, parentB);
+					children = randomCross(chromosomeA, chromosomeB);
 					break;
 				default:
 					// Fall through.
@@ -78,30 +100,14 @@ public class Crossover {
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] singlePoint(Genotype parentA, Genotype parentB)
-				throws IllegalArgumentException, GeneticsException {
-		ArrayList<Gene> chromosomeA = parentA.getChromosome();
-		ArrayList<Gene> chromosomeB = parentB.getChromosome();
-		// Get the size of the larger chromosome.
-		int sizeA = chromosomeA.size();
-		int sizeB = chromosomeB.size();
-		int size = (sizeA >= sizeB ? sizeA : sizeB);
+	private static Genotype[] singlePoint(ArrayList<Gene> chromosomeA,
+			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
+			GeneticsException {
+		
+		int size = chromosomeA.size();
 		// Create the chromosomes for the twin children.
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
-		
-		// Align the key genes.
-		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
-				chromosomeB);
-		
-		// Randomly choose the starting parent.
-		if (rand.nextInt(2) > 0) {
-			chromosomeA = newChromosomes.get(0);
-			chromosomeB = newChromosomes.get(1);			
-		} else {
-			chromosomeA = newChromosomes.get(1);
-			chromosomeB = newChromosomes.get(0);
-		}
 		
 		// Randomly choose the transition point.
 		int transition = rand.nextInt(size);

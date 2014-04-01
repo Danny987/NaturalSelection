@@ -149,6 +149,15 @@ public class Hopper {
 	}
 	
 	/**
+	 * Setter for fitness.
+	 * 
+	 * @param Hopper's new fitness as a float.
+	 */
+	public void setFitness(float fitness) {
+		this.fitness = fitness;
+	}
+	
+	/**
 	 * Checks if the fitness value is the real fitness from the simulation or
 	 * just an estimate.
 	 * 
