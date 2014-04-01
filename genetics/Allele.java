@@ -247,9 +247,11 @@ public class Allele {
 	}
 	
 	/**
-	 * Getter for the Allele's value.
+	 * Getter for the Allele's value. Note that, to actually use this for
+	 * anything useful, the Allele's trait must first be checked so the value
+	 * can be cast to the appropriate type.
 	 * 
-	 * @return The Allele's value.
+	 * @return The Allele's value as an Object.
 	 */
 	public Object getValue() {
 		return value;
@@ -258,7 +260,7 @@ public class Allele {
 	/**
 	 * Getter for the Allele's weight.
 	 * 
-	 * @return The Allele's weight.
+	 * @return The Allele's weight as a float.
 	 */
 	public float getWeight() {
 		return weight;

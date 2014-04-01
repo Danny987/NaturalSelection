@@ -443,7 +443,7 @@ public class Genotype {
 	}
 	
 	/**
-	 * Shift a DoF marker left or right by a specified amount.
+	 * Shift a DoF marker left or right by a specified number of Rules.
 	 * 
 	 * @param block Index of Block whose DoF marker should be shifted.
 	 * @param amount Number of rules to shift the marker (left is negative).
@@ -599,6 +599,7 @@ public class Genotype {
 	
 	/**
 	 * Creates the Creature (phenotype) for this Genotype with custom vectors.
+	 * No idea why this would ever be needed, but it's included in case.
 	 * 
 	 * @param rootForwardStart Vector3 a forward vector.
 	 * @param rootUpStart Vector3 an up vector.
@@ -708,7 +709,7 @@ public class Genotype {
 				case JOINT_SITE_ON_CHILD:
 					joint.setSiteOnChild((EnumJointSite) value);
 					break;
-				// Rule input A marks the beginning of a new Rule definition.
+				// RULE_INPUT_A marks the beginning of a new Rule definition.
 				// Unlike the BlockBuilder and JointBuilder, this RuleBuilder
 				// can be closed as soon as we encounter a UNARY_OPERATOR_4,
 				// which marks the end of the Rule.
@@ -754,7 +755,7 @@ public class Genotype {
 						throw new GeneticsException(
 								"Gene " + i + ": RuleBuilder was null.");
 					}
-					
+					// Reset the Builder.
 					rule = new RuleBuilder();
 					break;
 				// If we find a degree of freedom Allele, switch rules to point
@@ -762,7 +763,7 @@ public class Genotype {
 				case DOF_MARKER:
 					int numDoFs = joint.getNumDoFs();
 					// -1 is the error code for a null Joint type.
-					if (numDoFs == -1) {
+					if (numDoFs == JointBuilder.JOINT_TYPE_NULL) {
 						throw new GeneticsException(
 								"Gene " + i + ": found DoF marker before " +
 								"assigning Joint type, or found DoF marker " +
@@ -784,20 +785,22 @@ public class Genotype {
 			// start of a new Block, close the current Block and add it to
 			// the list.
 			if (nextGene == null || nextTrait == Trait.LENGTH) {
-				
+				// Get the Rules for each DoF, then clear the lists.
 				for (Rule r : dof1) {
 					joint.setRule(r, EnumJointType.DOF_1);
 				}
 				dof1.clear();
 				
-				for (Rule r : dof2) {
-					joint.setRule(r, EnumJointType.DOF_2);
+				if (joint.getNumDoFs() == 2) {
+					for (Rule r : dof2) {
+						joint.setRule(r, EnumJointType.DOF_2);
+					}
 				}
 				dof2.clear();
 				
 				Joint j = joint.toJoint();
 				// If j is null, check if this is the root block. If so, it's
-				// fine. Otherwise, the joint is invalid.
+				// fine. Otherwise, the Joint is invalid.
 				if (j != null || block.isRootBlock()) {
 					block.setJointToParent(j);
 				} else {
@@ -815,7 +818,7 @@ public class Genotype {
 					throw new GeneticsException(
 							"Gene " + i + ": BlockBuilder was null.");
 				}
-				
+				// Reset the Builders.
 				joint = new JointBuilder();
 				block = new BlockBuilder();
 			}
@@ -1221,6 +1224,29 @@ public class Genotype {
 				System.out.println("Fitness 2 @ " + i + " = "
 									+ phenotype2.advanceSimulation());
 			}
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			ex.printStackTrace();
+		}
+		
+		try {
+			ArrayList<Allele> alleles3 = new ArrayList<Allele>();
+			alleles3.add(new Allele(Trait.LENGTH, 1.0f, 0.37f));
+			alleles3.add(new Allele(Trait.LENGTH, 1.0f, 0.54f));
+			alleles3.add(new Allele(Trait.HEIGHT, 1.0f, 0.35f));
+			alleles3.add(new Allele(Trait.HEIGHT, 1.0f, 0.36f));
+			alleles3.add(new Allele(Trait.WIDTH, 1.0f, 0.5f));
+			alleles3.add(new Allele(Trait.WIDTH, 1.0f, 0.5f));
+			alleles3.add(new Allele(Trait.INDEX_TO_PARENT,
+					Block.PARENT_INDEX_NONE, 0.1f));
+			alleles3.add(new Allele(Trait.INDEX_TO_PARENT,
+					Block.PARENT_INDEX_NONE, 0.433f));
+			ArrayList<Gene> genes3 = Gene.allelesToGenes(alleles3);
+			Genotype genotype3 = new Genotype(genes3);
+			Creature phenotype3 = genotype3.getPhenotype();
+			System.out.println("---Genotype 3---");
+			System.out.println(genotype3);
+			System.out.println("---Phenotype 3---");
+			System.out.println(phenotype3);
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
