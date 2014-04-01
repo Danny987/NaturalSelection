@@ -660,14 +660,13 @@ public class Genotype implements Cloneable {
 						if (jointType.getDoF() > 0) {
 							for (Rule r : dof1) {
 								if (r != null) {
-									joint.addRule(r, EnumJointType.DOF_1 - 1);
+									joint.addRule(r, EnumJointType.DOF_1);
 								}
 							}
 							if (jointType.getDoF() > 1) {
 								for (Rule r : dof2) {
 									if (r != null) {
-										joint.addRule(r,
-												EnumJointType.DOF_2 - 1);
+										joint.addRule(r, EnumJointType.DOF_2);
 									}
 								}
 							}
@@ -855,13 +854,13 @@ public class Genotype implements Cloneable {
 				// Add the rule list(s) to the Joint.
 				for (Rule r : dof1) {
 					if (r != null) {
-						joint.addRule(r, EnumJointType.DOF_1 - 1);
+						joint.addRule(r, EnumJointType.DOF_1);
 					}
 				}
 				if (jointType.getDoF() > 1) {
 					for (Rule r : dof2) {
 						if (r != null) {
-							joint.addRule(r, EnumJointType.DOF_2 - 1);
+							joint.addRule(r, EnumJointType.DOF_2);
 						}
 					}
 				}
@@ -1109,10 +1108,10 @@ public class Genotype implements Cloneable {
 		newRule.setOp4(EnumOperatorUnary.ABS);
 		genotype.addRule(newRule, 1, 0, 0);
 		
-		System.out.println("---Genotype1---");
+		System.out.println("---Genotype 1---");
 		System.out.println(genotype);
 		Creature phenotype = genotype.getPhenotype();
-		System.out.println("---Phenotype1---");
+		System.out.println("---Phenotype 1---");
 		System.out.println(phenotype);
 		
 		// Second test creature.
@@ -1250,40 +1249,40 @@ public class Genotype implements Cloneable {
 		genes2 = Gene.allelesToGenes(alleles2);
 		
 		Genotype genotype2 = new Genotype(genes2);
-		System.out.println("---Genotype2---");
+		System.out.println("---Genotype 2---");
 		System.out.println(genotype2);
 		Creature phenotype2 = genotype2.getPhenotype();
-		System.out.println("---Phenotype2---");
+		System.out.println("---Phenotype 2---");
 		System.out.println(phenotype2);
 		
 		// Crossover test.
 		System.out.println("Starting crossover test.");
 		Genotype[] children = crossover(genotype, genotype2, Strategy.RANDOM);
-		System.out.println("---Child1---");
+		System.out.println("---Child 1---");
 		System.out.println(children[0]);
-		System.out.println("---Child1 Phenotype---");
+		System.out.println("---Child 1 Phenotype---");
 		try {
 			System.out.println(children[0].getPhenotype());
 		} catch (IllegalArgumentException ex) {
 			ex.printStackTrace();
 		} finally {
-			System.out.println("---Child2---");
+			System.out.println("---Child 2---");
 			System.out.println(children[1]);
 			try {
-				System.out.println("---Child2 Phenotype---");
+				System.out.println("---Child 2 Phenotype---");
 				System.out.println(children[1].getPhenotype());
 			} catch (IllegalArgumentException ex) {
 				ex.printStackTrace();
 			}
 		}
 		
-		System.out.println("---Genotype 1 Fitness Test--");
+		System.out.println("---Genotype 1 Fitness Test---");
 		for (int i = 0; i < 20; i++) {
 			System.out.println("Fitness 1 @ " + i + " = "
 								+ phenotype.advanceSimulation());
 		}
 		
-		System.out.println("---Genotype 2 Fitness Test--");
+		System.out.println("---Genotype 2 Fitness Test---");
 		for (int i = 0; i < 20; i++) {
 			System.out.println("Fitness 2 @ " + i + " = "
 								+ phenotype2.advanceSimulation());
