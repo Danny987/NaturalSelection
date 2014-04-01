@@ -1212,22 +1212,11 @@ public class Genotype {
 			System.out.println(children[1]);
 			System.out.println("---Child 2 Phenotype---");
 			System.out.println(children[1].getPhenotype());
-			
-			System.out.println("---Genotype 1 Fitness Test---");
-			for (int i = 0; i < 20; i++) {
-				System.out.println("Fitness 1 @ " + i + " = "
-									+ phenotype2.advanceSimulation());
-			}
-			
-			System.out.println("---Genotype 2 Fitness Test---");
-			for (int i = 0; i < 20; i++) {
-				System.out.println("Fitness 2 @ " + i + " = "
-									+ phenotype2.advanceSimulation());
-			}
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
 		
+		// Genotype3 is a single-block, (1, 1, 1) test Genotype.
 		try {
 			ArrayList<Allele> alleles3 = new ArrayList<Allele>();
 			alleles3.add(new Allele(Trait.LENGTH, 1.0f, 0.37f));
@@ -1247,6 +1236,12 @@ public class Genotype {
 			System.out.println(genotype3);
 			System.out.println("---Phenotype 3---");
 			System.out.println(phenotype3);
+			
+			System.out.println("---Genotype 3 Fitness Test---");
+			for (int i = 0; i < 20; i++) {
+				System.out.println("Fitness 3 @ " + i + " = "
+									+ phenotype3.advanceSimulation());
+			}
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
