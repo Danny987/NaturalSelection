@@ -33,17 +33,41 @@ public class Population {
 	 */
 	public Population() {
 		hoppers = new PriorityQueue<Hopper>(0,
-					new HopperAgeComparator<Hopper>());
+					new HopperFitnessComparator());
 		for (Attractor a : Attractor.values()) {
 			attractorTable.put(a, 0.0f);
 		}
 	}
 	
 	/**
+	 * A fitness Comparator for Hoppers.
+	 */
+	public static class HopperFitnessComparator implements Comparator<Hopper> {
+		/**
+		 * Override of Comparator's compare method. Compares the fitness of two
+		 * Hoppers.
+		 * 
+		 * @param hopperA First Hopper whose fitness should be compared.
+		 * @param hopperB Second Hopper whose fitness should be compared.
+		 * @return Negative int, 0, or positive int if hopperA's fitness is less
+		 *             than, equal to, or greater than hopperB's, respectively.
+		 */
+		@Override
+		public int compare(Hopper hopperA, Hopper hopperB) {
+			if (hopperA.getFitness() > hopperB.getFitness()) {
+				return -1;
+			} else if (hopperA.getFitness() > hopperB.getFitness()) {
+				return 1;
+			} else {
+				return 0;
+			}
+		}
+	}
+	
+	/**
 	 * An age Comparator for Hoppers.
 	 */
-	public static class HopperAgeComparator<Hopper> implements
-						Comparator<Hopper> {
+	public static class HopperAgeComparator implements Comparator<Hopper> {
 		/**
 		 * Override of Comparator's compare method. Compares the ages of two
 		 * Hoppers.
@@ -55,10 +79,14 @@ public class Population {
 		 */
 		@Override
 		public int compare(Hopper hopperA, Hopper hopperB) {
-			return ((creature.geeksquad.genetics.Hopper) hopperA).getAge() -
-				   ((creature.geeksquad.genetics.Hopper) hopperB).getAge();
+			if (hopperA.getAge() > hopperB.getAge()) {
+				return -1;
+			} else if (hopperA.getAge() > hopperB.getAge()) {
+				return 1;
+			} else {
+				return 0;
+			}
 		}
-		
 	}
 	
 	/**
@@ -106,9 +134,9 @@ public class Population {
 	/**
 	 * Kill off the provided list of individuals from the Population.
 	 * 
-	 * @param victims ArrayList<Hoppers> list of Hoppers to kill off.
+	 * @param victims List<Hoppers> list of Hoppers to kill off.
 	 */
-	public void cull(ArrayList<Hopper> victims) {
+	public void cull(List<Hopper> victims) {
 		for (Hopper h : victims) {
 			hoppers.remove(h);
 		}

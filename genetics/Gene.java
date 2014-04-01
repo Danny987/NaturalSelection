@@ -184,12 +184,13 @@ public class Gene {
 	 * constructor will throw an exception. If the list contains an odd number
 	 * of Alleles, the final element is ignored.
 	 * 
-	 * @param alleles
-	 *            List of Alleles. Allele pairs must be trait matched.
+	 * @param alleles List of Alleles. Allele pairs must be trait matched.
 	 * @return ArrayList<Gene> containing the generated Genes. Returns null if
 	 *         there was problem trait matching any of the Genes.
+	 * @throws IllegalArgumentException if there was a problem converting.
 	 */
-	public static ArrayList<Gene> allelesToGenes(List<Allele> alleles) {
+	public static ArrayList<Gene> allelesToGenes(List<Allele> alleles)
+					throws IllegalArgumentException{
 		ArrayList<Gene> genes = new ArrayList<Gene>();
 
 		try {
@@ -200,8 +201,7 @@ public class Gene {
 				}
 			}
 		} catch (IllegalArgumentException ex) {
-			System.err.println("allelesToGenes error: " + ex.getMessage());
-			return null;
+			throw ex;
 		}
 
 		return genes;

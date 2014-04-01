@@ -23,28 +23,37 @@ import creature.phenotype.*;
  * @group Danny Gomez
  * @group Marcos Lemus
  */
-public class Hopper {
+public class Hopper implements Cloneable {
 	private final String name;
 	private int age;
-	private final Genotype genotype;
-	private final Creature phenotype;
+	private Genotype genotype;
+	private Creature phenotype;
 	private Attractor attractor;
 	private int timesHillClimbed;
 	private int timesBred;
 	private int children;
 	private float fitness;
-	
+
 	/**
 	 * Instantiate a new Hopper with the passed Genotype and provided name.
 	 * 
 	 * @param genotype Genotype of the new Hopper.
 	 * @param name String to use as the Hopper's name.
+	 * @throws IllegalArgumentException if there was a problem creating the
+	 *             Genotype or Phenotype.
 	 */
-	public Hopper(Genotype genotype, String name) {
-		this.genotype = genotype;
-		this.phenotype = genotype.getPhenotype();
-		if (phenotype == null) {
-			System.err.println("Error: phenotype invalid.");
+	public Hopper(Genotype genotype, String name)
+			throws IllegalArgumentException {
+		try {
+			this.genotype = genotype;
+			this.phenotype = genotype.getPhenotype();
+		} catch (IllegalArgumentException ex) {
+			this.genotype = null;
+			this.phenotype = null;
+			throw ex;
+		}
+		if (genotype == null || phenotype == null) {
+			System.err.println("Error: genotype/phenotype invalid.");
 		}
 		this.name = name;
 		age = 0;
@@ -52,25 +61,27 @@ public class Hopper {
 		timesBred = 0;
 		children = 0;
 	}
-	
+
 	/**
 	 * Instantiate a new deep clone of the passed Hopper.
 	 * 
 	 * @param source Hopper to deep clone.
+	 * @throws IllegalArgumentException if Genotype or Phenotype is invalid.
 	 */
-	public Hopper(Hopper source) {
+	public Hopper(Hopper source) throws IllegalArgumentException {
 		this(new Genotype(source.getGenotype()), new String(source.getName()));
 	}
-	
+
 	/**
 	 * Instantiate a new Hopper with the passed Genotype and random name.
 	 * 
 	 * @param genotype Genotype of the new Hopper.
+	 * @throws IllegalArgumentException if Genotype or Phenotype is invalid.
 	 */
-	public Hopper(Genotype genotype) {
+	public Hopper(Genotype genotype) throws IllegalArgumentException {
 		this(genotype, randomName());
 	}
-	
+
 	/**
 	 * Gets a random name for the Hopper.
 	 * 
@@ -80,7 +91,7 @@ public class Hopper {
 		// TODO
 		return "";
 	}
-	
+
 	/**
 	 * Breed two Hoppers.
 	 * 
@@ -88,21 +99,49 @@ public class Hopper {
 	 * @param parentB Second parent Hopper.
 	 * @param strategy Strategy of Crossover to use in breeding.
 	 * @return An array of twin child Hoppers resulting from the crossover of
-	 *         the parents' genotypes.
+	 *             the parents' genotypes.
+	 * @throws IllegalArgumentException if generated Genotypes/Phenotypes
+	 *             are invalid.
 	 */
+	@SuppressWarnings("finally")
 	public static Hopper[] breed(Hopper parentA, Hopper parentB,
-							     Strategy strategy) {
+							     Strategy strategy)
+							    		 throws IllegalArgumentException {
 		Genotype[] genotypes = Genotype.crossover(parentA.getGenotype(),
 												 parentB.getGenotype(),
 												 strategy);
 		ArrayList<Hopper> hoppers = new ArrayList<Hopper>();
-		for (Genotype g : genotypes) {
-			hoppers.add(new Hopper(g));
+		try {
+			for (Genotype g : genotypes) {
+				hoppers.add(new Hopper(g));
+			}
+		} catch (IllegalArgumentException ex) {
+			throw ex;
+		} finally {
+			return (Hopper[]) hoppers.toArray();
 		}
-
-		return (Hopper[]) hoppers.toArray();
 	}
 	
+	/**
+	 * A pass-through getter for the Hopper's body, which calls Genotype's
+	 * getBody method.
+	 * 
+	 * @return The Hopper's body as a Block array as passed through from its
+	 * 	       Genotype's getBody method.
+	 */
+	public Block[] getBody() {
+		return genotype.getBody();
+	}
+	
+	/**
+	 * Getter for fitness.
+	 * 
+	 * @return Hopper's fitness as a float.
+	 */
+	public float getFitness() {
+		return fitness;
+	}
+
 	/**
 	 * Increment age.
 	 * 
@@ -111,7 +150,7 @@ public class Hopper {
 	public int grow() {
 		return ++age;
 	}
-	
+
 	/**
 	 * Getter for age.
 	 * 
@@ -120,16 +159,17 @@ public class Hopper {
 	public int getAge() {
 		return age;
 	}
-	
+
 	/**
 	 * Setter for age.
 	 * 
-	 * @param age Hopper's new age as an int.
+	 * @param age
+	 *            Hopper's new age as an int.
 	 */
 	public void setAge(int age) {
 		this.age = age;
 	}
-	
+
 	/**
 	 * Getter for name.
 	 * 
@@ -147,16 +187,16 @@ public class Hopper {
 	public Genotype getGenotype() {
 		return genotype;
 	}
-	
+
 	/**
 	 * Getter for phenotype.
 	 * 
 	 * @return The Hopper's Creature (phenotype).
 	 */
-	public Creature getPhenotype() {		
+	public Creature getPhenotype() {
 		return phenotype;
 	}
-	
+
 	/**
 	 * Getter for attractor.
 	 * 
@@ -165,7 +205,7 @@ public class Hopper {
 	public Attractor getAttractor() {
 		return attractor;
 	}
-	
+
 	/**
 	 * Setter for attractor.
 	 * 
@@ -174,7 +214,7 @@ public class Hopper {
 	public void setAttractor(Attractor attractor) {
 		this.attractor = attractor;
 	}
-	
+
 	/**
 	 * Getter for timesHillClimbed.
 	 * 
@@ -183,7 +223,7 @@ public class Hopper {
 	public int getTimesHillClimbed() {
 		return timesHillClimbed;
 	}
-	
+
 	/**
 	 * Getter for timesBred.
 	 * 
@@ -192,7 +232,7 @@ public class Hopper {
 	public int getTimesBred() {
 		return timesBred;
 	}
-	
+
 	/**
 	 * Getter for children.
 	 * 
@@ -203,30 +243,34 @@ public class Hopper {
 	}
 	
 	/**
+	 * Override of clone for Cloneable interface.
+	 * 
+	 * @return Deep clone of this hopper.
+	 */
+	@Override
+	public Hopper clone() {
+		return new Hopper(this);
+	}
+
+	/**
 	 * Override of toString.
 	 * 
 	 * @return String representation of this Hopper.
 	 */
 	@Override
 	public String toString() {
-		return "<creature>" + Helper.NEWLINE +
-			   "<name>" + Helper.NEWLINE +
-			   name + Helper.NEWLINE +
-			   "</name>" + Helper.NEWLINE +
-			   "<genotype>" + Helper.NEWLINE + 
-			   genotype.toString() + Helper.NEWLINE +
-			   "</genotype>" + Helper.NEWLINE +
-			   "</creature>";
+		return "<creature>" + Helper.NEWLINE + "<name>" + Helper.NEWLINE + name
+				+ Helper.NEWLINE + "</name>" + Helper.NEWLINE + "<genotype>"
+				+ Helper.NEWLINE + genotype.toString() + Helper.NEWLINE
+				+ "</genotype>" + Helper.NEWLINE + "</creature>";
 	}
-	
+
 	/**
 	 * Nested Attractor class for helping with two-stage selection. Primary
 	 * selection is always based on fitness.
 	 */
 	public static enum Attractor {
-		SURFACE_AREA,
-		TOP_BOTTOM_RATIO,
-		WEIGHT,
+		SURFACE_AREA, TOP_BOTTOM_RATIO, WEIGHT,
 		//
 		// Duplicates of Allele.Trait
 		//
@@ -248,7 +292,7 @@ public class Hopper {
 		UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule)
 		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
 		UNARY_OPERATOR_4; // 4 (unary operator in the 2nd neuron of a rule)
-		
+
 		/**
 		 * Override of toString.
 		 * 
@@ -259,7 +303,7 @@ public class Hopper {
 			return name();
 		}
 	}
-	
+
 	/**
 	 * Main method for testing.
 	 * 
@@ -270,5 +314,5 @@ public class Hopper {
 		// TODO
 		//
 	}
-	
+
 }

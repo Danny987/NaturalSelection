@@ -52,8 +52,10 @@ public class Genotype implements Cloneable {
 	 * 
 	 * @param source ArrayList<Gene> containing the chromosomes for this
 	 * 			     Genotype.
+	 * @throws IllegalArgumentException if there was a problem generating the
+	 *                                  body.
 	 */
-	public Genotype(ArrayList<Gene> source) {
+	public Genotype(ArrayList<Gene> source) throws IllegalArgumentException {
 		chromosome = new ArrayList<Gene>();
 		try {
 			for (Gene g : source) {
@@ -63,8 +65,7 @@ public class Genotype implements Cloneable {
 			}
 			body = buildBody();
 		} catch (IllegalArgumentException ex) {
-			System.err.println(
-					"Genotype construction error. Creation cannot continue.");
+			throw ex;
 		}
 	}
 	
@@ -102,69 +103,7 @@ public class Genotype implements Cloneable {
 	 *         trait match properly), returns null.
 	 */
 	public static Genotype[] crossover(Genotype[] parents, Strategy strategy) {
-		return Crossover.crossover(parents[0], parents[0], strategy);
-	}
-	
-	/**
-	 * Helper method for crossover that matches the locations of the key genes
-	 * on two strands.
-	 * 
-	 * @param strandA ArrayList<Gene> of first strand.
-	 * @param strandB ArrayList<Gene> of second strand.
-	 * @return ArrayList<ArrayList<Gene>> containing key-gene-matched copies of
-	 *         the strands.
-	 */
-	public static ArrayList<ArrayList<Gene>> align(ArrayList<Gene> strandA,
-								 ArrayList<Gene> strandB) {
-		ArrayList<ArrayList<Gene>> strands =
-					new ArrayList<ArrayList<Gene>>();
-		strands.add(new ArrayList<Gene>());
-		strands.add(new ArrayList<Gene>());
-		
-		ArrayList<Gene> bigger;
-		ArrayList<Gene> smaller;
-		
-		int sizeA = strandA.size();
-		int sizeB = strandB.size();
-		int bigSize;
-		
-		if (sizeA >= sizeB) {
-			bigger = strandA;
-			smaller = strandB;
-			bigSize = sizeA;
-		} else {
-			bigger = strandB;
-			smaller = strandA;
-			bigSize = sizeB;
-		}
-		
-		// Clone bigger.
-		for (Gene g : bigger) {
-			strands.get(0).add(new Gene(g));
-			// Initialize smaller.
-			strands.get(1).add(new Gene());
-		}
-		
-		// For smaller, we need to clone each section individually and pad with
-		// empty genes where the strands don't line up.
-		int sI = 0;
-		for (int bI = 0; bI < bigSize; bI++) {
-			ArrayList<Gene> strand = strands.get(1);
-			Gene gB = bigger.get(bI);
-			Gene gS = smaller.get(sI);
-			Trait tB = gB.getTrait();
-			Trait tS = gS.getTrait();
-			
-			// If the traits are the same at the two indices, add the gene.
-			if (tB.equals(tS)) {
-				strand.add(new Gene(gS));
-				sI++;
-			} else {
-				strand.add(new Gene());
-			}
-		}
-		
-		return strands;
+		return Crossover.crossover(parents[0], parents[1], strategy);
 	}
 	
 	/**
@@ -172,14 +111,29 @@ public class Genotype implements Cloneable {
 	 * adds all necessary Genes for a Block, including the Block structure,
 	 * index to parent, Joint specifications, and Joint rule table. When
 	 * inserting a Block, the newly created Genes start with matched pairs of
-	 * identical Alleles with their weights initialized to the mean of 0.5f.
+	 * identical Alleles with their weights initialized to the current
+	 * population weights for Alleles of that type.
 	 * 
-	 * Since the Blocks can be listed in any order, addBlock doesn't need a
-	 * position; it just adds the Block to the end of the Chromasome.
+	 * Since the Blocks can be listed in any order, the position is optional.
+	 * If not provided, it just adds the Block to the end of the Chromosome.
 	 * 
 	 * @param block Block to add.
+	 * @param position Optional position at which to add the Block. Arguments
+	 *                 past the first are ignored.
+	 * @return True if add successful; false if not (e.g. if position is
+	 *                 invalid).
 	 */
-	public void addBlock(Block block) {
+	public boolean addBlock(Block block, int...position) {
+		int index;
+		if (position.length > 0) {
+			index = findBlock(position[0]);
+			if (index < 0 || index >= size) {
+				return false;
+			}
+		} else {
+			index = chromosome.size();
+		}
+		
 		Allele length = new Allele(Trait.LENGTH, new Float(block.getLength()),
 					0.5f);
 		Allele height = new Allele(Trait.HEIGHT, new Float(block.getHeight()),
@@ -210,19 +164,22 @@ public class Genotype implements Cloneable {
 				} else {
 					ruleList2.add(rule);
 				}
-			} catch (IllegalArgumentException ex){
+				i++;
+			} catch (IllegalArgumentException ex) {
 				continue;
 			}
 		}
 		
-		chromosome.add(new Gene(length));
-		chromosome.add(new Gene(height));
-		chromosome.add(new Gene(width));
-		chromosome.add(new Gene(indexToParent));
-		chromosome.add(new Gene(jointType));
-		chromosome.add(new Gene(jointOrientation));
-		chromosome.add(new Gene(jointSiteOnParent));
-		chromosome.add(new Gene(jointSiteOnChild));
+		// We could insert these in reverse order to avoid having to change
+		// index, but we'll need it to be updated for the later adds anyway.
+		chromosome.add(index, new Gene(length));
+		chromosome.add(++index, new Gene(height));
+		chromosome.add(++index, new Gene(width));
+		chromosome.add(++index, new Gene(indexToParent));
+		chromosome.add(++index, new Gene(jointType));
+		chromosome.add(++index, new Gene(jointOrientation));
+		chromosome.add(++index, new Gene(jointSiteOnParent));
+		chromosome.add(++index, new Gene(jointSiteOnChild));
 		
 		for (Rule r : ruleList1) {
 			Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, r.getInput(0),
@@ -244,19 +201,19 @@ public class Genotype implements Cloneable {
 			Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
 					   					   r.getOp2(), 0.5f);
 			
-			chromosome.add(new Gene(ruleInputA));
-			chromosome.add(new Gene(ruleInputB));
-			chromosome.add(new Gene(ruleInputC));
-			chromosome.add(new Gene(ruleInputD));
-			chromosome.add(new Gene(ruleInputE));
-			chromosome.add(new Gene(binaryOperator1));
-			chromosome.add(new Gene(unaryOperator2));
-			chromosome.add(new Gene(binaryOperator3));
-			chromosome.add(new Gene(unaryOperator4));
+			chromosome.add(++index, new Gene(ruleInputA));
+			chromosome.add(++index, new Gene(ruleInputB));
+			chromosome.add(++index, new Gene(ruleInputC));
+			chromosome.add(++index, new Gene(ruleInputD));
+			chromosome.add(++index, new Gene(ruleInputE));
+			chromosome.add(++index, new Gene(binaryOperator1));
+			chromosome.add(++index, new Gene(unaryOperator2));
+			chromosome.add(++index, new Gene(binaryOperator3));
+			chromosome.add(++index, new Gene(unaryOperator4));
 		}
 		
 		if (maxDoF > 1) {
-		for (Rule r : ruleList2) {
+			for (Rule r : ruleList2) {
 				Allele ruleInputA = new Allele(Trait.RULE_INPUT_A,
 						r.getInput(0), 0.5f);
 				Allele ruleInputB = new Allele(Trait.RULE_INPUT_B,
@@ -276,19 +233,20 @@ public class Genotype implements Cloneable {
 				Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
 						   					   r.getOp2(), 0.5f);
 				
-				chromosome.add(new Gene(ruleInputA));
-				chromosome.add(new Gene(ruleInputB));
-				chromosome.add(new Gene(ruleInputC));
-				chromosome.add(new Gene(ruleInputD));
-				chromosome.add(new Gene(ruleInputE));
-				chromosome.add(new Gene(binaryOperator1));
-				chromosome.add(new Gene(unaryOperator2));
-				chromosome.add(new Gene(binaryOperator3));
-				chromosome.add(new Gene(unaryOperator4));
+				chromosome.add(++index, new Gene(ruleInputA));
+				chromosome.add(++index, new Gene(ruleInputB));
+				chromosome.add(++index, new Gene(ruleInputC));
+				chromosome.add(++index, new Gene(ruleInputD));
+				chromosome.add(++index, new Gene(ruleInputE));
+				chromosome.add(++index, new Gene(binaryOperator1));
+				chromosome.add(++index, new Gene(unaryOperator2));
+				chromosome.add(++index, new Gene(binaryOperator3));
+				chromosome.add(++index, new Gene(unaryOperator4));
 			}
 		}
 		// Update the body array.
 		body = buildBody();
+		return true;
 	}
 	
 	/**
@@ -510,19 +468,19 @@ public class Genotype implements Cloneable {
 	 *                    index is invalid.
 	 */
 	public int findBlock(int block) {
-		if (block > size) {
+		if (block >= size) {
 			return -1;
 		} else {
 			int index = 0;
 			int counter = 0;
 			
 			while (counter < block) {
-				if (chromosome.get(index).getTrait() == Trait.LENGTH) {
+				if (chromosome.get(++index).getTrait() == Trait.LENGTH) {
 					counter++;
 				}
-				index++;
 			}
-			
+			System.out.println("findBlock: index = " + index);
+			System.out.println("findBlock: chromosome.get(index) = " + index);
 			return index;
 		}
 	}
@@ -589,22 +547,27 @@ public class Genotype implements Cloneable {
 	 * vectors.
 	 * 
 	 * @return Creature (phenotype) of the Genotype.
+	 * @throws IllegalArgumentException if phenotype is invalid; caught and
+	 *                                  rethrown from phenotype.Creature.
 	 */
-	public Creature getPhenotype() {
+	@SuppressWarnings("finally")
+	public Creature getPhenotype() throws IllegalArgumentException {
 		Creature phenotype = null;
 		// If body is null, the Genotype is invalid.
 		if (body == null) {
-			return null;
+			throw new IllegalArgumentException(
+					"Phenotype invalid, body creation returned null.");
 		} else {
 			Vector3 rootForwardStart = Vector3.FORWARD;
 			Vector3 rootUpStart = Vector3.UP;
 			// Return a new Creature (phenotype) with the calculated values.
 			try {
 				phenotype = new Creature(body, rootForwardStart, rootUpStart);
-			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
+			} catch (IllegalArgumentException ex) {;
+				throw ex;
+			} finally {
+				return phenotype;
 			}
-			return phenotype;
 		}
 	}
 	
@@ -614,15 +577,22 @@ public class Genotype implements Cloneable {
 	 * @param rootForwardStart Vector3 a forward vector.
 	 * @param rootUpStart Vector3 an up vector.
 	 * @return Creature (phenotype) of the Genotype.
+	 * @throws IllegalArgumentException if there was a problem creating the
+	 *                                  Creature.
 	 */
 	public Creature getPhenotype(Vector3 rootForwardStart,
-								 Vector3 rootUpStart) {
+								 Vector3 rootUpStart)
+								 throws IllegalArgumentException{
 		// If body is null, the Genotype is invalid.
 		if (body == null) {
 			return null;
 		} else {
 			// Return a new Creature (phenotype) with the calculated values.
-			return new Creature(body, rootForwardStart, rootUpStart);
+			try {
+				return new Creature(body, rootForwardStart, rootUpStart);
+			} catch (IllegalArgumentException ex) {
+				throw ex;
+			}
 		}
 	}
 
@@ -1007,22 +977,22 @@ public class Genotype implements Cloneable {
 		ArrayList<Allele> alleles = new ArrayList<Allele>();
 		ArrayList<Gene> genes;
 		// Adding some dummy Alleles to the list.
-		alleles.add(new Allele(Trait.LENGTH, 35.4f, 0.3f));
-		alleles.add(new Allele(Trait.LENGTH, 13.3f, 0.64f));
-		alleles.add(new Allele(Trait.HEIGHT, 42.5f, 0.5f));
-		alleles.add(new Allele(Trait.HEIGHT, 20.5f, 0.35f));
-		alleles.add(new Allele(Trait.WIDTH, 42.5f, 0.5f));
-		alleles.add(new Allele(Trait.WIDTH, 20.5f, 0.35f));
+		alleles.add(new Allele(Trait.LENGTH, 1.35f, 0.3f));
+		alleles.add(new Allele(Trait.LENGTH, 1.19f, 0.64f));
+		alleles.add(new Allele(Trait.HEIGHT, 1.42f, 0.5f));
+		alleles.add(new Allele(Trait.HEIGHT, 1.2f, 0.35f));
+		alleles.add(new Allele(Trait.WIDTH, 1.42f, 0.5f));
+		alleles.add(new Allele(Trait.WIDTH, 1.2f, 0.35f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				               0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
 		// Second block.
-		alleles.add(new Allele(Trait.LENGTH, 21.4f, 0.2f));
-		alleles.add(new Allele(Trait.LENGTH, 20.0f, 0.199f));
-		alleles.add(new Allele(Trait.HEIGHT, 40.5f, 0.1f));
-		alleles.add(new Allele(Trait.HEIGHT, 45.5f, 0.4f));
-		alleles.add(new Allele(Trait.WIDTH, 19.5f, 0.5f));
-		alleles.add(new Allele(Trait.WIDTH, 25.5f, 0.6f));
+		alleles.add(new Allele(Trait.LENGTH, 1.21f, 0.2f));
+		alleles.add(new Allele(Trait.LENGTH, 1.22f, 0.199f));
+		alleles.add(new Allele(Trait.HEIGHT, 1.4f, 0.1f));
+		alleles.add(new Allele(Trait.HEIGHT, 1.45f, 0.4f));
+		alleles.add(new Allele(Trait.WIDTH, 1.19f, 0.5f));
+		alleles.add(new Allele(Trait.WIDTH, 1.25f, 0.6f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
 		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
@@ -1123,7 +1093,7 @@ public class Genotype implements Cloneable {
 		Joint newJoint = new Joint(EnumJointType.RIGID,
 				EnumJointSite.FACE_SOUTH, EnumJointSite.EDGE_BACK_NORTH,
 				30.0f);
-		Block newBlock = new Block(1, newJoint, 1.0f, 2.0f, 3.0f);
+		Block newBlock = new Block(1, newJoint, 1.1f, 1.2f, 1.3f);
 		genotype.addBlock(newBlock);
 		
 		// addRule test.
@@ -1149,12 +1119,12 @@ public class Genotype implements Cloneable {
 		ArrayList<Allele> alleles2 = new ArrayList<Allele>();
 		ArrayList<Gene> genes2;
 		// Box 1
-		alleles2.add(new Allele(Trait.LENGTH, 45.4f, 0.37f));
-		alleles2.add(new Allele(Trait.LENGTH, 29.3f, 0.54f));
-		alleles2.add(new Allele(Trait.HEIGHT, 40.5f, 0.35f));
-		alleles2.add(new Allele(Trait.HEIGHT, 41.5f, 0.36f));
-		alleles2.add(new Allele(Trait.WIDTH, 56.5f, 0.5f));
-		alleles2.add(new Allele(Trait.WIDTH, 56.5f, 0.5f));
+		alleles2.add(new Allele(Trait.LENGTH, 1.45f, 0.37f));
+		alleles2.add(new Allele(Trait.LENGTH, 1.43f, 0.54f));
+		alleles2.add(new Allele(Trait.HEIGHT, 1.39f, 0.35f));
+		alleles2.add(new Allele(Trait.HEIGHT, 1.31f, 0.36f));
+		alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
+		alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.1f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.433f));
 		alleles2.add(new Allele(Trait.JOINT_TYPE,
@@ -1208,23 +1178,23 @@ public class Genotype implements Cloneable {
 		alleles2.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.SIN,
 				0.2f));
 		// Box 2 (root)
-		alleles2.add(new Allele(Trait.LENGTH, 20.4f, 0.232f));
-		alleles2.add(new Allele(Trait.LENGTH, 21.3f, 0.855f));
-		alleles2.add(new Allele(Trait.HEIGHT, 60.0f, 0.125f));
-		alleles2.add(new Allele(Trait.HEIGHT, 60.0f, 0.115f));
-		alleles2.add(new Allele(Trait.WIDTH, 19.5f, 0.5f));
-		alleles2.add(new Allele(Trait.WIDTH, 19.4f, 0.5f));
+		alleles2.add(new Allele(Trait.LENGTH, 1.29f, 0.232f));
+		alleles2.add(new Allele(Trait.LENGTH, 1.31f, 0.855f));
+		alleles2.add(new Allele(Trait.HEIGHT, 1.35f, 0.125f));
+		alleles2.add(new Allele(Trait.HEIGHT, 1.35f, 0.115f));
+		alleles2.add(new Allele(Trait.WIDTH, 1.45f, 0.5f));
+		alleles2.add(new Allele(Trait.WIDTH, 1.45f, 0.5f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				0.59f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				0.49f));
 		// Box 3
-		alleles2.add(new Allele(Trait.LENGTH, 45.4f, 0.37f));
-		alleles2.add(new Allele(Trait.LENGTH, 29.3f, 0.54f));
-		alleles2.add(new Allele(Trait.HEIGHT, 40.5f, 0.35f));
-		alleles2.add(new Allele(Trait.HEIGHT, 41.5f, 0.36f));
-		alleles2.add(new Allele(Trait.WIDTH, 56.5f, 0.5f));
-		alleles2.add(new Allele(Trait.WIDTH, 56.5f, 0.5f));
+		alleles2.add(new Allele(Trait.LENGTH, 1.45f, 0.37f));
+		alleles2.add(new Allele(Trait.LENGTH, 1.29f, 0.54f));
+		alleles2.add(new Allele(Trait.HEIGHT, 1.40f, 0.35f));
+		alleles2.add(new Allele(Trait.HEIGHT, 1.41f, 0.36f));
+		alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
+		alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.59f));
 		alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.49f));
 		alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
@@ -1292,11 +1262,27 @@ public class Genotype implements Cloneable {
 		System.out.println("---Child1---");
 		System.out.println(children[0]);
 		System.out.println("---Child1 Phenotype---");
-		System.out.println(children[0].getPhenotype());
-		System.out.println("---Child2---");
-		System.out.println(children[1]);
-		System.out.println("---Child2 Phenotype---");
-		System.out.println(children[1].getPhenotype());
+		try {
+			System.out.println(children[0].getPhenotype());
+		} catch (IllegalArgumentException ex) {
+			ex.printStackTrace();
+		} finally {
+			System.out.println("---Child2---");
+			System.out.println(children[1]);
+			try {
+				System.out.println("---Child2 Phenotype---");
+				System.out.println(children[1].getPhenotype());
+			} catch (IllegalArgumentException ex) {
+				ex.printStackTrace();
+			}
+		}
+		
+		System.out.println("---Genotype 1 Fitness Test--");
+		for (int i = 0; i < 20; i++) {
+			System.out.println("Fitness @ " + i + " = "
+								+ phenotype.advanceSimulation());
+		}
+		// NOTE: float test for NaN -> Float.isNaN(value);
 	}
 
 }

@@ -24,6 +24,15 @@ public class Helper {
 	public static final String NEWLINE = System.getProperty("line.separator");
 	
 	/**
+	 * Sets the random number generator's seed.
+	 * 
+	 * @param seed Long to use as the RNG seed.
+	 */
+	public static void seed(long seed) {
+		RANDOM.setSeed(seed);
+	}
+	
+	/**
 	 * Randomly choose 0 or 1.
 	 * 
 	 * @return 0 or 1.
