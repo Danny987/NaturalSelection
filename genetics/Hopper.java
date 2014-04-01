@@ -33,6 +33,7 @@ public class Hopper {
 	private int timesBred;
 	private int children;
 	private float fitness;
+	private boolean realFitness;
 
 	/**
 	 * Instantiate a new Hopper with the passed Genotype and provided name.
@@ -60,6 +61,7 @@ public class Hopper {
 		timesHillClimbed = 0;
 		timesBred = 0;
 		children = 0;
+		realFitness = false;
 	}
 
 	/**
@@ -144,6 +146,17 @@ public class Hopper {
 	 */
 	public float getFitness() {
 		return fitness;
+	}
+	
+	/**
+	 * Checks if the fitness value is the real fitness from the simulation or
+	 * just an estimate.
+	 * 
+	 * @return True if fitness is the real fitness from the simulation, false
+	 *             if it's just an estimate.
+	 */
+	public boolean isRealFitness() {
+		return realFitness;
 	}
 
 	/**

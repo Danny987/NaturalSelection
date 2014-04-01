@@ -131,9 +131,9 @@ public class Genotype {
 	 * 
 	 * @param block Block to add.
 	 * @param position Optional position at which to add the Block. Arguments
-	 *                 past the first are ignored.
+	 *             past the first are ignored.
 	 * @return True if add successful; false if not (e.g. if position is
-	 *                 invalid).
+	 *             invalid).
 	 * @throws IllegalArgumentException if one of the Builders' setters was
 	 * 		       passed an invalid argument.
 	 * @throws GeneticsException if buildBody detected an error.
@@ -1051,6 +1051,11 @@ public class Genotype {
 			Creature phenotype = genotype.getPhenotype();
 			System.out.println("---Phenotype 1---");
 			System.out.println(phenotype);
+			System.out.println("---Genotype 1 Fitness Test---");
+			for (int i = 0; i < 20; i++) {
+				System.out.println("Fitness 1 @ " + i + " = "
+									+ phenotype.advanceSimulation());
+			}
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
@@ -1212,6 +1217,11 @@ public class Genotype {
 			System.out.println(children[1]);
 			System.out.println("---Child 2 Phenotype---");
 			System.out.println(children[1].getPhenotype());
+			System.out.println("---Genotype 2 Fitness Test---");
+			for (int i = 0; i < 20; i++) {
+				System.out.println("Fitness 2 @ " + i + " = "
+									+ phenotype2.advanceSimulation());
+			}
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
