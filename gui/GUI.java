@@ -299,16 +299,63 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
     private void loadGenotype() {
         BufferedReader reader;
         int option = fileChooser.showOpenDialog(this);
-
+        
         if (option != JFileChooser.CANCEL_OPTION) {
             File f = fileChooser.getSelectedFile();
             try {
+                String[] lineArray;
+                String name;
+                List<Allele> alleles = new ArrayList<>();
+                ArrayList<Gene> genes;
+                
                 reader = new BufferedReader(new FileReader(f));
+                
+                String line = reader.readLine();
                 reader.readLine();
+                name = reader.readLine();
+                reader.readLine();
+                reader.readLine();
+                
+                while(line != null){
+                    
+                    
+                    line = reader.readLine();
+                    
+                    line = line.replaceAll("\\[", "");
+                    line = line.replaceAll("\\]", "");
+                    
+                    
+                    if(line.startsWith("{")){
+                        line = line.replace("{", "");
+                    }
+                    if(line.endsWith("}")){
+                        line = line.replace("}", "");
+                    }
+                    
+                    
+                    lineArray = line.split("\\)\\(");
+                    
+                    if(lineArray.length < 2){
+                        break;
+                    }
+                    
+                    alleles.add(Allele.stringToAllele(lineArray[0] + ")"));
+                    alleles.add(Allele.stringToAllele("(" + lineArray[1]));
+                }
+                
+                genes = Gene.allelesToGenes(alleles);
+                Genotype genotype = new Genotype(genes);
+                
+                currentTribe.add(0, new Hopper(genotype, name));
+                
             } catch (FileNotFoundException ex) {
-                System.out.println("Error reading file.");
+                System.out.println("File not found");
+            } catch (IllegalArgumentException ex) {
+                ex.printStackTrace();
+            } catch (GeneticsException ex) {
+                System.out.println("Genetics exception");
             } catch (IOException ex) {
-                Logger.getLogger(GUI.class.getName()).log(Level.SEVERE, null, ex);
+                System.out.println("io exception");
             }
 
         }
