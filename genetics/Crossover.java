@@ -43,26 +43,22 @@ public class Crossover {
 	public static Genotype[] crossover(Genotype parentA, Genotype parentB,
 			Strategy strategy) throws IllegalArgumentException,
 			GeneticsException {
-		Genotype[] children = null;
+		@SuppressWarnings("unchecked")
+		ArrayList<Gene>[] children = new ArrayList[2];
 		
 		ArrayList<Gene> chromosomeA = parentA.getChromosome();
 		ArrayList<Gene> chromosomeB = parentB.getChromosome();
-		// Get the size of the larger chromosome.
-		int sizeA = chromosomeA.size();
-		int sizeB = chromosomeB.size();
-		int size = (sizeA >= sizeB ? sizeA : sizeB);
 		
 		// Align the key genes.
-		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
-				chromosomeB);
+		ArrayList<Gene>[] newChromosomes = align(chromosomeA, chromosomeB);
 		
 		// Randomly choose the starting parent.
 		if (rand.nextInt(2) > 0) {
-			chromosomeA = newChromosomes.get(0);
-			chromosomeB = newChromosomes.get(1);			
+			chromosomeA = newChromosomes[0];
+			chromosomeB = newChromosomes[1];			
 		} else {
-			chromosomeA = newChromosomes.get(1);
-			chromosomeB = newChromosomes.get(0);
+			chromosomeA = newChromosomes[1];
+			chromosomeB = newChromosomes[0];
 		}
 		
 		try {
@@ -86,21 +82,38 @@ public class Crossover {
 			throw ex;
 		}
 		
-		return children;
+		Genotype genome1 = null;
+		Genotype genome2 = null;
+		
+		try {
+			genome1 = new Genotype(children[0]);
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			ex.printStackTrace();
+		}
+		try {
+			genome2 = new Genotype(children[1]);
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			ex.printStackTrace();
+		}
+		
+		Genotype[] genomes = {genome1, genome2};
+		
+		return genomes;
 	}
 	
 	/**
 	 * Perform single-point crossover on two parents to create twin children.
 	 * 
-	 * @param Genotype parentA Genotype from parent A.
-	 * @param Genotype parentB Genotype from parent B.
-	 * @return Two-element array of Genotypes for children. If there were
+	 * @param chromosomeA ArrayList<Gene> from parent A.
+	 * @param chromosomeB ArrayList<Gene> from parent B.
+	 * @return Two-element ArrayList<Gene> array for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] singlePoint(ArrayList<Gene> chromosomeA,
+	@SuppressWarnings("unchecked")
+	private static ArrayList<Gene>[] singlePoint(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		
@@ -142,49 +155,30 @@ public class Crossover {
 		trimEmpty(childA);
 		trimEmpty(childB);
 
-		try {
-			Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-			return children;
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			throw ex;
-		}
+		@SuppressWarnings("rawtypes")
+		ArrayList[] children = {childA, childB};
+		return children;
 	}
 	
 	/**
 	 * Perform double-point crossover on two parents to create twin children.
 	 * 
-	 * @param Genotype parentA Genotype from parent A.
-	 * @param Genotype parentB Genotype from parent B.
-	 * @return Two-element array of Genotypes for children. If there were
+	 * @param chromosomeA ArrayList<Gene> from parent A.
+	 * @param chromosomeB ArrayList<Gene> from parent B.
+	 * @return Two-element ArrayList<Gene> array for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] doublePoint(Genotype parentA, Genotype parentB)
-			throws IllegalArgumentException, GeneticsException {
-		ArrayList<Gene> chromosomeA = parentA.getChromosome();
-		ArrayList<Gene> chromosomeB = parentB.getChromosome();
-		// Get the size of the larger chromosome.
-		int sizeA = chromosomeA.size();
-		int sizeB = chromosomeB.size();
-		int size = (sizeA >= sizeB ? sizeA : sizeB);
+	@SuppressWarnings("unchecked")
+	private static ArrayList<Gene>[] doublePoint(ArrayList<Gene> chromosomeA,
+			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
+			GeneticsException {
+		int size = chromosomeA.size();
 		// Create the chromosomes for the twin children.
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
-		
-		// Align the key genes.
-		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
-				chromosomeB);
-		
-		// Randomly choose the starting parent.
-		if (rand.nextInt(2) > 0) {
-			chromosomeA = newChromosomes.get(0);
-			chromosomeB = newChromosomes.get(1);			
-		} else {
-			chromosomeA = newChromosomes.get(1);
-			chromosomeB = newChromosomes.get(0);
-		}
 		
 		// Randomly choose the transition points.
 		int transition1 = rand.nextInt(size);
@@ -220,52 +214,45 @@ public class Crossover {
 		trimEmpty(childA);
 		trimEmpty(childB);
 
-		try {
-			Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-			return children;
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			throw ex;
-		}
+		@SuppressWarnings("rawtypes")
+		ArrayList[] children = {childA, childB};
+		return children;
 	}
 	
 	/**
 	 * Perform cut-and-splice crossover on two parents to create twin children.
 	 * 
-	 * @param Genotype parentA Genotype from parent A.
-	 * @param Genotype parentB Genotype from parent B.
-	 * @return Two-element array of Genotypes for children. If there were
+	 * @param chromosomeA ArrayList<Gene> from parent A.
+	 * @param chromosomeB ArrayList<Gene> from parent B.
+	 * @return Two-element ArrayList<Gene> array for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] cutAndSplice(Genotype parentA, Genotype parentB)
-			throws IllegalArgumentException, GeneticsException {
-		ArrayList<Gene> chromosomeA = parentA.getChromosome();
-		ArrayList<Gene> chromosomeB = parentB.getChromosome();
-		// Get the size of the larger chromosome.
-		int sizeA = chromosomeA.size();
-		int sizeB = chromosomeB.size();
-		int size = (sizeA >= sizeB ? sizeA : sizeB);
+	@SuppressWarnings("unchecked")
+	private static ArrayList<Gene>[] cutAndSplice(ArrayList<Gene> chromosomeA,
+			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
+			GeneticsException {
+		int size = chromosomeA.size();
 		// Create the chromosomes for the twin children.
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
 		
 		// Align the key genes.
-		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
-				chromosomeB);
+		ArrayList<Gene>[] newChromosomes = align(chromosomeA, chromosomeB);
 		
 		// Randomly choose the starting parent.
 		if (rand.nextInt(2) > 0) {
-			chromosomeA = newChromosomes.get(0);
-			chromosomeB = newChromosomes.get(1);			
+			chromosomeA = newChromosomes[0];
+			chromosomeB = newChromosomes[1];			
 		} else {
-			chromosomeA = newChromosomes.get(1);
-			chromosomeB = newChromosomes.get(0);
+			chromosomeA = newChromosomes[1];
+			chromosomeB = newChromosomes[0];
 		}
 		
 		// Iterate over the lists and pick a random allele from each parent.
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i <= size; i++) {
 			Gene parentGeneA = new Gene(chromosomeA.get(i));
 			Gene parentGeneB = new Gene(chromosomeB.get(i));
 			Gene childGeneA;
@@ -293,13 +280,9 @@ public class Crossover {
 		// from the final strand.
 		trimEmpty(childA);
 		trimEmpty(childB);
-
-		try {
-			Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-			return children;
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			throw ex;
-		}
+		@SuppressWarnings("rawtypes")
+		ArrayList[] children = {childA, childB};
+		return children;
 	}
 	
 	/**
@@ -308,30 +291,27 @@ public class Crossover {
 	 * parent or the other, 50/50 random crossover grabs individual Alleles
 	 * and combines them into new Genes.
 	 * 
-	 * @param Genotype parentA Genotype from parent A.
-	 * @param Genotype parentB Genotype from parent B.
-	 * @return Two-element array of Genotypes for children. If there were
+	 * @param chromosomeA ArrayList<Gene> from parent A.
+	 * @param chromosomeB ArrayList<Gene> from parent B.
+	 * @return Two-element ArrayList<Gene> array for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
 	 *         trait match properly), returns null.
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	private static Genotype[] randomCross(Genotype parentA, Genotype parentB)
-			throws IllegalArgumentException, GeneticsException {
-		ArrayList<Gene> chromosomeA = parentA.getChromosome();
-		ArrayList<Gene> chromosomeB = parentB.getChromosome();
-		// Get the size of the larger chromosome.
-		int sizeA = chromosomeA.size();
-		int sizeB = chromosomeB.size();
-		int size = (sizeA >= sizeB ? sizeA : sizeB);
+	@SuppressWarnings("unchecked")
+	private static ArrayList<Gene>[] randomCross(ArrayList<Gene> chromosomeA,
+			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
+			GeneticsException {
+		int size = chromosomeA.size();
 		// Create the chromosomes for the twin children.
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
+
 		// Align the key genes.
-		ArrayList<ArrayList<Gene>> newChromosomes = align(chromosomeA,
-				chromosomeB);
-		chromosomeA = newChromosomes.get(0);
-		chromosomeB = newChromosomes.get(1);
+		ArrayList<Gene>[] newChromosomes = align(chromosomeA, chromosomeB);
+		chromosomeA = newChromosomes[0];
+		chromosomeB = newChromosomes[1];
 		
 		if (chromosomeA == null || chromosomeB == null) {
 			return null;
@@ -349,8 +329,10 @@ public class Crossover {
 			try {
 				Gene childGeneA = new Gene(parentGeneA.getAlleles()[a1],
 						                   parentGeneB.getAlleles()[b1]);
+				// TODO DoF
 				Gene childGeneB = new Gene(parentGeneA.getAlleles()[a2],
 						                   parentGeneB.getAlleles()[b2]);
+				// TODO DoF
 				childA.add(childGeneA);
 				childB.add(childGeneB);
 			// If there were problems creating any of the Genes, return null.
@@ -361,12 +343,10 @@ public class Crossover {
 		}
 		// If the child Gene pulled a matched pair of empty Alleles, it will
 		// be trimmed when instantiating the new Genotypes.
-		try {
-			Genotype[] children = {new Genotype(childA), new Genotype(childB)};
-			return children;
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			throw ex;
-		}
+		@SuppressWarnings("rawtypes")
+		ArrayList[] children = {childA, childB};
+		
+		return children;
 	}
 	
 	/**
@@ -375,54 +355,59 @@ public class Crossover {
 	 * 
 	 * @param strandA ArrayList<Gene> of first strand.
 	 * @param strandB ArrayList<Gene> of second strand.
-	 * @return ArrayList<ArrayList<Gene>> containing key-gene-matched copies of
-	 *         the strands.
+	 * @return ArrayList<Gene>[] containing key-gene-matched copies of the
+	 *         strands.
 	 */
-	public static ArrayList<ArrayList<Gene>> align(ArrayList<Gene> strandA,
+	@SuppressWarnings("unchecked")
+	public static ArrayList<Gene>[] align(ArrayList<Gene> strandA,
 								 ArrayList<Gene> strandB) {
-		ArrayList<ArrayList<Gene>> strands =
-					new ArrayList<ArrayList<Gene>>();
-		strands.add(new ArrayList<Gene>());
-		strands.add(new ArrayList<Gene>());
+		ArrayList<Gene>[] strands =	new ArrayList[2];
+		strands[0] = new ArrayList<Gene>();
+		strands[1] = new ArrayList<Gene>();
 		
 		ArrayList<Gene> bigger;
 		ArrayList<Gene> smaller;
 		
 		int sizeA = strandA.size();
 		int sizeB = strandB.size();
-		int bigSize;
+		int bigSize, smallSize;
 		
 		if (sizeA >= sizeB) {
 			bigger = strandA;
 			smaller = strandB;
 			bigSize = sizeA;
+			smallSize = sizeB;
 		} else {
 			bigger = strandB;
 			smaller = strandA;
 			bigSize = sizeB;
+			smallSize = sizeA;
 		}
 		
 		// For smaller, we need to clone each section individually and pad with
 		// empty genes where the strands don't line up.
 		int sI = 0;
 		for (int bI = 0; bI < bigSize; bI++) {
-			ArrayList<Gene> strand0 = strands.get(0);
-			ArrayList<Gene> strand1 = strands.get(1);
 			Gene gB = bigger.get(bI);
-			Gene gS = smaller.get(sI);
+			Gene gS;
+			if (sI < smallSize) {
+				gS = smaller.get(sI);
+			} else {
+				gS = new Gene();
+			}
 			Trait tB = gB.getTrait();
 			Trait tS = gS.getTrait();
 			
-			// Clone the GEne from bigger.
-			strand0.add(new Gene(gB));
+			// Clone the Gene from bigger.
+			strands[0].add(new Gene(gB));
 			
 			// If the traits are the same at the two indices, add the gene from
 			// smaller.
 			if (tB.equals(tS)) {
-				strand1.add(new Gene(gS));
+				strands[1].add(new Gene(gS));
 				sI++;
 			} else {
-				strand1.add(new Gene());
+				strands[1].add(new Gene());
 			}
 		}
 		

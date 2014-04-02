@@ -86,16 +86,17 @@ public class Gene {
 			if (traitA.equals(Trait.DOF_MARKER) && traitB.equals(Trait.EMPTY)) {
 				alleles[0] = new Allele(alleleA);
 				alleles[1] = new Allele(alleleA);
+				dominant = alleles[0];
+				trait = dominant.getTrait();
+				value = dominant.getValue();
 			} else if (traitB.equals(Trait.DOF_MARKER) &&
 					traitA.equals(Trait.EMPTY)) {
 				alleles[0] = new Allele(alleleB);
 				alleles[1] = new Allele(alleleB);
+				dominant = alleles[0];
+				trait = dominant.getTrait();
+				value = dominant.getValue();
 			} else if (!alleleA.isEmpty() && !alleleB.isEmpty()) {
-				alleles[0] = null;
-				alleles[1] = null;
-				dominant = null;
-				trait = null;
-				value = 0;
 				throw new IllegalArgumentException(
 						"Cannot pair Allele of Trait." + alleleA.getTrait()
 								+ " with Allele of Trait." + alleleB.getTrait()
@@ -105,8 +106,8 @@ public class Gene {
 			// Clone the Alleles.
 			alleles[0] = new Allele(alleleA);
 			alleles[1] = new Allele(alleleB);
-			dominant = (alleles[0].getWeight() >= alleles[1].getWeight() ? alleles[0]
-					: alleles[1]);
+			dominant = (alleles[0].getWeight() >= alleles[1].getWeight()
+					? alleles[0] : alleles[1]);
 			trait = dominant.getTrait();
 			value = dominant.getValue();
 		}
@@ -237,6 +238,16 @@ public class Gene {
 			return false;
 		}
 	}
+	
+	/**
+	 * Check if either or both of this Gene's Alleles are null.
+	 * 
+	 * @return True if either or both of this Gene's Alleles are null, false
+	 *             otherwise.
+	 */
+	public boolean isNull() {
+		return alleles[0] == null || alleles[1] == null;
+	}
 
 	/**
 	 * Override of hashCode.
@@ -255,8 +266,7 @@ public class Gene {
 	 */
 	@Override
 	public String toString() {
-		return new String("[" + alleles[0].toString() + alleles[1].toString()
-				+ "]");
+		return new String("[" + alleles[0] + alleles[1]	+ "]");
 	}
 
 	/**

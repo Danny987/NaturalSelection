@@ -59,10 +59,29 @@ public class Genotype {
 	public Genotype(ArrayList<Gene> source) throws IllegalArgumentException,
 			GeneticsException {
 		chromosome = new ArrayList<Gene>();
+		int currentDoFs = 0;
+		// Remove empty Genes and unnecessary degree of freedom markers.
 		try {
 			for (Gene g : source) {
 				if (g != null && !g.isEmpty()) {
-					chromosome.add(new Gene(g));
+					Trait trait = g.getTrait();
+					Object value = g.getValue();
+					System.out.println("g = " + g);
+					System.out.println("trait = " + trait);
+					switch (trait) {
+						case EMPTY:
+							break;
+						case DOF_MARKER:
+							if (currentDoFs > 1) {
+								chromosome.add(new Gene(g));
+							}
+							break;
+						case JOINT_TYPE:
+							currentDoFs = ((EnumJointType) value).getDoF();
+							// Fall through.
+						default:
+							chromosome.add(new Gene(g));
+					}
 				}
 			}
 			body = buildBody();
@@ -507,8 +526,6 @@ public class Genotype {
 					counter++;
 				}
 			}
-			System.out.println("findBlock: index = " + index);
-			System.out.println("findBlock: chromosome.get(index) = " + index);
 			return index;
 		}
 	}
@@ -833,6 +850,40 @@ public class Genotype {
 	}
 	
 	/**
+	 * Move the Genes for the root Block to the beginning of the strand.
+	 */
+	public void zeroRootBlock() {
+		int rootBlockStart = -1;
+		ArrayList<Gene> buffer = new ArrayList<Gene>();
+		
+		for (int i = 0; i < size && rootBlockStart < 0; i++) {
+			int index = findBlock(i);
+			// findBlock gets the index of the LENGTH Gene for the Block. The
+			// Gene for the indexToParent is three later.
+			Gene genePlusThree = chromosome.get(index + 3);
+			Trait genePlusThreeTrait = genePlusThree.getTrait();
+			Object genePlusThreeValue = genePlusThree.getValue();
+			if (genePlusThreeTrait == Trait.INDEX_TO_PARENT &&
+					(Integer) genePlusThreeValue == Block.PARENT_INDEX_NONE) {
+				rootBlockStart = index;
+			}
+		}
+		
+		// Move the Genes from the chromosome to a temporary holding buffer.
+		// Short-circuits to prevent out of bounds.
+		buffer.add(chromosome.get(rootBlockStart));
+		chromosome.remove(rootBlockStart);
+		while (rootBlockStart < chromosome.size()
+				&& chromosome.get(rootBlockStart).getTrait() != Trait.LENGTH) {
+			buffer.add(chromosome.get(rootBlockStart));
+			chromosome.remove(rootBlockStart);
+		}
+		
+		// Move the Genes from the buffer back into the chromosome.
+		chromosome.addAll(0, buffer);
+	}
+	
+	/**
 	 * Trim empty Genes from the chromosome.
 	 * 
 	 * @param chromosome ArrayList<Gene> to trim.
@@ -914,6 +965,7 @@ public class Genotype {
 		ArrayList<Allele> alleles = new ArrayList<Allele>();
 		ArrayList<Gene> genes;
 		// Adding some dummy Alleles to the list.
+		// Block 1 (root)
 		alleles.add(new Allele(Trait.LENGTH, 20.0f, 0.3f));
 		alleles.add(new Allele(Trait.LENGTH, 18.0f, 0.64f));
 		alleles.add(new Allele(Trait.HEIGHT, 25.0f, 0.5f));
@@ -923,7 +975,7 @@ public class Genotype {
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				               0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
-		// Second block.
+		// Block 2
 		alleles.add(new Allele(Trait.LENGTH, 10.0f, 0.2f));
 		alleles.add(new Allele(Trait.LENGTH, 13.9f, 0.199f));
 		alleles.add(new Allele(Trait.HEIGHT, 14.1f, 0.1f));
@@ -1045,34 +1097,41 @@ public class Genotype {
 			newRule.setOp3(EnumOperatorBinary.ADD);
 			newRule.setOp4(EnumOperatorUnary.ABS);
 			genotype.addRule(newRule, 1, 0, 0);
-			
+			Creature phenotype = genotype.getPhenotype();
 			System.out.println("---Genotype 1---");
 			System.out.println(genotype);
-			Creature phenotype = genotype.getPhenotype();
 			System.out.println("---Phenotype 1---");
 			System.out.println(phenotype);
-			System.out.println("---Genotype 1 Fitness Test---");
-			for (int i = 0; i < 20; i++) {
-				System.out.println("Fitness 1 @ " + i + " = "
-									+ phenotype.advanceSimulation());
-			}
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
+		
+		Genotype genotype2 = null;
 		
 		try {			
 			// Second test creature.
 			ArrayList<Allele> alleles2 = new ArrayList<Allele>();
 			ArrayList<Gene> genes2;
-			// Box 1
-			alleles2.add(new Allele(Trait.LENGTH, 1.45f, 0.37f));
-			alleles2.add(new Allele(Trait.LENGTH, 1.43f, 0.54f));
-			alleles2.add(new Allele(Trait.HEIGHT, 1.39f, 0.35f));
-			alleles2.add(new Allele(Trait.HEIGHT, 1.31f, 0.36f));
-			alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
-			alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
-			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.1f));
-			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.433f));
+			// Box 1 (root)
+			alleles2.add(new Allele(Trait.LENGTH, 15.29f, 0.232f));
+			alleles2.add(new Allele(Trait.LENGTH, 13.31f, 0.855f));
+			alleles2.add(new Allele(Trait.HEIGHT, 13.35f, 0.125f));
+			alleles2.add(new Allele(Trait.HEIGHT, 14.35f, 0.115f));
+			alleles2.add(new Allele(Trait.WIDTH, 13.45f, 0.5f));
+			alleles2.add(new Allele(Trait.WIDTH, 17.45f, 0.5f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT,
+					Block.PARENT_INDEX_NONE, 0.59f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT,
+					Block.PARENT_INDEX_NONE, 0.49f));
+			// Box 2
+			alleles2.add(new Allele(Trait.LENGTH, 14.45f, 0.37f));
+			alleles2.add(new Allele(Trait.LENGTH, 11.43f, 0.54f));
+			alleles2.add(new Allele(Trait.HEIGHT, 13.39f, 0.35f));
+			alleles2.add(new Allele(Trait.HEIGHT, 16.31f, 0.36f));
+			alleles2.add(new Allele(Trait.WIDTH, 17.56f, 0.5f));
+			alleles2.add(new Allele(Trait.WIDTH, 15.56f, 0.5f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.1f));
+			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.433f));
 			alleles2.add(new Allele(Trait.JOINT_TYPE,
 					EnumJointType.HINGE,0.0f));
 			alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE,
@@ -1080,7 +1139,7 @@ public class Genotype {
 			alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
 			alleles2.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
 			alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
-					EnumJointSite.EDGE_FRONT_WEST, 0.6f));
+					EnumJointSite.EDGE_FRONT_SOUTH, 0.6f));
 			alleles2.add(new Allele(Trait.JOINT_SITE_ON_PARENT,
 					EnumJointSite.EDGE_MID_SOUTHWEST, 0.3f));
 			alleles2.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
@@ -1123,24 +1182,13 @@ public class Genotype {
 					EnumOperatorUnary.LOG, 0.3f));
 			alleles2.add(new Allele(Trait.UNARY_OPERATOR_4,
 					EnumOperatorUnary.SIN, 0.2f));
-			// Box 2 (root)
-			alleles2.add(new Allele(Trait.LENGTH, 1.29f, 0.232f));
-			alleles2.add(new Allele(Trait.LENGTH, 1.31f, 0.855f));
-			alleles2.add(new Allele(Trait.HEIGHT, 1.35f, 0.125f));
-			alleles2.add(new Allele(Trait.HEIGHT, 1.35f, 0.115f));
-			alleles2.add(new Allele(Trait.WIDTH, 1.45f, 0.5f));
-			alleles2.add(new Allele(Trait.WIDTH, 1.45f, 0.5f));
-			alleles2.add(new Allele(Trait.INDEX_TO_PARENT,
-					Block.PARENT_INDEX_NONE, 0.59f));
-			alleles2.add(new Allele(Trait.INDEX_TO_PARENT,
-					Block.PARENT_INDEX_NONE, 0.49f));
 			// Box 3
-			alleles2.add(new Allele(Trait.LENGTH, 1.45f, 0.37f));
-			alleles2.add(new Allele(Trait.LENGTH, 1.29f, 0.54f));
-			alleles2.add(new Allele(Trait.HEIGHT, 1.40f, 0.35f));
-			alleles2.add(new Allele(Trait.HEIGHT, 1.41f, 0.36f));
-			alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
-			alleles2.add(new Allele(Trait.WIDTH, 1.56f, 0.5f));
+			alleles2.add(new Allele(Trait.LENGTH, 16.45f, 0.37f));
+			alleles2.add(new Allele(Trait.LENGTH, 15.29f, 0.54f));
+			alleles2.add(new Allele(Trait.HEIGHT, 13.40f, 0.35f));
+			alleles2.add(new Allele(Trait.HEIGHT, 21.41f, 0.36f));
+			alleles2.add(new Allele(Trait.WIDTH, 25.56f, 0.5f));
+			alleles2.add(new Allele(Trait.WIDTH, 21.56f, 0.5f));
 			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.59f));
 			alleles2.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.49f));
 			alleles2.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST,
@@ -1196,14 +1244,17 @@ public class Genotype {
 			
 			genes2 = Gene.allelesToGenes(alleles2);
 			
-			Genotype genotype2 = new Genotype(genes2);
-			
+			genotype2 = new Genotype(genes2);
+			Creature phenotype2 = genotype2.getPhenotype();
 			System.out.println("---Genotype 2---");
 			System.out.println(genotype2);
-			Creature phenotype2 = genotype2.getPhenotype();
 			System.out.println("---Phenotype 2---");
 			System.out.println(phenotype2);
-			
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			ex.printStackTrace();
+		}
+		
+		try {			
 			// Crossover test.
 			System.out.println("Starting crossover test.");
 			
@@ -1217,11 +1268,6 @@ public class Genotype {
 			System.out.println(children[1]);
 			System.out.println("---Child 2 Phenotype---");
 			System.out.println(children[1].getPhenotype());
-			System.out.println("---Genotype 2 Fitness Test---");
-			for (int i = 0; i < 20; i++) {
-				System.out.println("Fitness 2 @ " + i + " = "
-									+ phenotype2.advanceSimulation());
-			}
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
@@ -1246,12 +1292,6 @@ public class Genotype {
 			System.out.println(genotype3);
 			System.out.println("---Phenotype 3---");
 			System.out.println(phenotype3);
-			
-			System.out.println("---Genotype 3 Fitness Test---");
-			for (int i = 0; i < 20; i++) {
-				System.out.println("Fitness 3 @ " + i + " = "
-									+ phenotype3.advanceSimulation());
-			}
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}

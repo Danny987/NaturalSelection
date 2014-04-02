@@ -47,7 +47,7 @@ public class Allele {
 	 */
 	Allele() {
 		trait = Trait.EMPTY;
-		value = null;
+		value = "none";
 		weight = 0.0f;
 	}
 	
