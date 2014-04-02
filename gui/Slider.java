@@ -31,11 +31,6 @@ public class Slider extends JSlider{
         setMinimumSize(size);
         setMaximumSize(size);
         
-        setPaintTicks(true);
-        setMajorTickSpacing(100);
-        setMinorTickSpacing(0);
-        
-        
         setBackground(new Color(55, 55, 55));
         setForeground(new Color(205, 205, 205));
     };

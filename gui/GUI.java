@@ -2,18 +2,13 @@ package creature.geeksquad.gui;
 
 import creature.geeksquad.genetics.Allele;
 import creature.geeksquad.genetics.Gene;
+import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
-import creature.geeksquad.graphics.GraphicsPanel;
-import creature.geeksquad.graphics.Renderer;
 import creature.phenotype.Block;
 import creature.phenotype.Creature;
 import creature.phenotype.EnumJointSite;
 import creature.phenotype.EnumJointType;
-import creature.phenotype.EnumNeuronInputType;
-import creature.phenotype.EnumOperatorBinary;
-import creature.phenotype.EnumOperatorUnary;
-import creature.phenotype.NeuronInput;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -68,15 +63,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
     private JFileChooser fileChooser = new JFileChooser();
 
     //Tribe Names
-    private final List<String> names = new ArrayList<>();
+    private final List<String> nameList = new ArrayList<>();
+    private final List<Tribe> tribeList = new ArrayList<>();
+    private List<Hopper> currentTribe = new ArrayList<>();
 
     // Contains opengl graphics
     private GraphicsPanel graphicsPanel;
     private Renderer renderer;
 
     private Hopper hopper;
-    private Creature phenotype;
-    private Genotype genotype;
 
     //Maintab
     private JTabbedPane mainTab;
@@ -105,6 +100,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
     // Label...
     private JLabel currentCreature;
+    private JLabel currentCreatureName;
 
     // slider used to choose creatures
     private Slider slider;
@@ -121,21 +117,20 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
     public GUI() {
         super("Creature Creator");
 
-        names.add("Thread 8");
-        names.add("Thread 7");
-        names.add("Thread 6");
-        names.add("Thread 5");
-        names.add("Thread 4");
-        names.add("Thread 3");
-        names.add("Thread 2");
-        names.add("Thread 1");
-
         int numberofcores = Runtime.getRuntime().availableProcessors();
-        for (int i = 0; i < 8 - numberofcores; i++) {
-            names.remove(0);
+        for (int i = 0; i < numberofcores; i++) {
+            String name = "Tribe " + i;
+            tribeList.add(new Tribe(name));
+            nameList.add(name);
         }
 
-        testCreature();
+        currentTribe = tribeList.get(0).getList();
+
+        try {
+            hopper = new Hopper(currentTribe.get(0));
+        } catch (GeneticsException ex) {
+            ex.printStackTrace();
+        }
     }
 
     /**
@@ -183,28 +178,46 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
             // Step Next Generation
             case "Next Generation":
                 break;
+
+            case "Change Tribe":
+                currentTribe = tribeList.get(tribes.getSelectedIndex()).getList();
+                try {
+                    hopper = new Hopper(currentTribe.get(0));
+                    slider.setValue(0);
+                    renderer.setHopper(hopper);
+                    currentCreatureName.setText(hopper.getName());
+                } catch (GeneticsException ex) {
+                    ex.printStackTrace();
+                }
+                break;
         }
 
         // if pause unpause the next generation button
         nextGeneration.setEnabled(paused);
     }
 
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    public void mouseExited(MouseEvent e) {
-    }
-
-    public void mousePressed(MouseEvent e) {
-    }
-
+    public void mouseClicked(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
+    public void mousePressed(MouseEvent e) {}
+    
     @Override
     public void mouseReleased(MouseEvent e) {
         if (mainTab.getSelectedIndex() == 1) {
             populateTree();
+        }
+        else {
+            graphicsPanel.startAnimator();
+        }
+
+        try {
+            hopper = new Hopper(currentTribe.get(slider.getValue()));
+            renderer.setHopper(hopper);
+            graphicsPanel.startAnimator();
+            graphicsPanel.stopAnimator();
+            currentCreatureName.setText(hopper.getName());
+        } catch (GeneticsException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -222,38 +235,36 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
      */
     private void populateTree() {
         String title = hopper.getName();
+
         
-        root.removeAllChildren();
         Block[] body = hopper.getGenotype().getBody();
 
-        for(Block b: body) {
+        root.removeAllChildren();
+        for (Block b : body) {
             DefaultMutableTreeNode blockTree;
-            
+
             String[] blockArray = b.toString().split("\n");
-            
+
             blockTree = new DefaultMutableTreeNode(blockArray[0]);
             blockTree.add(new DefaultMutableTreeNode(blockArray[1]));
-            
-            if(blockArray.length > 2){
+
+            if (blockArray.length > 2) {
                 DefaultMutableTreeNode ruleTree = null;
-                for(int j = 2; j < blockArray.length; j++){
-                    if(blockArray[j].contains("Rule Table")){
+                for (int j = 2; j < blockArray.length; j++) {
+                    if (blockArray[j].contains("Rule Table")) {
                         ruleTree = new DefaultMutableTreeNode(blockArray[j]);
                         blockTree.add(ruleTree);
                     }
-                    else{
+                    else {
                         ruleTree.add(new DefaultMutableTreeNode(blockArray[j]));
                     }
                 }
                 blockTree.add(ruleTree);
             }
-            
-            
+
             root.add(blockTree);
         }
-        
-        System.out.println(hopper.getPhenotype());
-        
+
         table.setBorder(BorderFactory.createTitledBorder(null,
                                                          title,
                                                          TitledBorder.LEFT,
@@ -330,7 +341,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         GLCapabilities caps = new GLCapabilities(glp);
         graphicsPanel = new GraphicsPanel(500, HEIGHT, caps);
         renderer = graphicsPanel.getRenderer();
-        renderer.setHopper(hopper);
+
+        try {
+            renderer.setHopper(new Hopper(hopper));
+        } catch (GeneticsException ex) {
+            ex.printStackTrace();
+        }
         //////////////////////////////////////////////////
 
         // main tab///////////////////////////////////////
@@ -360,20 +376,25 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         //////////////////////////////////////////////////////////
 
         // Initialize tribes JComboBox/////////////////////////////
-        tribes = new JComboBox(names.toArray());
+        tribes = new JComboBox(nameList.toArray());
         tribes.setSize(new Dimension(130, 20));
         tribes.setPreferredSize(new Dimension(130, 20));
         tribes.setMaximumSize(new Dimension(130, 20));
         tribes.setMinimumSize(new Dimension(130, 20));
+        tribes.setActionCommand("Change Tribe");
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 0, 1000, 0);
+        slider = new Slider("Creature", 0, Tribe.POPULATION_SIZE, 0);
+        slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 
         // Current Creature Label/////////////////////////////////
-        currentCreature = new JLabel("Current Creature");
+        currentCreature = new JLabel("   Current Creature   ");
         currentCreature.setForeground(FONTCOLOR);
+        
+        currentCreatureName = new JLabel(hopper.getName());
+        currentCreatureName.setForeground(FONTCOLOR);
         //////////////////////////////////////////////////////////
 
         // Setup default table/////////////////////////////////////
@@ -395,7 +416,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         rules.setForeground(FONTCOLOR);
 
         //////////////////////////////////////////////////////////
-        
         // Tree///////////////////////////////////////////////////
         root = new DefaultMutableTreeNode("Blocks");
 
@@ -421,6 +441,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         nextGeneration.addActionListener(this);
         writeFile.addActionListener(this);
         loadFile.addActionListener(this);
+        tribes.addActionListener(this);
         ///////////////////////////////////////////////
 
         // Add things to the buttons panel
@@ -429,6 +450,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         buttonsPanel.add(tribes);
         buttonsPanel.add(animate);
         buttonsPanel.add(currentCreature);
+        buttonsPanel.add(currentCreatureName);
         buttonsPanel.add(slider);
         buttonsPanel.add(writeFile);
         buttonsPanel.add(loadFile);
@@ -459,201 +481,200 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
      */
     private void testCreature() {
         ArrayList<Allele> alleles = new ArrayList<>();
-		ArrayList<Gene> genes;
-		
-                //Body[0]
-                alleles.add(new Allele(Allele.Trait.LENGTH, 2f, 0.3f));
-		alleles.add(new Allele(Allele.Trait.LENGTH, 2f, 0.64f));
-                
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.35f));
-                
-		alleles.add(new Allele(Allele.Trait.WIDTH, 3f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.WIDTH, 3f, 0.35f));
-		
-                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE, 0.63f));
-		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE, 0.4f));
-                
-                
-                //Body[1]
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-                
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-		
-                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.0f));
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHEAST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHEAST, 0.3f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.7f));
-                
+        ArrayList<Gene> genes;
 
-                //Body[2]
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-                
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-		
-                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHWEST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHWEST, 0.3f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.7f));
-                
-                
-                //Body[3]
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-                
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-		
-                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.3f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.7f));
-                
-                
-                //Body[4]
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-                
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-		
-                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-		
-                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.3f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.7f));
-                
-                
-                 //Body[5]
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-                
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-		
-                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
-		
-                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_NORTH, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_NORTH, 0.3f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_BACK, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_BACK, 0.7f));
-                
-                
-                 //Body[6]
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-                
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-		
-                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
-		
-                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 5, 0.63f));
-		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 5, 0.4f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 1f, 0.5f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_FRONT, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_FRONT, 0.3f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_EAST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_EAST, 0.7f));
-                
-                
-                 //Body[7]
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-                
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
-		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
-		
-                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-		
-                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
-		
-                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 6, 0.63f));
-		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 6, 0.4f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_WEST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_WEST, 0.3f));
-                
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_WEST, 1f));
-		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_WEST, 0.7f));
-                
-		genes = Gene.allelesToGenes(alleles);
-		
-		// Build some Genes from the Alleles.
-		// Create a Genotype from the Genes.
-		Genotype genotype = new Genotype(genes);
-                hopper = new Hopper(genotype, "Joel");
+        //Body[0]
+        alleles.add(new Allele(Allele.Trait.LENGTH, 2f, 0.3f));
+        alleles.add(new Allele(Allele.Trait.LENGTH, 2f, 0.64f));
+
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.35f));
+
+        alleles.add(new Allele(Allele.Trait.WIDTH, 3f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.WIDTH, 3f, 0.35f));
+
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE, 0.63f));
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE, 0.4f));
+
+        //Body[1]
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.0f));
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHEAST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHEAST, 0.3f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.7f));
+
+        //Body[2]
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHWEST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHWEST, 0.3f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.7f));
+
+        //Body[3]
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.3f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.7f));
+
+        //Body[4]
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.3f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.7f));
+
+        //Body[5]
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
+
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_NORTH, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_NORTH, 0.3f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_BACK, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_BACK, 0.7f));
+
+        //Body[6]
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
+
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 5, 0.63f));
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 5, 0.4f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 1f, 0.5f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_FRONT, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_FRONT, 0.3f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_EAST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_EAST, 0.7f));
+
+        //Body[7]
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
+        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
+
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
+
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 6, 0.63f));
+        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 6, 0.4f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_WEST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_WEST, 0.3f));
+
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_WEST, 1f));
+        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_WEST, 0.7f));
+
+        genes = Gene.allelesToGenes(alleles);
+
+        // Build some Genes from the Alleles.
+        // Create a Genotype from the Genes.
+        Genotype genotype = null;
+        try {
+            genotype = new Genotype(genes);
+        } catch (GeneticsException ex) {
+            ex.printStackTrace();
+        }
+
+        hopper = new Hopper(genotype, "Joel");
     }
 }
