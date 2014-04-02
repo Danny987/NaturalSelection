@@ -1,11 +1,12 @@
 package creature.geeksquad.hillclimbing;
 
 import java.util.HashMap;
-import java.util.Random;
 
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
+
+import creature.geeksquad.library.*;
 
 /**
  * 
@@ -93,7 +94,7 @@ public class TribeBrain {
 			weightSum += strategyWeights.get(i);
 		}
 
-		int choice = new Random().nextInt(weightSum);
+		int choice = Helper.RANDOM.nextInt(weightSum);
 		int subTotal = 0;
 
 		//pick strategy based on weight

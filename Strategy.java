@@ -5,7 +5,6 @@ package creature.geeksquad.hillclimbing;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Random;
 
 import creature.geeksquad.genetics.Allele;
 import creature.geeksquad.genetics.Gene;
@@ -17,6 +16,8 @@ import creature.phenotype.EnumNeuronInputType;
 import creature.phenotype.EnumOperatorBinary;
 import creature.phenotype.EnumOperatorUnary;
 import creature.phenotype.NeuronInput;
+
+import creature.geeksquad.library.*;
 
 /**
  * @author Daniel
@@ -36,11 +37,11 @@ public abstract class Strategy {
 	HashMap<EnumNeuronInputType, Integer> cRuleWeights = new HashMap<EnumNeuronInputType, Integer>();
 	HashMap<EnumNeuronInputType, Integer> dRuleWeights = new HashMap<EnumNeuronInputType, Integer>();
 	HashMap<EnumNeuronInputType, Integer> eRuleWeights = new HashMap<EnumNeuronInputType, Integer>();
-	
+
 	//binary enum maps
 	HashMap<EnumOperatorBinary, Integer> binaryOneWeights = new HashMap<EnumOperatorBinary, Integer>();
 	HashMap<EnumOperatorBinary, Integer> binaryThreeWeights = new HashMap<EnumOperatorBinary, Integer>();
-	
+
 	//unary enum maps
 	HashMap<EnumOperatorUnary, Integer> unaryTwoWeights = new HashMap<EnumOperatorUnary, Integer>();
 	HashMap<EnumOperatorUnary, Integer> unaryFourWeights = new HashMap<EnumOperatorUnary, Integer>();
@@ -63,7 +64,7 @@ public abstract class Strategy {
 	public String climbTypeChooser(Allele allele){
 		//get the trait from the allele
 		Allele.Trait trait = allele.getTrait();
-		
+
 		// Switch to determine what string to return based on the trait.
 		switch (trait) {
 		case HEIGHT: case WIDTH: case LENGTH:
@@ -93,13 +94,13 @@ public abstract class Strategy {
 
 		case BINARY_OPERATOR_1: 
 			return "BINARY_1";
-			
+
 		case BINARY_OPERATOR_3:
 			return "BINARY_3";
 
 		case UNARY_OPERATOR_2:
 			return "UNARY_2";
-			
+
 		case UNARY_OPERATOR_4:
 			return "UNARY_4";
 
@@ -146,7 +147,7 @@ public abstract class Strategy {
 			System.out.println("Can't climb rule CONSTANT yet!");
 		else if(newRuleValue.equals(EnumNeuronInputType.JOINT))
 			return new NeuronInput(newRuleValue, boxIndex, neuron.getDOF());
-		
+
 		//return starting neuron if no change occures
 		return neuron;
 	}
@@ -177,7 +178,7 @@ public abstract class Strategy {
 	}
 
 	/**
-	 * Main climbing method. Starts te hill climbing process.
+	 * Main climbing method. Starts the hill climbing process.
 	 * 
 	 * @param startingHopper - Starting/Non-hill climbed hopper.
 	 * @return Improved, hill climbed hopper.
@@ -194,11 +195,11 @@ public abstract class Strategy {
 	public float getNewFitness(Hopper hopper){
 		//generate a phenotype from the creature
 		Creature phenotype = hopper.getPhenotype();
-		
+
 		//initialize fitness
 		float highestFitness = 0;
 		float fitness = 0;
-		
+
 		//run the simulation
 		for (int i = 0; i < 20; i++) {
 			fitness = phenotype.advanceSimulation();
@@ -243,7 +244,7 @@ public abstract class Strategy {
 		eRuleWeights.put(EnumNeuronInputType.JOINT, 1);
 		eRuleWeights.put(EnumNeuronInputType.TIME, 1);
 		eRuleWeights.put(EnumNeuronInputType.TOUCH, 1);
-		
+
 		//binary operator maps
 		binaryOneWeights.put(EnumOperatorBinary.ADD, 1);
 		binaryOneWeights.put(EnumOperatorBinary.SUBTRACT, 1);
@@ -252,7 +253,7 @@ public abstract class Strategy {
 		binaryOneWeights.put(EnumOperatorBinary.MAX, 1);
 		binaryOneWeights.put(EnumOperatorBinary.MIN, 1);
 		binaryOneWeights.put(EnumOperatorBinary.ARCTAN2, 1);
-		
+
 		binaryThreeWeights.put(EnumOperatorBinary.ADD, 1);
 		binaryThreeWeights.put(EnumOperatorBinary.SUBTRACT, 1);
 		binaryThreeWeights.put(EnumOperatorBinary.MULTIPLY, 1);
@@ -260,7 +261,7 @@ public abstract class Strategy {
 		binaryThreeWeights.put(EnumOperatorBinary.MAX, 1);
 		binaryThreeWeights.put(EnumOperatorBinary.MIN, 1);
 		binaryThreeWeights.put(EnumOperatorBinary.ARCTAN2, 1);
-		
+
 		//unary operator maps
 		unaryTwoWeights.put(EnumOperatorUnary.ABS, 1);
 		unaryTwoWeights.put(EnumOperatorUnary.IDENTITY, 1);
@@ -269,7 +270,7 @@ public abstract class Strategy {
 		unaryTwoWeights.put(EnumOperatorUnary.NEGATIVE, 1);
 		unaryTwoWeights.put(EnumOperatorUnary.LOG, 1);
 		unaryTwoWeights.put(EnumOperatorUnary.EXP, 1);
-		
+
 		unaryFourWeights.put(EnumOperatorUnary.ABS, 1);
 		unaryFourWeights.put(EnumOperatorUnary.IDENTITY, 1);
 		unaryFourWeights.put(EnumOperatorUnary.SIN, 1);
@@ -277,8 +278,7 @@ public abstract class Strategy {
 		unaryFourWeights.put(EnumOperatorUnary.NEGATIVE, 1);
 		unaryFourWeights.put(EnumOperatorUnary.LOG, 1);
 		unaryFourWeights.put(EnumOperatorUnary.EXP, 1);
-		
-		
+
 	}
 
 	/**
@@ -327,27 +327,117 @@ public abstract class Strategy {
 		weightSum += weightMap.get(EnumNeuronInputType.TIME);
 		weightSum += weightMap.get(EnumNeuronInputType.TOUCH);
 
-		int choice = new Random().nextInt(weightSum);
+		int choice = Helper.RANDOM.nextInt(weightSum);
 		int subTotal = 0;
 
 		//pick strategy based on weight
 		subTotal += weightMap.get(EnumNeuronInputType.CONSTANT);
-		if(choice < subTotal){
-			return EnumNeuronInputType.CONSTANT;}
+		if(choice < subTotal)
+			return EnumNeuronInputType.CONSTANT;
 		subTotal += weightMap.get(EnumNeuronInputType.HEIGHT);
-		if(choice < subTotal){ 
-			return EnumNeuronInputType.HEIGHT;}
+		if(choice < subTotal)
+			return EnumNeuronInputType.HEIGHT;
 		subTotal += weightMap.get(EnumNeuronInputType.JOINT);
-		if(choice < subTotal){ 
-			return EnumNeuronInputType.JOINT;}
+		if(choice < subTotal)
+			return EnumNeuronInputType.JOINT;
 		subTotal += weightMap.get(EnumNeuronInputType.TIME);
-		if(choice < subTotal){ 
-			return EnumNeuronInputType.TIME;}
+		if(choice < subTotal)
+			return EnumNeuronInputType.TIME;
 		subTotal += weightMap.get(EnumNeuronInputType.TOUCH);
-		if(choice < subTotal){ 
-			return EnumNeuronInputType.TOUCH;}
+		if(choice < subTotal)
+			return EnumNeuronInputType.TOUCH;
 
 		//if we got here, I broke it
+		return null;
+	}
+
+	public EnumOperatorBinary pickBinaryValue(char opType){
+		HashMap<EnumOperatorBinary, Integer> weightMap = null;
+
+		if(opType == '1') weightMap = binaryOneWeights;
+		else if(opType == '3') weightMap = binaryThreeWeights;
+
+		int weightSum = 0;
+
+		weightSum += weightMap.get(EnumOperatorBinary.ADD);
+		weightSum += weightMap.get(EnumOperatorBinary.SUBTRACT);
+		weightSum += weightMap.get(EnumOperatorBinary.MULTIPLY);
+		weightSum += weightMap.get(EnumOperatorBinary.POWER);
+		weightSum += weightMap.get(EnumOperatorBinary.MAX);
+		weightSum += weightMap.get(EnumOperatorBinary.MIN);
+		weightSum += weightMap.get(EnumOperatorBinary.ARCTAN2);
+
+		int choice = Helper.RANDOM.nextInt(weightSum);
+		int subTotal = 0;
+
+		subTotal += weightMap.get(EnumOperatorBinary.ADD);
+		if(choice < subTotal)
+			return EnumOperatorBinary.ADD;
+		subTotal += weightMap.get(EnumOperatorBinary.SUBTRACT);
+		if(choice < subTotal)
+			return EnumOperatorBinary.SUBTRACT;
+		subTotal += weightMap.get(EnumOperatorBinary.MULTIPLY);
+		if(choice < subTotal)
+			return EnumOperatorBinary.MULTIPLY;
+		subTotal += weightMap.get(EnumOperatorBinary.POWER);
+		if(choice < subTotal)
+			return EnumOperatorBinary.POWER;
+		subTotal += weightMap.get(EnumOperatorBinary.MAX);
+		if(choice < subTotal)
+			return EnumOperatorBinary.MAX;
+		subTotal += weightMap.get(EnumOperatorBinary.MIN);
+		if(choice < subTotal)
+			return EnumOperatorBinary.MIN;
+		subTotal += weightMap.get(EnumOperatorBinary.ARCTAN2);
+		if(choice < subTotal)
+			return EnumOperatorBinary.ARCTAN2;
+
+		//if we got here, it's broken
+		return null;
+	}
+
+	public EnumOperatorUnary pickUnaryValue(char opType){
+		HashMap<EnumOperatorUnary, Integer> weightMap = null;
+
+		if(opType == '2') weightMap = unaryTwoWeights;
+		else if(opType == '4') weightMap = unaryFourWeights;
+
+		int weightSum = 0;
+
+		weightSum += weightMap.get(EnumOperatorUnary.ABS);
+		weightSum += weightMap.get(EnumOperatorUnary.EXP);
+		weightSum += weightMap.get(EnumOperatorUnary.IDENTITY);
+		weightSum += weightMap.get(EnumOperatorUnary.LOG);
+		weightSum += weightMap.get(EnumOperatorUnary.NEGATIVE);
+		weightSum += weightMap.get(EnumOperatorUnary.SIGN);
+		weightSum += weightMap.get(EnumOperatorUnary.SIN);
+
+		int choice = Helper.RANDOM.nextInt(weightSum);
+		int subTotal = 0;
+
+		subTotal += weightMap.get(EnumOperatorUnary.ABS);
+		if(choice < subTotal)
+			return EnumOperatorUnary.ABS;
+		subTotal += weightMap.get(EnumOperatorUnary.EXP);
+		if(choice < subTotal)
+			return EnumOperatorUnary.EXP;
+		subTotal += weightMap.get(EnumOperatorUnary.IDENTITY);
+		if(choice < subTotal)
+			return EnumOperatorUnary.IDENTITY;
+		subTotal += weightMap.get(EnumOperatorUnary.LOG);
+		if(choice < subTotal)
+			return EnumOperatorUnary.LOG;
+		subTotal += weightMap.get(EnumOperatorUnary.NEGATIVE);
+		if(choice < subTotal)
+			return EnumOperatorUnary.NEGATIVE;
+		subTotal += weightMap.get(EnumOperatorUnary.SIGN);
+		if(choice < subTotal)
+			return EnumOperatorUnary.SIGN;
+		subTotal += weightMap.get(EnumOperatorUnary.SIN);
+		if(choice < subTotal)
+			return EnumOperatorUnary.SIN;
+
+		//if we got here, it's broken
 		return null;
 	}
 

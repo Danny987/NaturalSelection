@@ -10,7 +10,10 @@ import creature.geeksquad.genetics.Allele;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
+import creature.phenotype.EnumOperatorBinary;
+import creature.phenotype.EnumOperatorUnary;
 import creature.phenotype.NeuronInput;
+import creature.phenotype.Rule;
 
 /**
  * @author Danny Gomez
@@ -22,7 +25,7 @@ import creature.phenotype.NeuronInput;
  *
  */
 public class ChangeSingleAllele extends Strategy{
-	
+
 	final boolean DEBUG = true;
 
 	//a map to store the gene indices and their success probability
@@ -42,17 +45,17 @@ public class ChangeSingleAllele extends Strategy{
 	public Hopper climb(Hopper hopperToClimb) {
 		//get the genotype from the hopper
 		Genotype genotypeToClimb = hopperToClimb.getGenotype();
-		
+
 		if(DEBUG)System.out.println("Starting Fitness: " + hopperToClimb.getFitness());
-		
+
 		//pick allele based on weighted probability
 		Allele allele = pickAllele(genotypeToClimb);
-		
+
 		if(DEBUG)System.out.println("Allele chosen to climb: " + allele);
 
 		//check what type of climbing needs to be done. int, float, enum, etc.
 		String climbType = climbTypeChooser(allele);
-		
+
 		if(DEBUG)System.out.println("Hill Climb Type: " + climbType);
 
 		if(climbType == null){
@@ -70,23 +73,25 @@ public class ChangeSingleAllele extends Strategy{
 		else if(climbType.equals("RULE_A") || climbType.equals("RULE_B") || 
 				climbType.equals("RULE_C") || climbType.equals("RULE_D") ||
 				climbType.equals("RULE_E")){
-			
+
 			//get box index
 			int boxIndex = getBoxIndex(genotypeToClimb, geneIndex);
-			
+
 			climbRuleAllele(hopperToClimb, allele, climbType, boxIndex);
 		}
 		else if(climbType.equals("BINARY_1") || climbType.equals("BINARY_3")){
-			climbBinaryAllele(allele);
+			climbBinaryAllele(hopperToClimb, allele, climbType);
 		}
 		else if(climbType.equals("UNARY_2") || climbType.equals("UNARY_4")){
-			climbUnaryAllele(allele);
+			climbUnaryAllele(hopperToClimb, allele, climbType);
 		}
 
 		if(DEBUG)System.out.println("Allele after climb: " + allele);
-		
+
 		if(DEBUG)System.out.println("New Fitness: " + hopperToClimb.getFitness());
-		
+
+		//TODO change weight map
+
 		return hopperToClimb;
 	}//end climb method
 
@@ -97,11 +102,11 @@ public class ChangeSingleAllele extends Strategy{
 	 * @param allele - specific allele to climb in hopper
 	 */
 	private void climbFloatAllele(Hopper hopper, Allele allele){
-		
+
 		//variable initialization
 		int initialDirection = 1; //default direction is "add"
 		int direction = initialDirection; //set direction
-		
+
 		float initialStepSize = 0.2f; //default step size, aka how much to add to value
 		float stepSize = initialStepSize; //set step size
 
@@ -111,7 +116,7 @@ public class ChangeSingleAllele extends Strategy{
 
 			//do 1 step of float hillclimbing
 			climbFloat(allele, direction, stepSize);
-			
+
 			//if improvement
 			if(improved(hopper)){
 				//double step size
@@ -158,7 +163,6 @@ public class ChangeSingleAllele extends Strategy{
 
 	//change the type of joint at this allele
 	public void climbJointAllele(Allele allele){
-		
 	}
 
 	public void climbIndexAllele(Allele allele){
@@ -172,7 +176,7 @@ public class ChangeSingleAllele extends Strategy{
 		NeuronInput originalValue = (NeuronInput)allele.getValue();
 		//clone of starting neuron
 		NeuronInput clonedValue = Allele.copyNeuron(originalValue);
-		
+
 		//figure out what type of rule the allele contains
 		if(climbType.equals("RULE_A")){
 			//change the rule value based on rule type map
@@ -190,25 +194,77 @@ public class ChangeSingleAllele extends Strategy{
 			//change the rule value based on rule type map
 			clonedValue = climbRule(clonedValue, 'E', boxIndex);
 		}
-		
+
 		allele.setValue(clonedValue);
-		
+
 		//if improved, replace neuron
 		if(improved(hopper)){
 			allele.setValue(clonedValue);
+			//TODO change weight map
 		}
 		//if it doesn't improve
 		else{
 			//undo change
 			allele.setValue(originalValue);
+			//TODO change weight map
+		}
+
+	}
+
+	public void climbBinaryAllele(Hopper hopper, Allele allele, String climbType){
+		//starting operator
+		EnumOperatorBinary originalValue = (EnumOperatorBinary) allele.getValue();
+		//cloned operator
+		EnumOperatorBinary clonedValue = (EnumOperatorBinary) allele.getValue();
+
+		if(climbType.equals("BINARY_1")){
+			clonedValue = pickBinaryValue('1');
+		}
+		else if(climbType.equals("BINARY_3")){
+			clonedValue = pickBinaryValue('3');
+		}
+
+		allele.setValue(clonedValue);
+
+		//if improved, replace neuron
+		if(improved(hopper)){
+			allele.setValue(clonedValue);
+			//TODO change weight map
+		}
+		//if it doesn't improve
+		else{
+			//undo change
+			allele.setValue(originalValue);
+			//TODO change weight map
+		}
+	}
+
+	public void climbUnaryAllele(Hopper hopper, Allele allele, String climbType){
+		//starting operator
+		EnumOperatorUnary originalValue = (EnumOperatorUnary) allele.getValue();
+		//cloned operator
+		EnumOperatorUnary clonedValue = (EnumOperatorUnary) allele.getValue();
+		
+		if(climbType.equals("UNARY_2")){
+			clonedValue = pickUnaryValue('2');
+		}
+		else if(climbType.equals("UNARY_4")){
+			clonedValue = pickUnaryValue('4');
 		}
 		
-	}
+		allele.setValue(clonedValue);
 
-	public void climbBinaryAllele(Allele allele){
-	}
-
-	public void climbUnaryAllele(Allele allele){
+		//if improved, replace neuron
+		if(improved(hopper)){
+			allele.setValue(clonedValue);
+			//TODO change weight map
+		}
+		//if it doesn't improve
+		else{
+			//undo change
+			allele.setValue(originalValue);
+			//TODO change weight map
+		}
 	}
 
 
