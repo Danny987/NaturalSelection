@@ -208,7 +208,7 @@ public class Population {
 	 * @param pop1 First Population to interbreed.
 	 * @param pop2 Second Population to interbreed.
 	 */
-	public static synchronized void interbreed(Population pop1,
+	public static void interbreed(Population pop1,
 			Population pop2) {
 		// TODO
 	}
