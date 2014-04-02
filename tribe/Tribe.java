@@ -24,10 +24,10 @@ public class Tribe extends Thread {
     }
 
     /**
-     *
+     * Call things to run hill climbing and cross over.
      */
     public void nextGeneration() {
-
+        
     }
 
     @Override
@@ -61,8 +61,7 @@ public class Tribe extends Thread {
      * @return new Hopper
      */
     private Hopper generateHopper() {
-
-        return new Hopper(null);
+        return null;
     }
 
     /**

@@ -51,17 +51,30 @@ public class Renderer implements GLEventListener {
 
         GL2 gl = drawable.getGL().getGL2();
 
-// clear the screen
+        // clear the screen
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
         // sets everything to default
+        glu.gluLookAt(0, 0, 0, 0, -testTheta, 0, 0, 0, 0);
         gl.glLoadIdentity();
 
+        // Move the hopper away from the camera
+       
+        
         gl.glTranslatef(0, 0, -50);
         
+        // Drawing stuff ////////////////////////////////////////////////////
         gl.glPushMatrix();
+        
+        //used to see the creature from different angles
         gl.glRotatef(testTheta, 0, 1, 0);
         testTheta += .5;
+        
+        
+        // It's ALIVE!!!
+        hopper.getPhenotype().advanceSimulation();
+  
+        // Draw the body block by block.
         for (int i = 0; i < body.length; i++) {
             length = body[i].getLength();
             height = body[i].getHeight();
@@ -70,9 +83,15 @@ public class Renderer implements GLEventListener {
             up = phenotype.getBlockUpVector(i);
             forward = phenotype.getBlockForwardVector(i);
 
+            // Draw the current block
             drawBlock(gl, length, height, width, center, up, forward);
         }
+        
+        setColor(gl, 0, 1, 0);
+        drawBlock(gl, 100, .0001f, 100, Vector3.ZERO, Vector3.UP, Vector3.FORWARD);
+  
         gl.glPopMatrix();
+        /////////////////////////////////////////////////////////////////////////
     }
 
     @Override
@@ -111,15 +130,17 @@ public class Renderer implements GLEventListener {
     }
 
     /**
-     *
+     * Initialize everything for lighting
      * @param gl
      */
     private void doLighting(GL2 gl) {
         float[] lightPos = new float[4]; // The lights position
-        lightPos[0] = 0;
-        lightPos[1] = 0;
-        lightPos[2] = -5000;
+        lightPos[0] = 0;                          // x position
+        lightPos[1] = 0;                          // y position
+        lightPos[2] = -5000;                      // z position
         lightPos[3] = 1;
+        
+        // enable lighting
         gl.glEnable(GLLightingFunc.GL_LIGHTING);
         gl.glEnable(GLLightingFunc.GL_LIGHT0);
 
@@ -148,30 +169,24 @@ public class Renderer implements GLEventListener {
      * @param forward 
      */
     public void drawBlock(GL2 gl, float length, float height, float width, Vector3 center, Vector3 up, Vector3 forward) {
-        float angle = 0;
-        
         gl.glPushMatrix();
+        
+        // move to the center of the block
         gl.glTranslatef(center.x , center.y, center.z);
+        
+        float[] rotationMatrix = new float[16];
+        Vector3.vectorsToRotationMatrix(rotationMatrix, forward, up);
+        gl.glMultMatrixf(rotationMatrix, 0);
+        
+        // scale to the size of the given block
         gl.glScalef(length, height, width);
         
-//        angle = (float)Math.toDegrees(Vector3.getAngleBetweenVectors(up, Vector3.UP));
-//        gl.glRotatef(angle, up.x, up.y, up.z);
-        
-//        angle = (float)Math.toDegrees(Vector3.getAngleBetweenVectors(forward, Vector3.FORWARD));
-//        gl.glRotatef(angle, forward.x, 0, forward.z);
-        
-        System.out.println(center);
-        
-        //Set material and shininess!
-        gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, new float[]{center.x, center.y, center.z, 1}, 0);
-        gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_SPECULAR, new float[]{center.x, center.y, center.z, 1}, 0);
-        gl.glMaterialf(GL.GL_FRONT_AND_BACK, GL2.GL_SHININESS, .5f);
+//        System.out.println("Up Vector = " + up + "Forward Vector = " + forward);
+        setColor(gl, center.x, center.y, center.z);
 
         // Draw the vertecies 
         gl.glBegin(GL.GL_TRIANGLES);
 
-//        gl.glColor3f(center.x, center.y, center.z);
-        
         //Front
         gl.glNormal3f(0, 0, 1);
         gl.glVertex3f(1, 1, -1);
@@ -227,6 +242,24 @@ public class Renderer implements GLEventListener {
         gl.glVertex3f(-1, -1, -1);
         gl.glEnd();
         gl.glPopMatrix();
+    }
+    
+    private void setColor(GL2 gl, float r, float g, float b){
+        //Set material and shininess!
+        gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, new float[]{r, g, b, 1}, 0);
+        gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_SPECULAR, new float[]{r, g, b, 1}, 0);
+        gl.glMaterialf(GL.GL_FRONT_AND_BACK, GL2.GL_SHININESS, .5f);
+
+    }
+    
+    private void drawFloor(GL2 gl){
+        gl.glNormal3f(0, 1, 0);
+        gl.glVertex3f(-1, -1, 1);
+        gl.glVertex3f(1, -1, 1);
+        gl.glVertex3f(1, -1, -1);
+        gl.glVertex3f(-1, -1, 1);
+        gl.glVertex3f(1, -1, -1);
+        gl.glVertex3f(-1, -1, -1);  
     }
 
 }

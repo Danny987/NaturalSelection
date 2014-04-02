@@ -403,8 +403,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         tree.setBackground(BACKGROUND_COLOR);
         tree.setForeground(FONTCOLOR);
 
-        final DefaultTreeCellRenderer treeRenderer
-                = (DefaultTreeCellRenderer) (tree.getCellRenderer());
+        // Setup the colors of the tree
+        final DefaultTreeCellRenderer treeRenderer = (DefaultTreeCellRenderer) (tree.getCellRenderer());
         treeRenderer.setBackgroundNonSelectionColor(BACKGROUND_COLOR);
         treeRenderer.setBackgroundSelectionColor(new Color(15, 15, 15));
         treeRenderer.setTextNonSelectionColor(FONTCOLOR);
@@ -458,7 +458,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
      * Setup a test creature
      */
     private void testCreature() {
-        ArrayList<Allele> alleles = new ArrayList<Allele>();
+        ArrayList<Allele> alleles = new ArrayList<>();
 		ArrayList<Gene> genes;
 		
                 //Body[0]
@@ -474,9 +474,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
                 alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE, 0.63f));
 		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE, 0.4f));
                 
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.SPHERICAL, 0.2f));
-		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.0f));
-		
+                
                 //Body[1]
 		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
 		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
@@ -501,69 +499,161 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
 		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.7f));
                 
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0.2f));
-//		alleles.add(new Allele(Allele.Trait.BINARY_OPERATOR_1, EnumOperatorBinary.SUBTRACT, 0.1f));
-//		
-//                alleles.add(new Allele(Allele.Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,0.3f));
-//		alleles.add(new Allele(Allele.Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,0.2f));
-//		
-//                alleles.add(new Allele(Allele.Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0.2f));
-//		alleles.add(new Allele(Allele.Trait.BINARY_OPERATOR_3, EnumOperatorBinary.SUBTRACT, 0.1f));
-//		
-//                alleles.add(new Allele(Allele.Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS,0.3f));
-//		alleles.add(new Allele(Allele.Trait.UNARY_OPERATOR_4, EnumOperatorUnary.EXP,0.2f));
-//		
-//                alleles.add(new Allele(Allele.Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f));
-//		alleles.add(new Allele(Allele.Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
-//		alleles.add(new Allele(Allele.Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
-//		
-//                alleles.add(new Allele(Allele.Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD,0.2f));
-//		alleles.add(new Allele(Allele.Trait.BINARY_OPERATOR_1,EnumOperatorBinary.SUBTRACT, 0.1f));
-//		
-//                alleles.add(new Allele(Allele.Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS,0.3f));
-//		alleles.add(new Allele(Allele.Trait.UNARY_OPERATOR_2, EnumOperatorUnary.EXP,0.2f));
-//		
-//                alleles.add(new Allele(Allele.Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD,0.2f));
-//		alleles.add(new Allele(Allele.Trait.BINARY_OPERATOR_3,EnumOperatorBinary.SUBTRACT, 0.1f));
-//		
-//                alleles.add(new Allele(Allele.Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS,0.3f));
-//		alleles.add(new Allele(Allele.Trait.UNARY_OPERATOR_4, EnumOperatorUnary.EXP,0.2f));
-//		
+
+                //Body[2]
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+                
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
+		
+                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+		
+                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+		
+                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHWEST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHWEST, 0.3f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.7f));
+                
+                
+                //Body[3]
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+                
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
+		
+                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+		
+                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+		
+                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.3f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.7f));
+                
+                
+                //Body[4]
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+                
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
+		
+                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+		
+                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
+		
+                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.3f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.7f));
+                
+                
+                 //Body[5]
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+                
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
+		
+                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+		
+                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
+		
+                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
+		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_NORTH, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_NORTH, 0.3f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_BACK, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_BACK, 0.7f));
+                
+                
+                 //Body[6]
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+                
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
+		
+                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+		
+                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
+		
+                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 5, 0.63f));
+		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 5, 0.4f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 1f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 1f, 0.5f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_FRONT, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_FRONT, 0.3f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_EAST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_EAST, 0.7f));
+                
+                
+                 //Body[7]
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
+		alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
+                
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
+		alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
+		
+                alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
+		
+                alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
+		
+                alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 6, 0.63f));
+		alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 6, 0.4f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+		alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_WEST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_WEST, 0.3f));
+                
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_WEST, 1f));
+		alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_WEST, 0.7f));
+                
 		genes = Gene.allelesToGenes(alleles);
 		
 		// Build some Genes from the Alleles.
 		// Create a Genotype from the Genes.
 		Genotype genotype = new Genotype(genes);
                 hopper = new Hopper(genotype, "Joel");
-                
     }
 }
