@@ -133,7 +133,7 @@ public class JointBuilder implements Builder {
 		} else if (dof >= jointDoF) {
 			throw new IllegalArgumentException(
 					"Degree of freedom out of bounds; for joint type " + type +
-					", DoF must be in integer range [0, " + jointDoF +
+					", DoF must be in integer range [0, " + (jointDoF - 1) +
 					"].");
 		}
 		
@@ -169,6 +169,16 @@ public class JointBuilder implements Builder {
 	}
 	
 	/**
+	 * Getter for this RuleBuilder's currently set Joint type.
+	 * 
+	 * @return This RuleBuilder's currently set EnumJointType type or null if 
+	 * 		       not set.
+	 */
+	public EnumJointType getJointType() {
+		return type;
+	}
+	
+	/**
 	 * Converts the JointBuilder into a Joint. If any of the fields except the
 	 * Rule table aren't set, returns null.
 	 * 
@@ -180,7 +190,20 @@ public class JointBuilder implements Builder {
 				ruleTable == null) {
 			return null;
 		} else {
-			return new Joint(type, siteOnParent, siteOnChild, orientation);
+			Joint joint = new Joint(type, siteOnParent, siteOnChild,
+								    orientation);
+			int dof = type.getDoF();
+			if (dof > 0) {
+				for (Rule r : ruleTable[0]) {
+					joint.addRule(r, EnumJointType.DOF_1);
+				}
+			}
+			if (dof > 1) {
+				for (Rule r : ruleTable[1]) {
+					joint.addRule(r, EnumJointType.DOF_2);
+				}
+			}
+			return joint;
 		}
 	}
 	

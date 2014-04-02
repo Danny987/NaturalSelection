@@ -48,6 +48,7 @@ public class Genotype {
 	private ArrayList<Gene> chromosome;
 	private Block[] body;
 	private int size;
+	private Creature phenotype;
 	private Random random = Helper.RANDOM;
 	
 	/**
@@ -107,6 +108,7 @@ public class Genotype {
 			BlockBuilder block = makeRandomBlock(i);
 			if (block.toBlock() != null) {
 				addBlock(makeRandomBlock(i).toBlock());
+				i++;
 			} else {
 				errors++;
 			}
@@ -161,6 +163,7 @@ public class Genotype {
 				}
 			}
 			body = buildBody();
+			phenotype = buildPhenotype();
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			throw ex;
 		}
@@ -671,7 +674,7 @@ public class Genotype {
 	 * @throws IllegalArgumentException if phenotype is invalid; caught and
 	 *             rethrown from phenotype.Creature.
 	 */
-	public Creature getPhenotype() throws IllegalArgumentException {
+	public Creature buildPhenotype() throws IllegalArgumentException {
 		Creature phenotype = null;
 		// If body is null, the Genotype is invalid.
 		if (body == null) {
@@ -700,7 +703,7 @@ public class Genotype {
 	 * @throws IllegalArgumentException if there was a problem creating the
 	 *                                  Creature.
 	 */
-	public Creature getPhenotype(Vector3 rootForwardStart,
+	public Creature buildPhenotype(Vector3 rootForwardStart,
 								 Vector3 rootUpStart)
 								 throws IllegalArgumentException{
 		// If body is null, the Genotype is invalid.
@@ -714,6 +717,15 @@ public class Genotype {
 				throw ex;
 			}
 		}
+	}
+	
+	/**
+	 * Gets the Creature phenotype for this Genotype.
+	 * 
+	 * @return Creature representing this Genotype's phenotype.
+	 */
+	public Creature getPhenotype() {
+		return phenotype;
 	}
 	
 	/**
@@ -933,8 +945,10 @@ public class Genotype {
 	 * @param index Index of this Block in the array and one more than the
 	 * 		      maximum index value that's valid for the Block's parent.
 	 * @return BlockBuilder for a random Block.
+	 * @throws GeneticsException if random Rule generation produced too many
+	 * 		       errors.
 	 */
-	public BlockBuilder makeRandomBlock(int index) {
+	public BlockBuilder makeRandomBlock(int index) throws GeneticsException {
 		BlockBuilder blockBuilder = new BlockBuilder();
 		
 		// Set dimensions.
@@ -956,33 +970,42 @@ public class Genotype {
 		// its jointSiteOnParent or jointSiteOnChild fields set.
 		JointBuilder jointBuilder = makeRandomJoint(index);
 
-		//
-		// TODO make Joel give you a way to check if a joint site is blocked.
-		//
-		int indexToParent = (index == 0 ? 0 : random.nextInt(index - 1));
-		EnumJointSite jointSiteOnParent = EnumJointSite.values()
+		/* ****************************************************************** */
+		/* TODO make Joel give you a way to check if a joint site is blocked.
+		/* ****************************************************************** */
+		int indexToParent = (index <= 1 ? 0 : random.nextInt(index - 1));
+		EnumJointSite siteOnParent = EnumJointSite.values()
 				[random.nextInt(EnumJointSite.values().length)];
-		EnumJointSite jointSiteOnChild = EnumJointSite.values()
+		EnumJointSite siteOnChild = EnumJointSite.values()
 				[random.nextInt(EnumJointSite.values().length)];
+		/* ****************************************************************** */
 		
+		blockBuilder.setIndexToParent(indexToParent);
+		jointBuilder.setSiteOnParent(siteOnParent);
+		jointBuilder.setSiteOnChild(siteOnChild);
 
 		// Generate random rules for any available degrees of freedom.
 		int dof = jointBuilder.getNumDoFs();
-//		for (int i = 0; i < dof; i++) {
-//			int numRules = random.nextInt(10) + 1;
-//			int j = 0;
-//			int error = 0;
-//			while (j < numRules) {
-//				RuleBuilder ruleBuilder = makeRandomRule(index, dof);
-//				
-//				if (rule.toRule() != null) {
-//					
-//					j++;
-//				}
-//			}
-//		}
+		for (int i = 0; i < dof; i++) {
+			int numRules = random.nextInt(10) + 1;
+			int j = 0;
+			int error = 0;
+			while (j < numRules) {
+				RuleBuilder ruleBuilder = makeRandomRule(index, dof);
+				if (ruleBuilder.toRule() != null) {
+					jointBuilder.setRule(ruleBuilder.toRule(), dof - 1);
+					j++;
+				} else {
+					error++;
+				}
+				if (error >= 50) {
+					throw new GeneticsException("Block[" + index + "]: "
+						+ "random Rule seeding failed; errors exceed 50.");
+				}
+			}
+		}
 		
-		
+		blockBuilder.setJointToParent(jointBuilder.toJoint());		
 		
 		return blockBuilder;
 	}
@@ -1027,6 +1050,20 @@ public class Genotype {
 		for (int i = 0; i < NeuronInput.TOTAL_INPUTS; i++) {
 			ruleBuilder.setNeuronInput(makeRandomNeuronInput(i, dof), i);
 		}
+		
+		EnumOperatorBinary op1 = EnumOperatorBinary.values()
+				[random.nextInt(EnumOperatorBinary.values().length)];
+		EnumOperatorUnary op2 = EnumOperatorUnary.values()
+				[random.nextInt(EnumOperatorUnary.values().length)];
+		EnumOperatorBinary op3 = EnumOperatorBinary.values()
+				[random.nextInt(EnumOperatorBinary.values().length)];
+		EnumOperatorUnary op4 = EnumOperatorUnary.values()
+				[random.nextInt(EnumOperatorUnary.values().length)];
+		
+		ruleBuilder.setOp1(op1);
+		ruleBuilder.setOp2(op2);
+		ruleBuilder.setOp3(op3);
+		ruleBuilder.setOp4(op4);
 		
 		return ruleBuilder;
 	}
@@ -1266,7 +1303,7 @@ public class Genotype {
 			newRule.setOp3(EnumOperatorBinary.ADD);
 			newRule.setOp4(EnumOperatorUnary.ABS);
 			genotype.addRule(newRule, 1, 0, 0);
-			Creature phenotype = genotype.getPhenotype();
+			Creature phenotype = genotype.buildPhenotype();
 			System.out.println("---Genotype 1---");
 			System.out.println(genotype);
 			System.out.println("---Phenotype 1---");
@@ -1414,7 +1451,7 @@ public class Genotype {
 			genes2 = Gene.allelesToGenes(alleles2);
 			
 			genotype2 = new Genotype(genes2);
-			Creature phenotype2 = genotype2.getPhenotype();
+			Creature phenotype2 = genotype2.buildPhenotype();
 			System.out.println("---Genotype 2---");
 			System.out.println(genotype2);
 			System.out.println("---Phenotype 2---");
@@ -1432,11 +1469,11 @@ public class Genotype {
 			System.out.println("---Child 1---");
 			System.out.println(children[0]);
 			System.out.println("---Child 1 Phenotype---");
-			System.out.println(children[0].getPhenotype());
+			System.out.println(children[0].buildPhenotype());
 			System.out.println("---Child 2---");
 			System.out.println(children[1]);
 			System.out.println("---Child 2 Phenotype---");
-			System.out.println(children[1].getPhenotype());
+			System.out.println(children[1].buildPhenotype());
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
@@ -1456,7 +1493,7 @@ public class Genotype {
 					Block.PARENT_INDEX_NONE, 0.433f));
 			ArrayList<Gene> genes3 = Gene.allelesToGenes(alleles3);
 			Genotype genotype3 = new Genotype(genes3);
-			Creature phenotype3 = genotype3.getPhenotype();
+			Creature phenotype3 = genotype3.buildPhenotype();
 			System.out.println("---Genotype 3---");
 			System.out.println(genotype3);
 			System.out.println("---Phenotype 3---");
