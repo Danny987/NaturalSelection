@@ -329,10 +329,8 @@ public class Crossover {
 			try {
 				Gene childGeneA = new Gene(parentGeneA.getAlleles()[a1],
 						                   parentGeneB.getAlleles()[b1]);
-				// TODO DoF
 				Gene childGeneB = new Gene(parentGeneA.getAlleles()[a2],
 						                   parentGeneB.getAlleles()[b2]);
-				// TODO DoF
 				childA.add(childGeneA);
 				childB.add(childGeneB);
 			// If there were problems creating any of the Genes, return null.

@@ -29,11 +29,11 @@ public class Population {
 	private Deque<Hopper> hillClimbers;
 	
 	/**
-	 * The default constructor creates an empty Population.
+	 * The default constructor creates an empty Population with its Hoppers
+	 * sorted by fitness.
 	 */
 	public Population() {
-		hoppers = new PriorityQueue<Hopper>(0,
-					new HopperFitnessComparator());
+		hoppers = new PriorityQueue<Hopper>(0, new HopperFitnessComparator());
 		for (Attractor a : Attractor.values()) {
 			attractorTable.put(a, 0.0f);
 		}
@@ -194,14 +194,22 @@ public class Population {
 	}
 	
 	/**
-	 * A static method that performs crossover selection (interbreeding) for
+	 * Perform selection and crossover within the population.
+	 */
+	public void selection() {
+		// TODO
+	}
+	
+	/**
+	 * A static method that performs interpopulation crossover selection for
 	 * two Populations. Returns nothing since it modifies the Populations
 	 * directly.
 	 * 
 	 * @param pop1 First Population to interbreed.
 	 * @param pop2 Second Population to interbreed.
 	 */
-	public static void selection(Population pop1, Population pop2) {
+	public static synchronized void interbreed(Population pop1,
+			Population pop2) {
 		// TODO
 	}
 	

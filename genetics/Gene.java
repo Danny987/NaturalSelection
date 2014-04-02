@@ -26,12 +26,21 @@ import creature.phenotype.EnumJointType;
  */
 public class Gene {
 	/*
-	 * 16 gene types (from project specs): L (length) H (height) W (width) I
-	 * (index to parent) T (joint Type) O (joint orientation) P (joint site on
-	 * Parent) C (joint site on Child) a, b, c, d, e (the five inputs to a rule)
-	 * 1 (binary operator in the 1st neuron of a rule) 2 (unary operator in the
-	 * 1st neuron of a rule) 3 (binary operator in the 2nd neuron of a rule) 4
-	 * (unary operator in the 2nd neuron of a rule) ...etc.
+	 * 16 gene types (from project specs):
+	 *   L (length)
+	 *   H (height)
+	 *   W (width)
+	 *   I (index to parent)
+	 *   T (joint Type)
+	 *   O (joint orientation)
+	 *   P (joint site on Parent)
+	 *   C (joint site on Child)
+	 *   a, b, c, d, e (the five inputs to a rule)
+	 *   1 (binary operator in the 1st neuron of a rule)
+	 *   2 (unary operator in the 1st neuron of a rule)
+	 *   3 (binary operator in the 2nd neuron of a rule)
+	 *   4 (unary operator in the 2nd neuron of a rule)
+	 *   ...etc.
 	 */
 	private final Allele[] alleles = new Allele[2];
 	private Allele dominant;

@@ -11,7 +11,7 @@ package creature.geeksquad.genetics;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Random;
 
 import creature.geeksquad.genetics.Allele.Trait;
 import creature.geeksquad.genetics.Crossover.Strategy;
@@ -43,9 +43,87 @@ public class Genotype {
 	 *   4 (unary operator in the 2nd neuron of a rule)
 	 *   ...etc.
 	 */
+	public static final int MAX_BLOCKS = 50;
+	
 	private ArrayList<Gene> chromosome;
 	private Block[] body;
 	private int size;
+	private Random random = Helper.RANDOM;
+	
+	/**
+	 * Instantiate a new Genotype with random Genes.
+	 * 
+	 * @throws IllegalArgumentException if buildBody tried to pass an invalid
+	 * 		       argument to one of the Builders' setters.
+	 * @throws GeneticsException if buildBody detected an error or if too
+	 *             many errors accumulated during Block creation.
+	 */
+	public Genotype() throws IllegalArgumentException, GeneticsException {
+		chromosome = new ArrayList<Gene>();
+		int numBlocks = random.nextInt(MAX_BLOCKS);
+		
+		// Root block.
+		float length = random.nextInt(19) + random.nextFloat() + 1;
+		chromosome.add(
+				new Gene(
+						new Allele(Trait.LENGTH, length, random.nextFloat()),
+						new Allele(Trait.LENGTH, length, random.nextFloat())
+						)
+				);
+		float height = random.nextInt(19) + random.nextFloat() + 1;
+		while (height < length / 10 || height > length * 10) {
+			height = random.nextInt(19) + random.nextFloat() + 1;
+		}
+		chromosome.add(
+				new Gene(
+						new Allele(Trait.HEIGHT, height, random.nextFloat()),
+						new Allele(Trait.HEIGHT, height, random.nextFloat())
+						)
+				);
+		float width = random.nextInt(19) + random.nextFloat() + 1;
+		while (width < length / 10 || width > length * 10
+				|| width < height / 10 || width > height * 10) {
+			width = random.nextInt(19) + random.nextFloat() + 1;
+		}
+		chromosome.add(
+				new Gene(
+						new Allele(Trait.WIDTH, width, random.nextFloat()),
+						new Allele(Trait.WIDTH, width, random.nextFloat())
+						)
+				);
+		chromosome.add(
+				new Gene(
+						new Allele(Trait.INDEX_TO_PARENT,
+								Block.PARENT_INDEX_NONE, random.nextFloat()),
+						new Allele(Trait.INDEX_TO_PARENT,
+								Block.PARENT_INDEX_NONE, random.nextFloat())
+						)
+				);
+		
+		// Add many blocks.
+		int i = 0;
+		int errors = 0;
+		while (i < numBlocks) {
+			BlockBuilder block = makeRandomBlock(i);
+			if (block.toBlock() != null) {
+				addBlock(makeRandomBlock(i).toBlock());
+			} else {
+				errors++;
+			}
+			// A redundant check to prevent endless looping.
+			if (errors >= 50) {
+				throw new GeneticsException("Block[" + i + "]: "
+						+ "random Genotype seeding failed; errors exceed 50.");
+			}
+		}
+		
+		
+		try {
+			body = buildBody();
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			throw ex;
+		}
+	}
 
 	/**
 	 * Instantiate a new Genotype as a deep clone of a passed chromosome list.
@@ -66,8 +144,6 @@ public class Genotype {
 				if (g != null && !g.isEmpty()) {
 					Trait trait = g.getTrait();
 					Object value = g.getValue();
-					System.out.println("g = " + g);
-					System.out.println("trait = " + trait);
 					switch (trait) {
 						case EMPTY:
 							break;
@@ -850,50 +926,143 @@ public class Genotype {
 	}
 	
 	/**
-	 * Move the Genes for the root Block to the beginning of the strand.
+	 * A helper method for the generic random Genotype constructor that creates
+	 * a random BlockBuilder with dimensions less than 20 and index to parent
+	 * of less than or equal to max.
+	 * 
+	 * @param index Index of this Block in the array and one more than the
+	 * 		      maximum index value that's valid for the Block's parent.
+	 * @return BlockBuilder for a random Block.
 	 */
-	public void zeroRootBlock() {
-		int rootBlockStart = -1;
-		ArrayList<Gene> buffer = new ArrayList<Gene>();
+	public BlockBuilder makeRandomBlock(int index) {
+		BlockBuilder blockBuilder = new BlockBuilder();
 		
-		for (int i = 0; i < size && rootBlockStart < 0; i++) {
-			int index = findBlock(i);
-			// findBlock gets the index of the LENGTH Gene for the Block. The
-			// Gene for the indexToParent is three later.
-			Gene genePlusThree = chromosome.get(index + 3);
-			Trait genePlusThreeTrait = genePlusThree.getTrait();
-			Object genePlusThreeValue = genePlusThree.getValue();
-			if (genePlusThreeTrait == Trait.INDEX_TO_PARENT &&
-					(Integer) genePlusThreeValue == Block.PARENT_INDEX_NONE) {
-				rootBlockStart = index;
-			}
+		// Set dimensions.
+		float length = random.nextInt(19) + random.nextFloat() + 1;
+		float height = random.nextInt(19) + random.nextFloat() + 1;
+		while (height < length / 10 || height > length * 10) {
+			height = random.nextInt(19) + random.nextFloat() + 1;
 		}
-		
-		// Move the Genes from the chromosome to a temporary holding buffer.
-		// Short-circuits to prevent out of bounds.
-		buffer.add(chromosome.get(rootBlockStart));
-		chromosome.remove(rootBlockStart);
-		while (rootBlockStart < chromosome.size()
-				&& chromosome.get(rootBlockStart).getTrait() != Trait.LENGTH) {
-			buffer.add(chromosome.get(rootBlockStart));
-			chromosome.remove(rootBlockStart);
+		float width = random.nextInt(19) + random.nextFloat() + 1;
+		while (width < length / 10 || width > length * 10
+				|| width < height / 10 || width > height * 10) {
+			width = random.nextInt(19) + random.nextFloat() + 1;
 		}
+		blockBuilder.setLength(length);
+		blockBuilder.setHeight(height);
+		blockBuilder.setWidth(width);
 		
-		// Move the Genes from the buffer back into the chromosome.
-		chromosome.addAll(0, buffer);
+		// By design, makeRandomJoint returns an incomplete JointBuilder without
+		// its jointSiteOnParent or jointSiteOnChild fields set.
+		JointBuilder jointBuilder = makeRandomJoint(index);
+
+		//
+		// TODO make Joel give you a way to check if a joint site is blocked.
+		//
+		int indexToParent = (index == 0 ? 0 : random.nextInt(index - 1));
+		EnumJointSite jointSiteOnParent = EnumJointSite.values()
+				[random.nextInt(EnumJointSite.values().length)];
+		EnumJointSite jointSiteOnChild = EnumJointSite.values()
+				[random.nextInt(EnumJointSite.values().length)];
+		
+
+		// Generate random rules for any available degrees of freedom.
+		int dof = jointBuilder.getNumDoFs();
+//		for (int i = 0; i < dof; i++) {
+//			int numRules = random.nextInt(10) + 1;
+//			int j = 0;
+//			int error = 0;
+//			while (j < numRules) {
+//				RuleBuilder ruleBuilder = makeRandomRule(index, dof);
+//				
+//				if (rule.toRule() != null) {
+//					
+//					j++;
+//				}
+//			}
+//		}
+		
+		
+		
+		return blockBuilder;
 	}
 	
 	/**
-	 * Trim empty Genes from the chromosome.
+	 * A helper method for the generic random Genotype constructor that creates
+	 * a random JointBuilder with no rules and without its jointSiteOnParent
+	 * and jointSiteOnChild fields set.
 	 * 
-	 * @param chromosome ArrayList<Gene> to trim.
+	 * @param index Index of owner Block in the array and one more than the
+	 * 		      maximum index value that's valid for the Block's parent.
+	 * @return An incomplete JointBuilder for a random Joint without its
+	 * 		       jointToParent or jointToChild fields set.
 	 */
-	public static void trimEmpty(ArrayList<Gene> chromosome) {
-		for (Iterator<Gene> it = chromosome.iterator(); it.hasNext(); ) {
-			if (it.next().isEmpty()) {
-				it.remove();
-			}
+	public JointBuilder makeRandomJoint(int index) {
+		JointBuilder jointBuilder = new JointBuilder();
+		// By design, makeRandomJoint does not set its JointBuilder's
+		// jointSiteOnParent or jointSiteOnChild fields.
+		EnumJointType jointType = EnumJointType.values()
+				[random.nextInt(EnumJointType.values().length)];
+		float orientation = (float) ((random.nextFloat() * 100)
+				% (2 * Math.PI));
+		
+		jointBuilder.setType(jointType);
+		jointBuilder.setOrientation(orientation);
+		
+		return jointBuilder;
+	}
+	
+	/**
+	 * A helper method for the generic random Genotype constructor that creates
+	 * a random RuleBuilder
+	 * 
+	 * @param index Index of owner Block in the array and one more than the
+	 * 		      maximum index value that's valid for the Block's parent.
+	 * @param dof Degree of freedom to which this Rule applies.
+	 * @return A RuleBuilder for a random Rule.
+	 */
+	public RuleBuilder makeRandomRule(int index, int dof) {
+		RuleBuilder ruleBuilder = new RuleBuilder();
+		
+		for (int i = 0; i < NeuronInput.TOTAL_INPUTS; i++) {
+			ruleBuilder.setNeuronInput(makeRandomNeuronInput(i, dof), i);
 		}
+		
+		return ruleBuilder;
+	}
+	
+	/**
+	 * A helper method for the generic random Genotype constructor that creates
+	 * a random NeuronInput.
+	 * 
+	 * @param index Index of owner Block in the array and one more than the
+	 * 		      maximum index value that's valid for the Block's parent.
+	 * @return A random NeuronInput.
+	 */
+	public NeuronInput makeRandomNeuronInput(int index, int dof) {
+		NeuronInput neuronInput;
+		EnumNeuronInputType inputType = EnumNeuronInputType.values()
+				[random.nextInt(EnumNeuronInputType.values().length)];
+		
+		switch (inputType) {
+		case TIME:
+			neuronInput = new NeuronInput(inputType);
+			break;
+		case CONSTANT:
+			neuronInput = new NeuronInput(inputType, 
+					random.nextFloat() + random.nextInt(20) - 10);
+			break;
+		case HEIGHT: case TOUCH:
+			neuronInput = new NeuronInput(inputType, index);
+			break;
+		case JOINT:
+			neuronInput = new NeuronInput(inputType, index, dof);
+			break;
+		default:
+			neuronInput = null;
+	}
+		
+		return neuronInput;
 	}
 
 	/**

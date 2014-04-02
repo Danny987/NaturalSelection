@@ -402,7 +402,8 @@ public class Allele {
 	 *                     Allele, formatted according to the toString rules:
 	 *                         (trait:value:weight)
 	 */
-	public static Allele stringToAllele(String alleleString) {
+	public static Allele stringToAllele(String alleleString)
+			throws GeneticsException {
 		// Trim the parentheses off the string.
 		String trimmedString = alleleString.substring(1,
 					alleleString.length() - 1);
@@ -439,7 +440,7 @@ public class Allele {
 				value = EnumOperatorUnary.valueOf(substrings[1]);
 				break;
 			default:
-				value = null;
+				return null;
 		}
 		
 		return new Allele(trait, value, weight);

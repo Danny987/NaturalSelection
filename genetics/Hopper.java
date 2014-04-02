@@ -36,15 +36,27 @@ public class Hopper {
 	private boolean realFitness;
 
 	/**
+	 * Instantiate a new Hopper with random Genotype and name.
+	 * 
+	 * @throws GeneticsException if thrown by Genotype.
+	 * @throws IllegalArgumentException if there was a problem creating the
+	 *             Genotype or Phenotype.
+	 */
+	public Hopper() throws IllegalArgumentException, GeneticsException {
+		this(new Genotype(), randomName());
+	}
+	
+	/**
 	 * Instantiate a new Hopper with the passed Genotype and provided name.
 	 * 
 	 * @param genotype Genotype of the new Hopper.
 	 * @param name String to use as the Hopper's name.
+	 * @throws GeneticsException if thrown by Genotype.
 	 * @throws IllegalArgumentException if there was a problem creating the
 	 *             Genotype or Phenotype.
 	 */
 	public Hopper(Genotype genotype, String name)
-			throws IllegalArgumentException {
+			throws IllegalArgumentException, GeneticsException {
 		try {
 			this.genotype = genotype;
 			this.phenotype = genotype.getPhenotype();
@@ -326,9 +338,13 @@ public class Hopper {
 	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
-		//
-		// TODO
-		//
+		try {
+			Hopper hopper1 = new Hopper();
+			System.out.println("---Hopper 1---");
+			System.out.println(hopper1);
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			ex.printStackTrace();
+		}
 	}
 
 }

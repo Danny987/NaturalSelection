@@ -227,9 +227,3 @@ public class RuleBuilder implements Builder {
 	  }
 	  
 }
-
-//private NeuronInput[] input = new NeuronInput[NeuronInput.TOTAL_INPUTS]; 
-//				  private EnumOperatorBinary op1;
-//				  private EnumOperatorUnary op2; 
-//				  private EnumOperatorBinary op3;
-//				  private EnumOperatorUnary op4;
