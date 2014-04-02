@@ -105,10 +105,25 @@ public class Genotype {
 		int i = 0;
 		int errors = 0;
 		while (i < numBlocks) {
+			// Clone the current Genotype for testing.
+			Genotype testGenotype = new Genotype(this);
 			BlockBuilder block = makeRandomBlock(i);
-			if (block.toBlock() != null) {
-				addBlock(makeRandomBlock(i).toBlock());
-				i++;
+			Block testBlock = block.toBlock();
+			if (testBlock != null) {
+				try {
+					testGenotype.addBlock(testBlock);
+					Creature testCreature = buildPhenotype();
+					// If the test phenotype was valid, then we know it's safe
+					// to add the block to *this* Genotype. Short-circuits if
+					// testGenotype is null.
+					if (testCreature != null && 
+							testGenotype.buildPhenotype() != null) {
+						addBlock(testBlock);
+						i++;
+					}
+				} catch (IllegalArgumentException | GeneticsException ex) {
+					errors++;
+				}
 			} else {
 				errors++;
 			}
@@ -118,13 +133,8 @@ public class Genotype {
 						+ "random Genotype seeding failed; errors exceed 50.");
 			}
 		}
-		
-		
-		try {
-			body = buildBody();
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			throw ex;
-		}
+		body = buildBody();
+		phenotype = buildPhenotype();
 	}
 
 	/**
@@ -249,20 +259,20 @@ public class Genotype {
 		}
 		
 		Allele length = new Allele(Trait.LENGTH, new Float(block.getLength()),
-					0.5f);
+					0.0f);
 		Allele height = new Allele(Trait.HEIGHT, new Float(block.getHeight()),
-					0.5f);
-		Allele width = new Allele(Trait.WIDTH, block.getWidth(), 0.5f);
+					0.0f);
+		Allele width = new Allele(Trait.WIDTH, block.getWidth(), 0.0f);
 		Allele indexToParent = new Allele(Trait.INDEX_TO_PARENT,
-										  block.getIndexOfParent(), 0.5f);
+										  block.getIndexOfParent(), 0.0f);
 		Joint joint = block.getJointToParent();
-		Allele jointType = new Allele(Trait.JOINT_TYPE, joint.getType(), 0.5f);
+		Allele jointType = new Allele(Trait.JOINT_TYPE, joint.getType(), 0.0f);
 		Allele jointOrientation = new Allele(Trait.JOINT_ORIENTATION,
-											 joint.getOrientation(), 0.5f);
+											 joint.getOrientation(), 0.0f);
 		Allele jointSiteOnParent = new Allele(Trait.JOINT_SITE_ON_PARENT,
-											  joint.getSiteOnParent(), 0.5f);
+											  joint.getSiteOnParent(), 0.0f);
 		Allele jointSiteOnChild = new Allele(Trait.JOINT_SITE_ON_CHILD,
-										     joint.getSiteOnChild(), 0.5f);
+										     joint.getSiteOnChild(), 0.0f);
 		ArrayList<Rule> ruleList1 = new ArrayList<Rule>();
 		ArrayList<Rule> ruleList2 = new ArrayList<Rule>();
 		int maxDoF = joint.getType().getDoF();
@@ -297,23 +307,23 @@ public class Genotype {
 		
 		for (Rule r : ruleList1) {
 			Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, r.getInput(0),
-										   0.5f);
+										   0.0f);
 			Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, r.getInput(1),
-										   0.5f);
+										   0.0f);
 			Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, r.getInput(2),
-										   0.5f);
+										   0.0f);
 			Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, r.getInput(3),
-										   0.5f);
+										   0.0f);
 			Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, r.getInput(4),
-										   0.5f);
+										   0.0f);
 			Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-										   r.getOp1(), 0.5f);
+										   r.getOp1(), 0.0f);
 			Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-					   					   r.getOp2(), 0.5f);
+					   					   r.getOp2(), 0.0f);
 			Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-					   					   r.getOp3(), 0.5f);
+					   					   r.getOp3(), 0.0f);
 			Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
-					   					   r.getOp2(), 0.5f);
+					   					   r.getOp2(), 0.0f);
 			
 			chromosome.add(++index, new Gene(ruleInputA));
 			chromosome.add(++index, new Gene(ruleInputB));
@@ -329,23 +339,23 @@ public class Genotype {
 		if (maxDoF > 1) {
 			for (Rule r : ruleList2) {
 				Allele ruleInputA = new Allele(Trait.RULE_INPUT_A,
-						r.getInput(0), 0.5f);
+						r.getInput(0), 0.0f);
 				Allele ruleInputB = new Allele(Trait.RULE_INPUT_B,
-						r.getInput(1), 0.5f);
+						r.getInput(1), 0.0f);
 				Allele ruleInputC = new Allele(Trait.RULE_INPUT_C,
-						r.getInput(2), 0.5f);
+						r.getInput(2), 0.0f);
 				Allele ruleInputD = new Allele(Trait.RULE_INPUT_D,
-						r.getInput(3), 0.5f);
+						r.getInput(3), 0.0f);
 				Allele ruleInputE = new Allele(Trait.RULE_INPUT_E,
-						r.getInput(4), 0.5f);
+						r.getInput(4), 0.0f);
 				Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-											   r.getOp1(), 0.5f);
+											   r.getOp1(), 0.0f );
 				Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-						   					   r.getOp2(), 0.5f);
+						   					   r.getOp2(), 0.0f);
 				Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-						   					   r.getOp3(), 0.5f);
+						   					   r.getOp3(), 0.0f);
 				Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
-						   					   r.getOp2(), 0.5f);
+						   					   r.getOp2(), 0.0f);
 				
 				chromosome.add(++index, new Gene(ruleInputA));
 				chromosome.add(++index, new Gene(ruleInputB));
@@ -438,7 +448,7 @@ public class Genotype {
 		// Add a DoF marker if needed.
 		if (chromosome.get(i).getTrait() == Trait.LENGTH) {
 			chromosome.add(--i, new Gene(
-					new Allele(Trait.DOF_MARKER, 2, 0.5f)));
+					new Allele(Trait.DOF_MARKER, 2, 0.0f)));
 		}
 		i++;
 		
@@ -458,23 +468,23 @@ public class Genotype {
 		}
 		
 		Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, rule.getInput(0),
-						   0.5f);
+						   0.0f);
 		Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, rule.getInput(1),
-						   0.5f);
+						   0.0f);
 		Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, rule.getInput(2),
-						   0.5f);
+						   0.0f);
 		Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, rule.getInput(3),
-						   0.5f);
+						   0.0f);
 		Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, rule.getInput(4),
-						   0.5f);
+						   0.0f);
 		Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-						   rule.getOp1(), 0.5f);
+						   rule.getOp1(), 0.0f);
 		Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-						   rule.getOp2(), 0.5f);
+						   rule.getOp2(), 0.0f);
 		Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-						   rule.getOp3(), 0.5f);
+						   rule.getOp3(), 0.0f);
 		Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_4,
-						   rule.getOp2(), 0.5f);
+						   rule.getOp2(), 0.0f);
 		
 		chromosome.add(i, new Gene(ruleInputA));
 		chromosome.add(++i, new Gene(ruleInputB));
@@ -643,12 +653,6 @@ public class Genotype {
 			}
 		}
 		
-		// Add a DoF marker if needed.
-		if (chromosome.get(i).getTrait() == Trait.LENGTH) {
-			chromosome.add(--i, new Gene(
-					new Allele(Trait.DOF_MARKER, 2, 0.5f)));
-		}
-		
 		// Increase i over Rule list until rule index is reached..
 		for (int current = 0; current < rule; ) {
 			if (++i > chromosome.size()) {
@@ -673,9 +677,16 @@ public class Genotype {
 	 * @return Creature (phenotype) of the Genotype.
 	 * @throws IllegalArgumentException if phenotype is invalid; caught and
 	 *             rethrown from phenotype.Creature.
+	 * @throws GeneticsException if buildBody found an error.
 	 */
-	public Creature buildPhenotype() throws IllegalArgumentException {
+	public Creature buildPhenotype() throws IllegalArgumentException,
+			GeneticsException {
 		Creature phenotype = null;
+		try {
+			body = buildBody();
+		} catch (GeneticsException ex) {
+			throw ex;
+		}
 		// If body is null, the Genotype is invalid.
 		if (body == null) {
 			throw new IllegalArgumentException(

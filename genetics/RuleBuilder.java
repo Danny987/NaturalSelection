@@ -9,8 +9,6 @@
  */
 package creature.geeksquad.genetics;
 
-import java.util.ArrayList;
-
 import creature.phenotype.*;
 
 /**

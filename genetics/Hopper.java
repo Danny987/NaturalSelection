@@ -201,8 +201,7 @@ public class Hopper {
 	/**
 	 * Setter for age.
 	 * 
-	 * @param age
-	 *            Hopper's new age as an int.
+	 * @param age Hopper's new age as an int.
 	 */
 	public void setAge(int age) {
 		this.age = age;
@@ -302,7 +301,6 @@ public class Hopper {
 		//
 		// Duplicates of Allele.Trait
 		//
-		EMPTY, // E (empty Allele)
 		LENGTH, // L (length)
 		HEIGHT, // H (height)
 		WIDTH, // W (width)
@@ -319,7 +317,8 @@ public class Hopper {
 		BINARY_OPERATOR_1, // 1 (binary operator in the 1st neuron of a rule)
 		UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule)
 		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
-		UNARY_OPERATOR_4; // 4 (unary operator in the 2nd neuron of a rule)
+		UNARY_OPERATOR_4, // 4 (unary operator in the 2nd neuron of a rule)
+		DOF_MARKER; // End of a degree of freedom.
 
 		/**
 		 * Override of toString.
@@ -342,6 +341,8 @@ public class Hopper {
 			Hopper hopper1 = new Hopper();
 			System.out.println("---Hopper 1---");
 			System.out.println(hopper1);
+			System.out.println("---Phenotype 1---");
+			System.out.println(hopper1.getPhenotype());
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
