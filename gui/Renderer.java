@@ -55,13 +55,12 @@ public class Renderer implements GLEventListener {
         gl.glClear(GL.GL_COLOR_BUFFER_BIT | GL.GL_DEPTH_BUFFER_BIT);
 
         // sets everything to default
-        glu.gluLookAt(0, 0, 0, 0, -testTheta, 0, 0, 0, 0);
         gl.glLoadIdentity();
 
         // Move the hopper away from the camera
        
         
-        gl.glTranslatef(0, 0, -50);
+        gl.glTranslatef(0, 0, -100);
         
         // Drawing stuff ////////////////////////////////////////////////////
         gl.glPushMatrix();
@@ -87,9 +86,6 @@ public class Renderer implements GLEventListener {
             drawBlock(gl, length, height, width, center, up, forward);
         }
         
-        setColor(gl, 0, 1, 0);
-        drawBlock(gl, 100, .0001f, 100, Vector3.ZERO, Vector3.UP, Vector3.FORWARD);
-  
         gl.glPopMatrix();
         /////////////////////////////////////////////////////////////////////////
     }
@@ -182,7 +178,7 @@ public class Renderer implements GLEventListener {
         gl.glScalef(length, height, width);
         
 //        System.out.println("Up Vector = " + up + "Forward Vector = " + forward);
-        setColor(gl, center.x, center.y, center.z);
+        setColor(gl, length/100, height/100, width/100);
 
         // Draw the vertecies 
         gl.glBegin(GL.GL_TRIANGLES);
