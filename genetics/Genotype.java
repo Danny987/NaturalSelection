@@ -43,7 +43,6 @@ public class Genotype {
 	 *   4 (unary operator in the 2nd neuron of a rule)
 	 *   ...etc.
 	 */
-	public static final int MAX_BLOCKS = 50;
 	
 	private ArrayList<Gene> chromosome;
 	private Block[] body;
@@ -61,7 +60,7 @@ public class Genotype {
 	 */
 	public Genotype() throws IllegalArgumentException, GeneticsException {
 		chromosome = new ArrayList<Gene>();
-		int numBlocks = random.nextInt(MAX_BLOCKS);
+		int numBlocks = random.nextInt(Helper.MAX_BLOCKS);
 		
 		// Root block.
 		float length = random.nextInt(19) + random.nextFloat() + 1;
@@ -128,9 +127,10 @@ public class Genotype {
 				errors++;
 			}
 			// A redundant check to prevent endless looping.
-			if (errors >= 50) {
+			if (errors >= Helper.FAULT_TOLERENCE) {
 				throw new GeneticsException("Block[" + i + "]: "
-						+ "random Genotype seeding failed; errors exceed 50.");
+						+ "random Genotype seeding failed; errors exceed "
+						+ Helper.FAULT_TOLERENCE + ".");
 			}
 		}
 		body = buildBody();
@@ -190,40 +190,6 @@ public class Genotype {
 	public Genotype(Genotype source) throws IllegalArgumentException,
 			GeneticsException {
 		this(source.getChromosome());
-	}
-
-	/**
-	 * Perform crossover on two parents to create twin children.
-	 * 
-	 * @param Genotype parentA Genotype from parent A.
-	 * @param Genotype parentB Genotype from parent B.
-	 * @param Strategy strategy Crossover Strategy to use.
-	 * @return Two-element array of Genotypes for children. If there were
-	 *         problems creating any of the genes (e.g. if the alleles didn't
-	 *         trait match properly), returns null.
-	 * @throws IllegalArgumentException from Genotype instantiation.
-	 * @throws GeneticsException from Genotype instantiation.
-	 */
-	public static Genotype[] crossover(Genotype parentA, Genotype parentB,
-			Strategy strategy) throws IllegalArgumentException,
-			GeneticsException {
-		return Crossover.crossover(parentA, parentB, strategy);
-	}
-	
-	/**
-	 * Perform crossover on two parents to create twin children.
-	 * 
-	 * @param Genotype[] Two-element array of Genotypes from parents.
-	 * @param Strategy strategy Crossover Strategy to use.
-	 * @return Two-element array of Genotypes for children. If there were
-	 *         problems creating any of the genes (e.g. if the alleles didn't
-	 *         trait match properly), returns null.
-	 * @throws IllegalArgumentException from Genotype instantiation.
-	 * @throws GeneticsException from Genotype instantiation.
-	 */
-	public static Genotype[] crossover(Genotype[] parents, Strategy strategy)
-			throws IllegalArgumentException, GeneticsException {
-		return Crossover.crossover(parents[0], parents[1], strategy);
 	}
 	
 	/**
@@ -982,7 +948,7 @@ public class Genotype {
 		JointBuilder jointBuilder = makeRandomJoint(index);
 
 		/* ****************************************************************** */
-		/* TODO make Joel give you a way to check if a joint site is blocked.
+		/* Make Joel give you a way to check if a joint site is blocked.
 		/* ****************************************************************** */
 		int indexToParent = (index <= 1 ? 0 : random.nextInt(index - 1));
 		EnumJointSite siteOnParent = EnumJointSite.values()
@@ -1009,9 +975,10 @@ public class Genotype {
 				} else {
 					error++;
 				}
-				if (error >= 50) {
+				if (error >= Helper.FAULT_TOLERENCE) {
 					throw new GeneticsException("Block[" + index + "]: "
-						+ "random Rule seeding failed; errors exceed 50.");
+						+ "random Rule seeding failed; errors exceed "
+						+ Helper.FAULT_TOLERENCE + ".");
 				}
 			}
 		}
@@ -1475,7 +1442,8 @@ public class Genotype {
 			// Crossover test.
 			System.out.println("Starting crossover test.");
 			
-			Genotype[] children = crossover(genotype, genotype2,
+			Crossover crossover = new Crossover();
+			Genotype[] children = crossover.crossover(genotype, genotype2,
 					Strategy.RANDOM);
 			System.out.println("---Child 1---");
 			System.out.println(children[0]);

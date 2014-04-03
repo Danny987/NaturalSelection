@@ -11,7 +11,6 @@ package creature.geeksquad.genetics;
 
 import java.util.*;
 
-import creature.geeksquad.genetics.Hopper.Attractor;
 import creature.geeksquad.library.Helper;
 
 /**
@@ -21,21 +20,23 @@ import creature.geeksquad.library.Helper;
  * @group Danny Gomez
  * @group Marcos Lemus
  */
+@SuppressWarnings("serial")
 public class Population extends ArrayList<Hopper> {
-	private Attractor attractor;
-	private HashMap<Attractor, Float> attractorTable =
-				new HashMap<Attractor, Float>();
-	private ArrayList<Hopper> breeders;
-	private ArrayList<Hopper> climbers;
+	// Sub-collections allow the Population to separate the Hoppers that need
+	// special handling from those in the general population.
+	private final ArrayList<Hopper> breeders;
+	private final Queue<Hopper> climbers;
+	// The Crossover module this Population will use.
+	private Crossover crossover;
 	
 	/**
 	 * The default constructor creates an empty Population.
 	 */
 	public Population() {
 		super();
-		for (Attractor a : Attractor.values()) {
-			attractorTable.put(a, 0.0f);
-		}
+		breeders = new ArrayList<Hopper>();
+		climbers = new LinkedList<Hopper>();
+		crossover = new Crossover();
 	}
 	
 	/**
@@ -44,180 +45,65 @@ public class Population extends ArrayList<Hopper> {
 	 * @param num Number of random Hoppers to create.
 	 */
 	public Population(int num) {
-		super();
+		this();
 		for (int i = 0; i < num; i++) {
 			try {
 				add(new Hopper());
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				ex.printStackTrace();
 				i--;
 			}
 		}
 	}
 	
-	/**
-	 * A fitness Comparator for Hoppers.
-	 */
-	public static class HopperFitnessComparator implements Comparator<Hopper> {
-		/**
-		 * Override of Comparator's compare method. Compares the fitness of two
-		 * Hoppers.
-		 * 
-		 * @param hopperA First Hopper whose fitness should be compared.
-		 * @param hopperB Second Hopper whose fitness should be compared.
-		 * @return Negative int, 0, or positive int if hopperA's fitness is less
-		 *             than, equal to, or greater than hopperB's, respectively.
-		 */
-		@Override
-		public int compare(Hopper hopperA, Hopper hopperB) {
-			if (hopperA.getFitness() > hopperB.getFitness()) {
-				return -1;
-			} else if (hopperA.getFitness() > hopperB.getFitness()) {
-				return 1;
-			} else {
-				return 0;
-			}
-		}
-	}
-	
-	/**
-	 * An optional age Comparator for Hoppers.
-	 */
-	public static class HopperAgeComparator implements Comparator<Hopper> {
-		/**
-		 * Override of Comparator's compare method. Compares the ages of two
-		 * Hoppers.
-		 * 
-		 * @param hopperA First Hopper whose age should be compared.
-		 * @param hopperB Second Hopper whose age should be compared.
-		 * @return Negative int, 0, or positive int if hopperA's age is less
-		 *             than, equal to, or greater than hopperB's, respectively.
-		 */
-		@Override
-		public int compare(Hopper hopperA, Hopper hopperB) {
-			if (hopperA.getAge() > hopperB.getAge()) {
-				return -1;
-			} else if (hopperA.getAge() > hopperB.getAge()) {
-				return 1;
-			} else {
-				return 0;
-			}
-		}
-	}
-	
-	/**
-	 * Reverse the order of the Population.
-	 * 
-	 * @return The fitness of the Hopper at index 0.
-	 */
-	public float reverse() {
-		Collections.sort(this, Collections.reverseOrder());
-		return get(0).getFitness();
-	}
-	
-	/**
-	 * Update the population.
-	 */
-	public void update() {
-		// TODO
-	}
-	
-	/**
-	 * Remove a Hopper from the Population by reference and discard it.
-	 */
-	public void kill(Hopper victim) {
-		remove(victim);
-	}
-	
-	/**
-	 * Remove a Hopper from the Population by index.
-	 */
-	public void kill(int index) {
-		remove(index);
-	}
-	
-	/**
-	 * Kill off the least-desirable n individuals in the Population.
-	 * 
-	 * @param n Number of individuals to kill off.
-	 */
-	public void cull(int n) {
-		for (int i = 0; i < n; i++) {
-			// TODO
-			remove(0);
-		}
-	}
-	
-	/**
-	 * Kill off the provided list of individuals from the Population.
-	 * 
-	 * @param victims List<Hoppers> list of Hoppers to kill off.
-	 */
-	public void cull(List<Hopper> victims) {
-		for (Hopper h : victims) {
-			remove(h);
-		}
-	}
-	
-	/**
-	 * Perform selection and crossover within the population.
-	 */
-	public void selection() {
-		// TODO
-	}
-	
-	/**
-	 * Gets the lowest-fitness Hopper.
-	 * 
-	 * @return Hopper with the lowest fitness or null if the list is empty.
-	 */
-//	public Hopper getUnderachiever() {
-		// TODO
-//		Collections.sort(hoppers, new HopperFitnessComparator());
-		
+//	/**
+//	 * A fitness Comparator for Hoppers.
+//	 */
+//	public static class HopperFitnessComparator implements Comparator<Hopper> {
+//		/**
+//		 * Override of Comparator's compare method. Compares the fitness of two
+//		 * Hoppers.
+//		 * 
+//		 * @param hopperA First Hopper whose fitness should be compared.
+//		 * @param hopperB Second Hopper whose fitness should be compared.
+//		 * @return Negative int, 0, or positive int if hopperA's fitness is less
+//		 *             than, equal to, or greater than hopperB's, respectively.
+//		 */
+//		@Override
+//		public int compare(Hopper hopperA, Hopper hopperB) {
+//			if (hopperA.getFitness() > hopperB.getFitness()) {
+//				return -1;
+//			} else if (hopperA.getFitness() > hopperB.getFitness()) {
+//				return 1;
+//			} else {
+//				return 0;
+//			}
+//		}
 //	}
-	
-	/**
-	 * Getter for attractor.
-	 * 
-	 * @return This Hopper's Attractor.
-	 */
-	public Attractor getAttractor() {
-		return attractor;
-	}
-	
-	/**
-	 * Sets the Attractor for this Population and goes through the hoppers list
-	 * and updates it for each Hopper individually.
-	 * 
-	 * @param attractor Attractor to set for this population.
-	 */
-	public void setAttractor(Attractor attractor) {
-		this.attractor = attractor;
-		for (Hopper h : this) {
-			h.setAttractor(attractor);
-		}
-	}
-	
-	/**
-	 * Getter for a particular value in the Attractor table.
-	 * 
-	 * @param attractor Attractor value to access in the Attractor table.
-	 * @return The requested Attractor's weight from the table as a float.
-	 */
-	public float getAttractorWeight(Attractor attractor) {
-		return attractorTable.get(attractor);
-	}
-	
-	/**
-	 * Setter for a particular value in the Attractor table.
-	 * 
-	 * @param attractor Attractor value to set in the Attractor table.
-	 * @param weight Float to use as Attractor's weight in the table.
-	 */
-	public void setAttractorWeight(Attractor attractor, float weight) {
-		attractorTable.put(attractor, weight);
-	}
+//	
+//	/**
+//	 * An optional age Comparator for Hoppers.
+//	 */
+//	public static class HopperAgeComparator implements Comparator<Hopper> {
+//		/**
+//		 * Override of Comparator's compare method. Compares the ages of two
+//		 * Hoppers.
+//		 * 
+//		 * @param hopperA First Hopper whose age should be compared.
+//		 * @param hopperB Second Hopper whose age should be compared.
+//		 * @return Negative int, 0, or positive int if hopperA's age is less
+//		 *             than, equal to, or greater than hopperB's, respectively.
+//		 */
+//		@Override
+//		public int compare(Hopper hopperA, Hopper hopperB) {
+//			if (hopperA.getAge() > hopperB.getAge()) {
+//				return -1;
+//			} else if (hopperA.getAge() > hopperB.getAge()) {
+//				return 1;
+//			} else {
+//				return 0;
+//			}
+//		}
+//	}
 	
 	/**
 	 * A static method that performs interpopulation crossover selection for
@@ -229,6 +115,106 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	public static void interbreed(Population pop1, Population pop2) {
 		// TODO
+	}
+	
+	/**
+	 * Update the population.
+	 */
+	public void update() {
+		// TODO
+		// Do we need to keep track of age?
+	}
+	
+	/**
+	 * Breed, perform selection and crossover, within the population.
+	 */
+	public void breed() {
+		// TODO
+	}
+	
+	/**
+	 * Perform hill-climbing on the Population.
+	 */
+	public void hillClimb() {
+		// TODO
+	}
+	
+	/**
+	 * Move a percentage of the highest-fitness Hoppers into the breeders
+	 * list.
+	 */
+	public void moveBreeders(float f) {
+		sort();
+		int size = size();
+		int stop = (int) (size - (f * size));
+		if (stop >= size) {
+			breeders.addAll(this);
+			clear();
+		} else {
+			for (int i = size - 1; i >= stop; i--) {
+				breeders.add(remove(i));
+			}
+		}
+	}
+	
+	/**
+	 * Kill off the lowest-fitness n individuals in the general Population.
+	 * 
+	 * @param n Number of individuals to kill off.
+	 */
+	public void cull(int n) {
+		sort();
+		if (n < size()) {
+			removeRange(0, n);
+		} else {
+			clear();
+		}
+	}
+	
+	/**
+	 * Kill off a percentage of the lowest-fitness individuals in the general
+	 * Population.
+	 */
+	public void cullPercent(float f) {
+		if (f > 1.0f) {
+			f = 1.0f;
+		}
+		cull((int) (f * size()));
+	}
+	
+	/**
+	 * Gets the average fitness of this Population. Takes n time since it has
+	 * to iterate over the whole array.
+	 * 
+	 * Note: this method makes no guarantees about the accuracy of its result.
+	 * At any given time, the majority of the Hoppers in the Population will
+	 * have very rough estimates for their individual fitness.
+	 * 
+	 * @return Average fitness of Population as a float.
+	 */
+	public float getAverageFitness() {
+		float sum = 0.0f;
+		for (Hopper h : this) {
+			sum += h.getFitness();
+		}
+		
+		return sum / size();
+	}
+	
+	/**
+	 * Sort this Population according to its natural ordering: ascending Hopper
+	 * fitness.
+	 */
+	public void sort() {
+		Collections.sort(this);
+	}
+	
+	/**
+	 * Sort this Population according to the reverse of its natural ordering:
+	 * descending Hopper fitness.
+	 */
+	public void reverse() {
+		Collections.sort(this, Collections.reverseOrder());
 	}
 	
 	/**
@@ -256,9 +242,6 @@ public class Population extends ArrayList<Hopper> {
 			output.append(h.toString() + Helper.NEWLINE);
 		}
 		output.append("</climbers>" + Helper.NEWLINE);
-		//
-		// TODO
-		//
 		output.append("</population>");
 		
 		return output.toString();

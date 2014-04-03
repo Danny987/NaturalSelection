@@ -27,6 +27,13 @@ public class Crossover {
 	private static Random rand = Helper.RANDOM;
 	
 	/**
+	 * Instantiate a new Crossover and initialize the weight table.
+	 */
+	public Crossover() {
+		// TODO
+	}
+	
+	/**
 	 * Perform crossover on two parents based on a provided strategy. Since the
 	 * positions of blocks don't matter and we need the key genes to line up,
 	 * first align the strands and shift the root block to the beginning.
@@ -40,7 +47,7 @@ public class Crossover {
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	public static Genotype[] crossover(Genotype parentA, Genotype parentB,
+	public Genotype[] crossover(Genotype parentA, Genotype parentB,
 			Strategy strategy) throws IllegalArgumentException,
 			GeneticsException {
 		@SuppressWarnings("unchecked")
@@ -53,7 +60,7 @@ public class Crossover {
 		ArrayList<Gene>[] newChromosomes = align(chromosomeA, chromosomeB);
 		
 		// Randomly choose the starting parent.
-		if (rand.nextInt(2) > 0) {
+		if (Helper.choose() > 0) {
 			chromosomeA = newChromosomes[0];
 			chromosomeB = newChromosomes[1];			
 		} else {
@@ -99,6 +106,27 @@ public class Crossover {
 		Genotype[] genomes = {genome1, genome2};
 		
 		return genomes;
+	}
+	
+	/**
+	 * An overloaded crossover that just provides an alternate input method for
+	 * calling the primary crossover method.
+	 * 
+	 * Perform crossover on two parents based on a provided strategy. Since the
+	 * positions of blocks don't matter and we need the key genes to line up,
+	 * first align the strands and shift the root block to the beginning.
+	 * 
+	 * @param Genotype[] parents Genotype array containing parents A and B.
+	 * @param Strategy strategy Strategy to use for crossover.
+	 * @return Two-element array of Genotypes for children. If there were
+	 *         problems creating any of the genes (e.g. if the alleles didn't
+	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
+	 */
+	public Genotype[] crossover(Genotype[] parents, Strategy strategy)
+			throws IllegalArgumentException, GeneticsException {
+		return crossover(parents[0], parents[1], strategy);
 	}
 	
 	/**
@@ -243,7 +271,7 @@ public class Crossover {
 		ArrayList<Gene>[] newChromosomes = align(chromosomeA, chromosomeB);
 		
 		// Randomly choose the starting parent.
-		if (rand.nextInt(2) > 0) {
+		if (Helper.choose() > 0) {
 			chromosomeA = newChromosomes[0];
 			chromosomeB = newChromosomes[1];			
 		} else {
@@ -321,8 +349,8 @@ public class Crossover {
 		for (int i = 0; i < size; i++) {
 			Gene parentGeneA = new Gene(chromosomeA.get(i));
 			Gene parentGeneB = new Gene(chromosomeB.get(i));
-			int a1 = rand.nextInt(2);
-			int b1 = rand.nextInt(2);
+			int a1 = Helper.choose();
+			int b1 = Helper.choose();
 			int a2 = (a1 == 1 ? 0 : 1);
 			int b2 = (b1 == 1 ? 0 : 1);
 			// Create deep clones of the genes for the children.

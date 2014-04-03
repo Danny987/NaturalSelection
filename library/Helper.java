@@ -22,6 +22,13 @@ import java.util.Random;
 public class Helper {
 	public static final Random RANDOM = new Random();
 	public static final String NEWLINE = System.getProperty("line.separator");
+	public static final int MAX_BLOCKS = 50;
+	// Use the top 20% of the Population for breeding each generation. This
+	// mirrors the portion used in the original Karl Sims experiment.
+	public static final float BREED_PERCENTAGE = 0.2f; 
+	// Allow up to 50 errors to accrue during random Genotype generation before
+	// giving up.
+	public static final int FAULT_TOLERENCE = 50;
 	
 	/**
 	 * Sets the random number generator's seed.
@@ -37,7 +44,7 @@ public class Helper {
 	 * 
 	 * @return 0 or 1.
 	 */
-	public static int binary() {
+	public static int choose() {
 		return RANDOM.nextInt(2);
 	}
 

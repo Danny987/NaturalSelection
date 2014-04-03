@@ -28,12 +28,12 @@ public class Hopper implements Comparable<Hopper> {
 	private int age;
 	private Genotype genotype;
 	private Creature phenotype;
-	private Attractor attractor;
 	private int timesHillClimbed;
 	private int timesBred;
 	private int children;
 	private float fitness;
 	private boolean realFitness;
+//	private Attractor attractor;
 
 	/**
 	 * Instantiate a new Hopper with random Genotype and name.
@@ -116,6 +116,7 @@ public class Hopper implements Comparable<Hopper> {
 	 * @param parentA First parent Hopper.
 	 * @param parentB Second parent Hopper.
 	 * @param strategy Strategy of Crossover to use in breeding.
+	 * @param crossover Crossover instance to use for this breed session.
 	 * @return An array of twin child Hoppers resulting from the crossover of
 	 *             the parents' genotypes.
 	 * @throws IllegalArgumentException if generated Genotypes/Phenotypes
@@ -123,10 +124,10 @@ public class Hopper implements Comparable<Hopper> {
 	 * @throws GeneticsException if thrown by Genotype constructor.
 	 */
 	public static Hopper[] breed(Hopper parentA, Hopper parentB,
-			Strategy strategy) throws IllegalArgumentException,
-			GeneticsException {
+			Strategy strategy, Crossover crossover) throws 
+			IllegalArgumentException, GeneticsException {
 		try {
-			Genotype[] genotypes = Genotype.crossover(parentA.getGenotype(),
+			Genotype[] genotypes = crossover.crossover(parentA.getGenotype(),
 					parentB.getGenotype(), strategy);
 			ArrayList<Hopper> hoppers = new ArrayList<Hopper>();
 
@@ -167,6 +168,13 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	public void setFitness(float fitness) {
 		this.fitness = fitness;
+	}
+	
+	/**
+	 * Sets the realFitness flag to true.
+	 */
+	public void setRealFitness() {
+		realFitness = true;
 	}
 	
 	/**
@@ -234,23 +242,23 @@ public class Hopper implements Comparable<Hopper> {
 		return phenotype;
 	}
 
-	/**
-	 * Getter for attractor.
-	 * 
-	 * @return The Hopper's Attractor.
-	 */
-	public Attractor getAttractor() {
-		return attractor;
-	}
-
-	/**
-	 * Setter for attractor.
-	 * 
-	 * @param attractor New Attractor to give this Hopper.
-	 */
-	public void setAttractor(Attractor attractor) {
-		this.attractor = attractor;
-	}
+//	/**
+//	 * Getter for attractor.
+//	 * 
+//	 * @return The Hopper's Attractor.
+//	 */
+//	public Attractor getAttractor() {
+//		return attractor;
+//	}
+//
+//	/**
+//	 * Setter for attractor.
+//	 * 
+//	 * @param attractor New Attractor to give this Hopper.
+//	 */
+//	public void setAttractor(Attractor attractor) {
+//		this.attractor = attractor;
+//	}
 
 	/**
 	 * Getter for timesHillClimbed.
@@ -309,35 +317,6 @@ public class Hopper implements Comparable<Hopper> {
 				+ Helper.NEWLINE + "</name>" + Helper.NEWLINE + "<genotype>"
 				+ Helper.NEWLINE + genotype.toString() + Helper.NEWLINE
 				+ "</genotype>" + Helper.NEWLINE + "</creature>";
-	}
-
-	/**
-	 * Nested Attractor class for helping with two-stage selection. Primary
-	 * selection is always based on fitness.
-	 */
-	public static enum Attractor {
-		SURFACE_AREA, TOP_BOTTOM_RATIO, WEIGHT,
-		//
-		// Duplicates of Allele.Trait
-		//
-		LENGTH, // L (length)
-		HEIGHT, // H (height)
-		WIDTH, // W (width)
-		INDEX_TO_PARENT, // I (index to parent)
-		JOINT_TYPE, // T (joint Type)
-		JOINT_ORIENTATION, // O (joint orientation)
-		JOINT_SITE_ON_PARENT, // P (joint site on Parent)
-		JOINT_SITE_ON_CHILD, // C (joint site on Child)
-		RULE_INPUT_A, // a (the five inputs to a rule)
-		RULE_INPUT_B, // b (the five inputs to a rule)
-		RULE_INPUT_C, // c (the five inputs to a rule)
-		RULE_INPUT_D, // d (the five inputs to a rule)
-		RULE_INPUT_E, // e (the five inputs to a rule)
-		BINARY_OPERATOR_1, // 1 (binary operator in the 1st neuron of a rule)
-		UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule)
-		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
-		UNARY_OPERATOR_4, // 4 (unary operator in the 2nd neuron of a rule)
-		DOF_MARKER; // End of a degree of freedom.
 	}
 
 	/**
