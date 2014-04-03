@@ -19,6 +19,7 @@ public class Creatures {
      * Initializes the gui and starts the thread
      */
     public Creatures(){
+        Names.loadFiles();
         gui = new GUI();
         Thread guiThread = new Thread(gui);
         

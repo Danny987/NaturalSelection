@@ -119,7 +119,7 @@ public class Renderer implements GLEventListener {
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
 
-        glu.gluPerspective(45.0, (float) width / height, .1, 100); // set perspective
+        glu.gluPerspective(45.0, (float) width / height, .1, 1000); // set perspective
 
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
@@ -178,7 +178,7 @@ public class Renderer implements GLEventListener {
         gl.glScalef(length, height, width);
         
 //        System.out.println("Up Vector = " + up + "Forward Vector = " + forward);
-        setColor(gl, length/100, height/100, width/100);
+        setColor(gl, length/10, height/10, width/10);
 
         // Draw the vertecies 
         gl.glBegin(GL.GL_TRIANGLES);

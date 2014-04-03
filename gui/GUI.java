@@ -5,10 +5,6 @@ import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
-import creature.phenotype.Block;
-import creature.phenotype.Creature;
-import creature.phenotype.EnumJointSite;
-import creature.phenotype.EnumJointType;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -27,8 +23,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.swing.BorderFactory;
@@ -41,9 +35,11 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.Timer;
 import javax.swing.border.TitledBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import javax.swing.tree.DefaultTreeModel;
 
 /**
  *
@@ -52,7 +48,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
 public class GUI extends JFrame implements ActionListener, MouseListener, Runnable {
 
     //Size
-    private final int WIDTH = 640;
+    private final int WIDTH = 700;
     private final int HEIGHT = 600;
 
     //Colors
@@ -60,7 +56,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
     private final Color BACKGROUND_COLOR = new Color(55, 55, 55);
 
     //Read and save files
-    private JFileChooser fileChooser = new JFileChooser();
+    private final JFileChooser fileChooser = new JFileChooser();
 
     //Tribe Names
     private final List<String> nameList = new ArrayList<>();
@@ -70,6 +66,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
     // Contains opengl graphics
     private GraphicsPanel graphicsPanel;
     private Renderer renderer;
+    
+    private Timer timer;
 
     private Hopper hopper;
 
@@ -82,9 +80,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
     // contains all buttons, sliders, and JComboBox
     private Panel buttonsPanel;
 
+    // panel for the slider and or jcombobox
+    private Panel bottomPanel;
+    
     // Display the statistics
     private JScrollPane scroll;
     private Panel stats;
+    private JLabel time;
+    private int secondsSinceStart = 0;
+    
     private Panel table;
     private JTree tree;
     private DefaultMutableTreeNode root;
@@ -100,7 +104,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
     // Label...
     private JLabel currentCreature;
-    private JLabel currentCreatureName;
 
     // slider used to choose creatures
     private Slider slider;
@@ -119,7 +122,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
         int numberofcores = Runtime.getRuntime().availableProcessors();
         for (int i = 0; i < numberofcores; i++) {
-            String name = "Tribe " + i;
+            String name = i + ": " + Names.getTribeName();
             tribeList.add(new Tribe(name));
             nameList.add(name);
         }
@@ -140,6 +143,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
      */
     @Override
     public void actionPerformed(ActionEvent e) {
+        if(e.getSource().equals(timer)){
+            if(!paused) {
+                time.setText((Integer.toString(secondsSinceStart++)));
+                
+            }
+            
+            return;
+        }
+        
         mainTab.getSelectedIndex();
         switch (e.getActionCommand()) {
 
@@ -177,6 +189,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
             // Step Next Generation
             case "Next Generation":
+                tribeList.get(0).nextGeneration();
+                currentTribe = tribeList.get(0).getList();
+                hopper = currentTribe.get(0);
+                renderer.setHopper(hopper);
                 break;
 
             case "Change Tribe":
@@ -185,7 +201,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
                     hopper = new Hopper(currentTribe.get(0));
                     slider.setValue(0);
                     renderer.setHopper(hopper);
-                    currentCreatureName.setText(hopper.getName());
+                    mainTab.setTitleAt(1, hopper.getName());
                 } catch (GeneticsException ex) {
                     ex.printStackTrace();
                 }
@@ -215,7 +231,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
             renderer.setHopper(hopper);
             graphicsPanel.startAnimator();
             graphicsPanel.stopAnimator();
-            currentCreatureName.setText(hopper.getName());
+            mainTab.setTitleAt(1, hopper.getName());
         } catch (GeneticsException ex) {
             ex.printStackTrace();
         }
@@ -234,39 +250,32 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
      * Populate the tree with the current creatures phenotype
      */
     private void populateTree() {
-        String title = hopper.getName();
-
+        DefaultMutableTreeNode block = null;
+        String[] str;
+        str = hopper.toString().split("\n");
         
-        Block[] body = hopper.getGenotype().getBody();
-
+        
+        if(str == null) return;
+        
+        String title = str[2];
+        
         root.removeAllChildren();
-        for (Block b : body) {
-            DefaultMutableTreeNode blockTree;
-
-            String[] blockArray = b.toString().split("\n");
-
-            blockTree = new DefaultMutableTreeNode(blockArray[0]);
-            blockTree.add(new DefaultMutableTreeNode(blockArray[1]));
-
-            if (blockArray.length > 2) {
-                DefaultMutableTreeNode ruleTree = null;
-                for (int j = 2; j < blockArray.length; j++) {
-                    if (blockArray[j].contains("Rule Table")) {
-                        ruleTree = new DefaultMutableTreeNode(blockArray[j]);
-                        blockTree.add(ruleTree);
-                    }
-                    else {
-                        ruleTree.add(new DefaultMutableTreeNode(blockArray[j]));
-                    }
-                }
-                blockTree.add(ruleTree);
+        DefaultTreeModel model = (DefaultTreeModel)tree.getModel();
+        model.reload();
+        
+        for(int i = 5; i < str.length; i++){
+            if(str[i].equals("<//genotype>") || str[i].equals("}")) break;
+            if(str[i].contains("LENGTH")){
+                block = new DefaultMutableTreeNode(str[i++] + str[i++] + str[i++]);
+                root.add(block);
             }
-
-            root.add(blockTree);
+            else{
+                block.add(new DefaultMutableTreeNode(str[i]));
+            }
         }
-
+        table.setPreferredSize(new Dimension(WIDTH + 450, root.getChildCount() * root.getLeafCount()));
         table.setBorder(BorderFactory.createTitledBorder(null,
-                                                         title,
+                                                         null,
                                                          TitledBorder.LEFT,
                                                          TitledBorder.TOP,
                                                          null,
@@ -317,13 +326,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
                 reader.readLine();
                 
                 while(line != null){
-                    
-                    
                     line = reader.readLine();
-                    
-                    line = line.replaceAll("\\[", "");
-                    line = line.replaceAll("\\]", "");
-                    
                     
                     if(line.startsWith("{")){
                         line = line.replace("{", "");
@@ -332,6 +335,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
                         line = line.replace("}", "");
                     }
                     
+                    line = line.substring(1, line.length() -1);
                     
                     lineArray = line.split("\\)\\(");
                     
@@ -349,13 +353,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
                 currentTribe.add(0, new Hopper(genotype, name));
                 
             } catch (FileNotFoundException ex) {
-                System.out.println("File not found");
-            } catch (IllegalArgumentException ex) {
-                ex.printStackTrace();
-            } catch (GeneticsException ex) {
-                System.out.println("Genetics exception");
-            } catch (IOException ex) {
-                System.out.println("io exception");
+                System.out.println(ex);
+            } catch (IllegalArgumentException | GeneticsException | IOException ex) {
+                System.out.println(ex);
             }
 
         }
@@ -399,19 +399,31 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         // main tab///////////////////////////////////////
         mainTab = new JTabbedPane();
         mainTab.setSize(WIDTH, HEIGHT);
-        mainTab.setMinimumSize(new Dimension(WIDTH, HEIGHT + 20));
-        mainTab.setMaximumSize(new Dimension(WIDTH, HEIGHT + 20));
+        mainTab.setMinimumSize(new Dimension(WIDTH, HEIGHT));
+        mainTab.setMaximumSize(new Dimension(WIDTH, HEIGHT));
         //////////////////////////////////////////////////
 
         // Initialize JPanels
         mainPanel = new Panel(WIDTH, HEIGHT);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
 
-        buttonsPanel = new Panel(140, HEIGHT);
+        buttonsPanel = new Panel(WIDTH - graphicsPanel.getWidth(), HEIGHT);
         buttonsPanel.setBackground(BACKGROUND_COLOR);
 
+        bottomPanel = new Panel(WIDTH, 20);
+        bottomPanel.setBackground(Color.RED);
+        
         stats = new Panel(140, 140);
-        stats.setBackground(Color.red);
+        time = new JLabel("0");
+        time.setForeground(FONTCOLOR);
+
+        JLabel timeTitle = new JLabel("Timer");
+        timeTitle.setForeground(FONTCOLOR);
+        
+        stats.add(timeTitle);
+        stats.add(time);
+        stats.setForeground(FONTCOLOR);
+        stats.setBackground(BACKGROUND_COLOR);
         //////////////////////////////////////////////////////////////////
 
         //Initialize buttons
@@ -424,15 +436,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
         // Initialize tribes JComboBox/////////////////////////////
         tribes = new JComboBox(nameList.toArray());
-        tribes.setSize(new Dimension(130, 20));
-        tribes.setPreferredSize(new Dimension(130, 20));
-        tribes.setMaximumSize(new Dimension(130, 20));
-        tribes.setMinimumSize(new Dimension(130, 20));
+        tribes.setSize(new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20));
+        tribes.setPreferredSize(new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20));
+        tribes.setMaximumSize(new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20));
+        tribes.setMinimumSize(new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20));
         tribes.setActionCommand("Change Tribe");
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 0, Tribe.POPULATION_SIZE, 0);
+        slider = new Slider("Creature", 0, Tribe.POPULATION_SIZE - 1, 0);
         slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 
@@ -440,12 +452,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         currentCreature = new JLabel("   Current Creature   ");
         currentCreature.setForeground(FONTCOLOR);
         
-        currentCreatureName = new JLabel(hopper.getName());
-        currentCreatureName.setForeground(FONTCOLOR);
         //////////////////////////////////////////////////////////
 
         // Setup default table/////////////////////////////////////
-        table = new Panel(WIDTH + 300, HEIGHT);
+        table = new Panel(WIDTH, HEIGHT);
         table.setAlignmentX(CENTER_ALIGNMENT);
         table.setBorder(BorderFactory.createTitledBorder(null,
                                                          "No Selection",
@@ -492,12 +502,11 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         ///////////////////////////////////////////////
 
         // Add things to the buttons panel
+        buttonsPanel.add(tribes);
         buttonsPanel.add(pause);
         buttonsPanel.add(nextGeneration);
-        buttonsPanel.add(tribes);
         buttonsPanel.add(animate);
         buttonsPanel.add(currentCreature);
-        buttonsPanel.add(currentCreatureName);
         buttonsPanel.add(slider);
         buttonsPanel.add(writeFile);
         buttonsPanel.add(loadFile);
@@ -512,216 +521,18 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         // add the main panel to "this"
         mainTab.addMouseListener(this);
         mainTab.addTab("Main", mainPanel);
-        mainTab.addTab("Phenotype", scroll);
+        mainTab.addTab(hopper.getName(), scroll);
 
         add(mainTab, BorderLayout.CENTER);
+        add(bottomPanel);
 
         // Initialize the next generations button to off.
         nextGeneration.setEnabled(paused);
 
         // Pack because why not?
         pack();
-    }
-
-    /**
-     * Setup a test creature
-     */
-    private void testCreature() {
-        ArrayList<Allele> alleles = new ArrayList<>();
-        ArrayList<Gene> genes;
-
-        //Body[0]
-        alleles.add(new Allele(Allele.Trait.LENGTH, 2f, 0.3f));
-        alleles.add(new Allele(Allele.Trait.LENGTH, 2f, 0.64f));
-
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.35f));
-
-        alleles.add(new Allele(Allele.Trait.WIDTH, 3f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.WIDTH, 3f, 0.35f));
-
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE, 0.63f));
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE, 0.4f));
-
-        //Body[1]
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.0f));
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHEAST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHEAST, 0.3f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.7f));
-
-        //Body[2]
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHWEST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_FRONT_SOUTHWEST, 0.3f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.7f));
-
-        //Body[3]
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.3f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.7f));
-
-        //Body[4]
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.1f));
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 3f, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.HINGE, 0.2f));
-
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHWEST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.VERTEX_BACK_SOUTHWEST, 0.3f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.VERTEX_BACK_SOUTHEAST, 0.7f));
-
-        //Body[5]
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
-
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.63f));
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 0, 0.4f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_NORTH, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_NORTH, 0.3f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_BACK, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_BACK, 0.7f));
-
-        //Body[6]
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
-
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 5, 0.63f));
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 5, 0.4f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 1f, 0.5f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_FRONT, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_FRONT, 0.3f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_EAST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_EAST, 0.7f));
-
-        //Body[7]
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.2f));
-        alleles.add(new Allele(Allele.Trait.LENGTH, 1f, 0.199f));
-
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.1f));
-        alleles.add(new Allele(Allele.Trait.HEIGHT, 1f, 0.4f));
-
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.WIDTH, 1f, 0.6f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_TYPE, EnumJointType.TWIST, 0.2f));
-
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 6, 0.63f));
-        alleles.add(new Allele(Allele.Trait.INDEX_TO_PARENT, 6, 0.4f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-        alleles.add(new Allele(Allele.Trait.JOINT_ORIENTATION, 0f, 0.5f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_WEST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_PARENT, EnumJointSite.FACE_WEST, 0.3f));
-
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_WEST, 1f));
-        alleles.add(new Allele(Allele.Trait.JOINT_SITE_ON_CHILD, EnumJointSite.FACE_WEST, 0.7f));
-
-        genes = Gene.allelesToGenes(alleles);
-
-        // Build some Genes from the Alleles.
-        // Create a Genotype from the Genes.
-        Genotype genotype = null;
-        try {
-            genotype = new Genotype(genes);
-        } catch (GeneticsException ex) {
-            ex.printStackTrace();
-        }
-
-        hopper = new Hopper(genotype, "Joel");
+        
+        timer = new Timer(1000, this);
+        timer.start();
     }
 }
