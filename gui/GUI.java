@@ -291,6 +291,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
         if (option != JFileChooser.CANCEL_OPTION) {
             File f = fileChooser.getSelectedFile();
+            
 
             try {
                 writer = new BufferedWriter(new FileWriter(f));
@@ -311,6 +312,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         
         if (option != JFileChooser.CANCEL_OPTION) {
             File f = fileChooser.getSelectedFile();
+            System.out.println(f);
             try {
                 String[] lineArray;
                 String name;

@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class Tribe extends Thread {
 
-    public static final int POPULATION_SIZE = 2;
+    public static final int POPULATION_SIZE = 1000;
     private String name;
     private List<Hopper> hoppers = new ArrayList<>();
     private boolean paused = false;
