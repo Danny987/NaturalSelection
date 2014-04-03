@@ -1,3 +1,4 @@
+Every One Is Named Zem
 CS 351
 Block Corp.
 Nudist Beach
@@ -9,6 +10,7 @@ Cult of Kefka
 NaN
 Riverside, Iowa
 Team Jacob
+Team Edward
 WTF is a Hufflepuff?
 FBI Surveillance Van
 Emo Kids
@@ -31,7 +33,6 @@ Waiting for Joel’s Code
 Perfect Fitness
 Max Lies
 Fax Modem and Data SCSI
-Every One Is Named Zem
 Jack Black on a Motorbike
 Section 9
 Soviet Russia
@@ -71,3 +72,51 @@ Valley Climbing
 Electroencephalographers
 Healthcare.gov
 South Lot
+Gotham Police Union
+Homunculi
+The Satanic Society
+One-Star Students
+Two-Star Students
+Three-Star Students
+The Irken Empire
+Non-Athletic Groups
+AKB0048
+Mermaid Yakuza
+Arlong Beach
+The Digi-destined
+Morose Delectation
+VHDL
+The Tojo Clan
+The Indigo League
+Alice B. Toklas Society
+NeuroGame Jam 2048
+Long-Distance Relationships
+<PALS FOR LIFE>
+The Dragonborn Club
+Aedra and Daedra
+Disneyland Employees
+Crowley High
+Goodsoup Family
+Seelie and Unseelie
+Amestris
+ECE Majors
+Unseen University
+Kerbal Space Program
+Professors Emeritus
+Surgeons General
+Anytown, USA
+White Court of Vampires
+To Be Determined
+The Color Squad
+The Colour Squad
+All-American Theatre Society
+Omicron Persei 7
+Omicron Persei 9
+Unnoficial Anime Club
+C--
+Cartoon Characters
+Leaders of the USSR
+Team Starkid
+Has a Tamagotchi
+Beliebers
+Jehovah's Witnesses

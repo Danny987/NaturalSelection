@@ -1,16 +1,35 @@
+Zem
 Ryuko Matoi
 Satsuki Kiryuin
 Ira Gamagori
 Mako Mankanshoku
+Nonon Jakuzure
 Torin, Son of Joel
 Vladamir Putin
 Hajime Ichinose
 Twelve Motion Jeweled Skull
-Zem
 Shiroe
 Inari
 Max who Speaks the Truth
 Hop Armstrong
+Leeroy Jenkins
+Bagger 288
+Chuck Norris
+Biggs
+Wedge
+Steve
+Other Steve
+Not Other Steve
+Muffin Man
+Dr. Wiley
+Zero
+Bass
+Lrrr
+Ndnd
+The Flippant God
+Marcos, Father of Small Child
+James, Folder of Polygons
+Vinny, Slayer of Yetis
 A
 Un
 Aun
@@ -260,7 +279,7 @@ Appaim
 Apphia
 Aquila
 Ar
-Ara[disambiguation needed]
+Ara
 Arab
 Arabia
 Arad
@@ -1237,7 +1256,7 @@ Izri
 Jaakan
 Jaakobah
 Jaala
-Jaalam (name)
+Jaalam
 Jaanai
 Jaasau
 Jaasiel
@@ -1436,7 +1455,7 @@ Joelah
 Joezer
 Jogbehah
 Jogli
-Joha (or Juha)
+Joha
 Johanan
 John
 Joiarib
@@ -2066,7 +2085,7 @@ Pul
 Punites
 Punon
 Pur
-Putiel God is my fatness
+Putiel
 Puteoli
 Quartus
 Quirinius
@@ -2319,7 +2338,7 @@ Shilhi
 Shillem
 Shiloah
 Shiloh
-Shiloh (name of a city)
+Shiloh
 Shilom
 Shilshah
 Shimeah
@@ -2549,12 +2568,12 @@ Vashni
 Vashti
 Vophsi
 Xerxes
-Yakman (yakman
-Yehoyada -god knew.
-Yashua or Eashoa
+Yakman
+Yehoyada
+Yashua
 Yahwe
 Yehezkel
-Yoav (יואב) - "The LORD is father"
+Yoav
 Zaanaim
 Zaanan
 Zaanannim
@@ -3269,7 +3288,7 @@ Caere
 Caerno
 Caerroil
 Caf'es
-Cafe'
+Cafe
 Cahir
 Cail
 Caino
@@ -5957,7 +5976,7 @@ Role
 Rolf
 Rolfur
 Rolo
-Rombonolw
+Rombonol
 Romeo
 Ronetan
 Rooka

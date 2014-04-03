@@ -12,6 +12,7 @@ package creature.geeksquad.genetics;
 import java.util.ArrayList;
 
 import creature.geeksquad.genetics.Crossover.Strategy;
+import creature.geeksquad.gui.Names;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
 
@@ -106,7 +107,7 @@ public class Hopper implements Comparable<Hopper> {
 	 * @return String containing a random name for the Hopper.
 	 */
 	public static String randomName() {
-		return Names.getHopperName;
+		return Names.getHopperName();
 	}
 
 	/**
@@ -129,12 +130,13 @@ public class Hopper implements Comparable<Hopper> {
 			Genotype[] genotypes = crossover.crossover(parentA.getGenotype(),
 					parentB.getGenotype(), strategy);
 			ArrayList<Hopper> hoppers = new ArrayList<Hopper>();
-//			parentA.
 
 			for (Genotype g : genotypes) {
 				hoppers.add(new Hopper(g));
 			}
 
+			parentA.timesBred++;
+			parentB.timesBred++;
 			return (Hopper[]) hoppers.toArray();
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			throw ex;
