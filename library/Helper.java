@@ -29,6 +29,10 @@ public class Helper {
 	// Allow up to 50 errors to accrue during random Genotype generation before
 	// giving up.
 	public static final int FAULT_TOLERENCE = 50;
+	// Seed constants.
+	public static final int SEED_MAX_BLOCKS = 10;
+	public static final int SEED_MAX_SIZE = 10;
+	public static final int SEED_MAX_CONSTANT = 10;
 	
 	/**
 	 * Sets the random number generator's seed.

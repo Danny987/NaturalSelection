@@ -106,8 +106,7 @@ public class Hopper implements Comparable<Hopper> {
 	 * @return String containing a random name for the Hopper.
 	 */
 	public static String randomName() {
-		// TODO
-		return "";
+		return Names.getHopperName;
 	}
 
 	/**
@@ -130,6 +129,7 @@ public class Hopper implements Comparable<Hopper> {
 			Genotype[] genotypes = crossover.crossover(parentA.getGenotype(),
 					parentB.getGenotype(), strategy);
 			ArrayList<Hopper> hoppers = new ArrayList<Hopper>();
+//			parentA.
 
 			for (Genotype g : genotypes) {
 				hoppers.add(new Hopper(g));
@@ -259,6 +259,13 @@ public class Hopper implements Comparable<Hopper> {
 //	public void setAttractor(Attractor attractor) {
 //		this.attractor = attractor;
 //	}
+	
+	/**
+	 * Increment timesHillClimbed.
+	 */
+	public void hillClimbed() {
+		timesHillClimbed++;
+	}
 
 	/**
 	 * Getter for timesHillClimbed.

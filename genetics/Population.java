@@ -14,7 +14,7 @@ import java.util.*;
 import creature.geeksquad.library.Helper;
 
 /**
- * A class for a Population of creatures in a PriorityQueue.
+ * A class for a sortable Population of Hoppers in an extended ArrayList.
  * 
  * @author Ramon A. Lovato
  * @group Danny Gomez
@@ -136,12 +136,25 @@ public class Population extends ArrayList<Hopper> {
 	 * Perform hill-climbing on the Population.
 	 */
 	public void hillClimb() {
-		// TODO
+		Hopper hopper = climbers.poll();
+		// Hopper newHopper = HillClimbing.performHillClimbing(hopper);
+		// newHopper.hillClimbed();
+		// add(newHopper);
+		breeders.remove(hopper);
+	}
+	
+	/**
+	 * Move the top 20% most fit Hoppers into the breeders list.
+	 */
+	public void moveBreeders() {
+		moveBreeders(Helper.BREED_PERCENTAGE);
 	}
 	
 	/**
 	 * Move a percentage of the highest-fitness Hoppers into the breeders
 	 * list.
+	 * 
+	 * @param f Percentage of the highest-fitness Hoppers to move, as a float.
 	 */
 	public void moveBreeders(float f) {
 		sort();
@@ -155,6 +168,13 @@ public class Population extends ArrayList<Hopper> {
 				breeders.add(remove(i));
 			}
 		}
+	}
+	
+	/**
+	 * Kill off the lowest-performing 20% of the Population.
+	 */
+	public void cull() {
+		cull(Helper.BREED_PERCENTAGE);
 	}
 	
 	/**
@@ -174,8 +194,10 @@ public class Population extends ArrayList<Hopper> {
 	/**
 	 * Kill off a percentage of the lowest-fitness individuals in the general
 	 * Population.
+	 * 
+	 * @param f Percentage of individuals to kill off (as a float).
 	 */
-	public void cullPercent(float f) {
+	public void cull(float f) {
 		if (f > 1.0f) {
 			f = 1.0f;
 		}
@@ -184,11 +206,11 @@ public class Population extends ArrayList<Hopper> {
 	
 	/**
 	 * Gets the average fitness of this Population. Takes n time since it has
-	 * to iterate over the whole array.
-	 * 
-	 * Note: this method makes no guarantees about the accuracy of its result.
-	 * At any given time, the majority of the Hoppers in the Population will
-	 * have very rough estimates for their individual fitness.
+	 * to iterate over the whole array. This method makes no guarantees about
+	 * the accuracy of its result. At any given time, the majority of the
+	 * Hoppers in the Population will have very rough estimates for their
+	 * individual fitness, and not all Hoppers are guaranteed to be in the
+	 * general population. The sub-collections are not automatically included.
 	 * 
 	 * @return Average fitness of Population as a float.
 	 */

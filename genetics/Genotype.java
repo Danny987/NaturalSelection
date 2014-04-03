@@ -60,19 +60,22 @@ public class Genotype {
 	 */
 	public Genotype() throws IllegalArgumentException, GeneticsException {
 		chromosome = new ArrayList<Gene>();
-		int numBlocks = random.nextInt(Helper.MAX_BLOCKS);
+		int numBlocks = random.nextInt(Helper.SEED_MAX_BLOCKS);
 		
 		// Root block.
-		float length = random.nextInt(19) + random.nextFloat() + 1;
+		float length = random.nextInt(Helper.SEED_MAX_SIZE - 1)
+				+ random.nextFloat() + 1;
 		chromosome.add(
 				new Gene(
 						new Allele(Trait.LENGTH, length, random.nextFloat()),
 						new Allele(Trait.LENGTH, length, random.nextFloat())
 						)
 				);
-		float height = random.nextInt(19) + random.nextFloat() + 1;
+		float height = random.nextInt(Helper.SEED_MAX_SIZE - 1)
+				+ random.nextFloat() + 1;
 		while (height < length / 10 || height > length * 10) {
-			height = random.nextInt(19) + random.nextFloat() + 1;
+			height = random.nextInt(Helper.SEED_MAX_SIZE - 1)
+					+ random.nextFloat() + 1;
 		}
 		chromosome.add(
 				new Gene(
@@ -80,10 +83,12 @@ public class Genotype {
 						new Allele(Trait.HEIGHT, height, random.nextFloat())
 						)
 				);
-		float width = random.nextInt(19) + random.nextFloat() + 1;
+		float width = random.nextInt(Helper.SEED_MAX_SIZE - 1)
+				+ random.nextFloat() + 1;
 		while (width < length / 10 || width > length * 10
 				|| width < height / 10 || width > height * 10) {
-			width = random.nextInt(19) + random.nextFloat() + 1;
+			width = random.nextInt(Helper.SEED_MAX_SIZE - 1)
+					+ random.nextFloat() + 1;
 		}
 		chromosome.add(
 				new Gene(
@@ -929,15 +934,20 @@ public class Genotype {
 		BlockBuilder blockBuilder = new BlockBuilder();
 		
 		// Set dimensions.
-		float length = random.nextInt(19) + random.nextFloat() + 1;
-		float height = random.nextInt(19) + random.nextFloat() + 1;
+		float length = random.nextInt(Helper.SEED_MAX_SIZE - 1)
+				+ random.nextFloat() + 1;
+		float height = random.nextInt(Helper.SEED_MAX_SIZE)
+				+ random.nextFloat() + 1;
 		while (height < length / 10 || height > length * 10) {
-			height = random.nextInt(19) + random.nextFloat() + 1;
+			height = random.nextInt(Helper.SEED_MAX_SIZE - 1)
+					+ random.nextFloat() + 1;
 		}
-		float width = random.nextInt(19) + random.nextFloat() + 1;
+		float width = random.nextInt(Helper.SEED_MAX_SIZE - 1)
+				+ random.nextFloat() + 1;
 		while (width < length / 10 || width > length * 10
 				|| width < height / 10 || width > height * 10) {
-			width = random.nextInt(19) + random.nextFloat() + 1;
+			width = random.nextInt(Helper.SEED_MAX_SIZE)
+					+ random.nextFloat() + 1;
 		}
 		blockBuilder.setLength(length);
 		blockBuilder.setHeight(height);
@@ -1065,7 +1075,8 @@ public class Genotype {
 			break;
 		case CONSTANT:
 			neuronInput = new NeuronInput(inputType, 
-					random.nextFloat() + random.nextInt(20) - 10);
+					random.nextFloat()
+						+ random.nextInt(Helper.SEED_MAX_CONSTANT) - 10);
 			break;
 		case HEIGHT: case TOUCH:
 			neuronInput = new NeuronInput(inputType, index);
