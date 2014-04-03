@@ -23,7 +23,7 @@ import creature.phenotype.*;
  * @group Danny Gomez
  * @group Marcos Lemus
  */
-public class Hopper {
+public class Hopper implements Comparable<Hopper> {
 	private final String name;
 	private int age;
 	private Genotype genotype;
@@ -278,6 +278,25 @@ public class Hopper {
 	public int getChildren() {
 		return children;
 	}
+	
+	/**
+	 * Override of compareTo: allows for easy sorting of Hoppers by fitness.
+	 * 
+	 * @param other Hopper to compare fitness with.
+	 * @return -1, 0, or 1 if this Hopper's fitness is less than, equal to, or
+	 *             greater than the other Hopper's fitness.
+	 */
+	@Override
+	public int compareTo(Hopper other) {
+		float otherFitness = other.getFitness();
+		if (fitness < otherFitness) {
+			return -1;
+		} else if (fitness > otherFitness) {
+			return 1;
+		} else {
+			return 0;
+		}
+	}
 
 	/**
 	 * Override of toString.
@@ -319,16 +338,6 @@ public class Hopper {
 		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
 		UNARY_OPERATOR_4, // 4 (unary operator in the 2nd neuron of a rule)
 		DOF_MARKER; // End of a degree of freedom.
-
-		/**
-		 * Override of toString.
-		 * 
-		 * @return Trait identifier as a String.
-		 */
-		@Override
-		public String toString() {
-			return name();
-		}
 	}
 
 	/**

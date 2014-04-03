@@ -12,30 +12,46 @@ package creature.geeksquad.genetics;
 import java.util.*;
 
 import creature.geeksquad.genetics.Hopper.Attractor;
+import creature.geeksquad.library.Helper;
 
 /**
- * A class for a Population of creatures.
+ * A class for a Population of creatures in a PriorityQueue.
  * 
  * @author Ramon A. Lovato
  * @group Danny Gomez
  * @group Marcos Lemus
  */
-public class Population {
-	private final PriorityQueue<Hopper> hoppers;
+public class Population extends ArrayList<Hopper> {
 	private Attractor attractor;
 	private HashMap<Attractor, Float> attractorTable =
 				new HashMap<Attractor, Float>();
-	private Deque<Hopper> breeders;
-	private Deque<Hopper> hillClimbers;
+	private ArrayList<Hopper> breeders;
+	private ArrayList<Hopper> climbers;
 	
 	/**
-	 * The default constructor creates an empty Population with its Hoppers
-	 * sorted by fitness.
+	 * The default constructor creates an empty Population.
 	 */
 	public Population() {
-		hoppers = new PriorityQueue<Hopper>(0, new HopperFitnessComparator());
+		super();
 		for (Attractor a : Attractor.values()) {
 			attractorTable.put(a, 0.0f);
+		}
+	}
+	
+	/**
+	 * Instantiate a new Population containing randomly generated seed Hoppers.
+	 * 
+	 * @param num Number of random Hoppers to create.
+	 */
+	public Population(int num) {
+		super();
+		for (int i = 0; i < num; i++) {
+			try {
+				add(new Hopper());
+			} catch (IllegalArgumentException | GeneticsException ex) {
+				ex.printStackTrace();
+				i--;
+			}
 		}
 	}
 	
@@ -65,7 +81,7 @@ public class Population {
 	}
 	
 	/**
-	 * An age Comparator for Hoppers.
+	 * An optional age Comparator for Hoppers.
 	 */
 	public static class HopperAgeComparator implements Comparator<Hopper> {
 		/**
@@ -90,13 +106,13 @@ public class Population {
 	}
 	
 	/**
-	 * Instantiates a new Population containing the provided Collection of
-	 * Hoppers.
+	 * Reverse the order of the Population.
 	 * 
-	 * @param creatures A PriorityQueue of Hoppers.
+	 * @return The fitness of the Hopper at index 0.
 	 */
-	public Population(PriorityQueue<Hopper> hoppers) {
-		this.hoppers = hoppers;
+	public float reverse() {
+		Collections.sort(this, Collections.reverseOrder());
+		return get(0).getFitness();
 	}
 	
 	/**
@@ -107,19 +123,17 @@ public class Population {
 	}
 	
 	/**
-	 * Add a Hopper to the Population.
-	 * 
-	 * @return True if successful; false otherwise.
+	 * Remove a Hopper from the Population by reference and discard it.
 	 */
-	public void add(Hopper newbie) {
-		hoppers.add(newbie);
+	public void kill(Hopper victim) {
+		remove(victim);
 	}
 	
 	/**
-	 * Remove a Hopper from the Population by reference.
+	 * Remove a Hopper from the Population by index.
 	 */
-	public void kill(Hopper victim) {
-		hoppers.remove(victim);
+	public void kill(int index) {
+		remove(index);
 	}
 	
 	/**
@@ -128,7 +142,10 @@ public class Population {
 	 * @param n Number of individuals to kill off.
 	 */
 	public void cull(int n) {
-		// TODO
+		for (int i = 0; i < n; i++) {
+			// TODO
+			remove(0);
+		}
 	}
 	
 	/**
@@ -138,9 +155,27 @@ public class Population {
 	 */
 	public void cull(List<Hopper> victims) {
 		for (Hopper h : victims) {
-			hoppers.remove(h);
+			remove(h);
 		}
 	}
+	
+	/**
+	 * Perform selection and crossover within the population.
+	 */
+	public void selection() {
+		// TODO
+	}
+	
+	/**
+	 * Gets the lowest-fitness Hopper.
+	 * 
+	 * @return Hopper with the lowest fitness or null if the list is empty.
+	 */
+//	public Hopper getUnderachiever() {
+		// TODO
+//		Collections.sort(hoppers, new HopperFitnessComparator());
+		
+//	}
 	
 	/**
 	 * Getter for attractor.
@@ -159,7 +194,7 @@ public class Population {
 	 */
 	public void setAttractor(Attractor attractor) {
 		this.attractor = attractor;
-		for (Hopper h : hoppers) {
+		for (Hopper h : this) {
 			h.setAttractor(attractor);
 		}
 	}
@@ -185,22 +220,6 @@ public class Population {
 	}
 	
 	/**
-	 * Getter for the size of the population.
-	 * 
-	 * @return Population size as a long.
-	 */
-	public long size() {
-		return hoppers.size();
-	}
-	
-	/**
-	 * Perform selection and crossover within the population.
-	 */
-	public void selection() {
-		// TODO
-	}
-	
-	/**
 	 * A static method that performs interpopulation crossover selection for
 	 * two Populations. Returns nothing since it modifies the Populations
 	 * directly.
@@ -208,8 +227,7 @@ public class Population {
 	 * @param pop1 First Population to interbreed.
 	 * @param pop2 Second Population to interbreed.
 	 */
-	public static void interbreed(Population pop1,
-			Population pop2) {
+	public static void interbreed(Population pop1, Population pop2) {
 		// TODO
 	}
 	
@@ -221,8 +239,38 @@ public class Population {
 	 */
 	@Override
 	public String toString() {
+		StringBuilder output = new StringBuilder("<population>"
+												 + Helper.NEWLINE);
+		output.append("<hoppers>" + Helper.NEWLINE);
+		for (Hopper h : this) {
+			output.append(h.toString() + Helper.NEWLINE);
+		}
+		output.append("</hoppers> + Helper.NEWLINE");
+		output.append("<breeders> + Helper.NEWLINE");
+		for (Hopper h : breeders) {
+			output.append(h.toString() + Helper.NEWLINE);
+		}
+		output.append("</breeders>" + Helper.NEWLINE);
+		output.append("<climbers>" + Helper.NEWLINE);
+		for (Hopper h : climbers) {
+			output.append(h.toString() + Helper.NEWLINE);
+		}
+		output.append("</climbers>" + Helper.NEWLINE);
+		//
 		// TODO
-		return "";
+		//
+		output.append("</population>");
+		
+		return output.toString();
+	}
+	
+	/**
+	 * Main method for testing purposes.
+	 * 
+	 * @param args Command-line arguments.
+	 */
+	public static void main(String[] args) {
+		Population pop = new Population(10);
 	}
 	
 }

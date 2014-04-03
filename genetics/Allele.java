@@ -548,16 +548,6 @@ public class Allele {
 		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule).
 		UNARY_OPERATOR_4, // 4 (unary operator in the 2nd neuron of a rule).
 		DOF_MARKER; // End of a degree of freedom.
-		
-		/**
-		 * Override of toString.
-		 * 
-		 * @return Trait identifier as a String.
-		 */
-		@Override
-		public String toString() {
-			return name();
-		}
 	}
 	
 	/**
