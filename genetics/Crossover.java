@@ -10,7 +10,9 @@
 package creature.geeksquad.genetics;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
 
 import creature.geeksquad.genetics.Allele.Trait;
@@ -25,12 +27,16 @@ import creature.geeksquad.library.Helper;
  */
 public class Crossover {
 	private static Random rand = Helper.RANDOM;
+	private Map<Trait, Float> weights;
 	
 	/**
 	 * Instantiate a new Crossover and initialize the weight table.
 	 */
 	public Crossover() {
-		// TODO
+		weights = new HashMap<Trait, Float>();
+		for (Trait t : Trait.values()) {
+			weights.put(t, Helper.MEDIAN_WEIGHT);
+		}
 	}
 	
 	/**
@@ -233,7 +239,7 @@ public class Crossover {
 				childB.add(childGeneB);
 			// If there were problems creating any of the Genes, return null.
 			} catch (IllegalArgumentException ex) {
-				return null;
+				throw ex;
 			}
 		}
 		
@@ -300,7 +306,7 @@ public class Crossover {
 				childB.add(childGeneB);
 			// If there were problems creating any of the Genes, return null.
 			} catch (IllegalArgumentException ex) {
-				return null;
+				throw ex;
 			}
 		}
 		
@@ -342,7 +348,8 @@ public class Crossover {
 		chromosomeB = newChromosomes[1];
 		
 		if (chromosomeA == null || chromosomeB == null) {
-			return null;
+			throw new GeneticsException(
+					"Crossover.align produced one or more null chromosomes.");
 		}
 		
 		// Iterate over the lists and pick a random allele from each parent.
@@ -361,10 +368,8 @@ public class Crossover {
 						                   parentGeneB.getAlleles()[b2]);
 				childA.add(childGeneA);
 				childB.add(childGeneB);
-			// If there were problems creating any of the Genes, return null.
 			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
-				return null;
+				throw ex;
 			}
 		}
 		// If the child Gene pulled a matched pair of empty Alleles, it will
@@ -451,6 +456,71 @@ public class Crossover {
 				it.remove();
 			}
 		}
+	}
+	
+	/**
+	 * Getter for the weights in the weight table.
+	 * 
+	 * @param key Trait key to look up in the rule table.
+	 * @return The weight attached to key Trait in the rule table.
+	 */
+	public float getWeight(Trait key) {
+		return weights.get(key);
+	}
+	
+	/**
+	 * Setter for the weights of the Traits in the weight table. If not in the
+	 * range Helper.MIN_WEIGHT (0.0f) to Helper.MAX_WEIGHT (1.0f), sets it to
+	 * the appropriate extrema instead.
+	 * 
+	 * @param key Trait key to set in the rule table.
+	 * @param value New weight float to assign to key in the weight table.
+	 */
+	public void setWeight(Trait key, float value) {
+		if (value > Helper.MAX_WEIGHT) {
+			value = Helper.MAX_WEIGHT;
+		} else if (value < Helper.MIN_WEIGHT) {
+			value = Helper.MIN_WEIGHT;
+		}
+		weights.put(key, value);
+	}
+	
+	/**
+	 * Change a weight of a Trait in the weight table by a percentage of the
+	 * current value.
+	 * 
+	 * @param key Trait key to set in the rule table.
+	 * @param value Percentage float by which to change the weight. If positive,
+	 *            increases the value; if negative, decreases the value.
+	 */
+	public void setWeightPercent(Trait key, float value) {
+		float old = weights.get(key);
+		if (old * value > Helper.MAX_WEIGHT) {
+			value = Helper.MAX_WEIGHT;
+		} else if (old * value < Helper.MIN_WEIGHT) {
+			value = Helper.MIN_WEIGHT;
+		}
+		weights.put(key, value);
+	}
+	
+	/**
+	 * Increase weight in the weight table by a fixed percentage of the
+	 * current value.
+	 * 
+	 * @param key Trait key to increase in the rule table.
+	 */
+	public void increaseWeight(Trait key) {
+		setWeightPercent(key, Helper.WEIGHT_STEP);
+	}
+	
+	/**
+	 * Decrease weight in the weight table by a fixed percentage of the
+	 * current value.
+	 * 
+	 * @param key Trait key to increase in the rule table.
+	 */
+	public void decreaseWeight(Trait key) {
+		setWeightPercent(key, -Helper.WEIGHT_STEP);
 	}
 	
 	/**

@@ -220,8 +220,7 @@ public class Gene {
 	/**
 	 * Override of equals.
 	 * 
-	 * @param other
-	 *            Gene to compare to.
+	 * @param other Gene to compare to.
 	 * @return True if Alleles' traits and values match; false otherwise.
 	 */
 	@Override

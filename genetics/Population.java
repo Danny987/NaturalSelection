@@ -12,6 +12,7 @@ package creature.geeksquad.genetics;
 import java.util.*;
 
 import creature.geeksquad.library.Helper;
+import creature.geeksquad.hillclimbing.*;
 
 /**
  * A class for a sortable Population of Hoppers in an extended ArrayList.
@@ -22,20 +23,22 @@ import creature.geeksquad.library.Helper;
  */
 @SuppressWarnings("serial")
 public class Population extends ArrayList<Hopper> {
+	private int generations;
 	// Sub-collections allow the Population to separate the Hoppers that need
 	// special handling from those in the general population.
 	private final ArrayList<Hopper> breeders;
-	private final Queue<Hopper> climbers;
 	// The Crossover module this Population will use.
 	private Crossover crossover;
+	// The hill-climbing Tribe brain for this Population.
+	private TribeBrain brain = new TribeBrain();
 	
 	/**
 	 * The default constructor creates an empty Population.
 	 */
 	public Population() {
 		super();
+		generations = 0;
 		breeders = new ArrayList<Hopper>();
-		climbers = new LinkedList<Hopper>();
 		crossover = new Crossover();
 	}
 	
@@ -50,60 +53,10 @@ public class Population extends ArrayList<Hopper> {
 			try {
 				add(new Hopper());
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				i--;
+				ex.printStackTrace();
 			}
 		}
 	}
-	
-//	/**
-//	 * A fitness Comparator for Hoppers.
-//	 */
-//	public static class HopperFitnessComparator implements Comparator<Hopper> {
-//		/**
-//		 * Override of Comparator's compare method. Compares the fitness of two
-//		 * Hoppers.
-//		 * 
-//		 * @param hopperA First Hopper whose fitness should be compared.
-//		 * @param hopperB Second Hopper whose fitness should be compared.
-//		 * @return Negative int, 0, or positive int if hopperA's fitness is less
-//		 *             than, equal to, or greater than hopperB's, respectively.
-//		 */
-//		@Override
-//		public int compare(Hopper hopperA, Hopper hopperB) {
-//			if (hopperA.getFitness() > hopperB.getFitness()) {
-//				return -1;
-//			} else if (hopperA.getFitness() > hopperB.getFitness()) {
-//				return 1;
-//			} else {
-//				return 0;
-//			}
-//		}
-//	}
-//	
-//	/**
-//	 * An optional age Comparator for Hoppers.
-//	 */
-//	public static class HopperAgeComparator implements Comparator<Hopper> {
-//		/**
-//		 * Override of Comparator's compare method. Compares the ages of two
-//		 * Hoppers.
-//		 * 
-//		 * @param hopperA First Hopper whose age should be compared.
-//		 * @param hopperB Second Hopper whose age should be compared.
-//		 * @return Negative int, 0, or positive int if hopperA's age is less
-//		 *             than, equal to, or greater than hopperB's, respectively.
-//		 */
-//		@Override
-//		public int compare(Hopper hopperA, Hopper hopperB) {
-//			if (hopperA.getAge() > hopperB.getAge()) {
-//				return -1;
-//			} else if (hopperA.getAge() > hopperB.getAge()) {
-//				return 1;
-//			} else {
-//				return 0;
-//			}
-//		}
-//	}
 	
 	/**
 	 * A static method that performs interpopulation crossover selection for
@@ -121,32 +74,51 @@ public class Population extends ArrayList<Hopper> {
 	 * Update the population.
 	 */
 	public void update() {
-		// TODO
-		// Do we need to keep track of age?
+		synchronized (this) {
+			generations++;
+			hillClimb();
+			// Hill climbing the population will change the creatures, which
+			// means their sorting will no longer be valid. However,
+			// moveBreeders will sort them again, so it's fine.
+			moveBreeders();
+			int count = breed();
+			// Like above, breeding will change the creatures in the collection,
+			// but cull will sort them again first.
+			cull(count);
+		}
 	}
 	
 	/**
 	 * Breed, perform selection and crossover, within the population.
+	 * 
+	 * @return The number of new Hoppers that were added to the population.
+	 *         Needed to tell how many Hoppers should be culled.
 	 */
-	public void breed() {
+	private int breed() {
+		int offspring = 0;
+		//
 		// TODO
+		//
+		return offspring;
 	}
 	
 	/**
-	 * Perform hill-climbing on the Population.
+	 * Perform hill-climbing on all members of the Population.
 	 */
-	public void hillClimb() {
-		Hopper hopper = climbers.poll();
-		// Hopper newHopper = HillClimbing.performHillClimbing(hopper);
-		// newHopper.hillClimbed();
-		// add(newHopper);
-		breeders.remove(hopper);
+	private void hillClimb() {
+		Iterator<Hopper> i = iterator();
+		while (i.hasNext()) {
+			Hopper original = i.next();
+			Hopper newHotness = brain.performHillClimbing(original);
+			remove(original);
+			add(newHotness);
+		}
 	}
 	
 	/**
 	 * Move the top 20% most fit Hoppers into the breeders list.
 	 */
-	public void moveBreeders() {
+	private void moveBreeders() {
 		moveBreeders(Helper.BREED_PERCENTAGE);
 	}
 	
@@ -156,7 +128,7 @@ public class Population extends ArrayList<Hopper> {
 	 * 
 	 * @param f Percentage of the highest-fitness Hoppers to move, as a float.
 	 */
-	public void moveBreeders(float f) {
+	private void moveBreeders(float f) {
 		sort();
 		int size = size();
 		int stop = (int) (size - (f * size));
@@ -171,23 +143,18 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
-	 * Kill off the lowest-performing 20% of the Population.
-	 */
-	public void cull() {
-		cull(Helper.BREED_PERCENTAGE);
-	}
-	
-	/**
 	 * Kill off the lowest-fitness n individuals in the general Population.
 	 * 
 	 * @param n Number of individuals to kill off.
 	 */
-	public void cull(int n) {
-		sort();
-		if (n < size()) {
-			removeRange(0, n);
-		} else {
-			clear();
+	private void cull(int n) {
+		synchronized (this) {
+			sort();
+			if (n < size()) {
+				removeRange(0, n);
+			} else {
+				clear();
+			}
 		}
 	}
 	
@@ -197,7 +164,7 @@ public class Population extends ArrayList<Hopper> {
 	 * 
 	 * @param f Percentage of individuals to kill off (as a float).
 	 */
-	public void cull(float f) {
+	private void cull(float f) {
 		if (f > 1.0f) {
 			f = 1.0f;
 		}
@@ -205,7 +172,16 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
-	 * Gets the average fitness of this Population. Takes n time since it has
+	 * Getter for the number of generations this population has gone through.
+	 * 
+	 * @return Number of generations this population has had.
+	 */
+	public int getGenerations() {
+		return generations;
+	}
+	
+	/**
+	 * Get the average fitness of this Population. Takes n time since it has
 	 * to iterate over the whole array. This method makes no guarantees about
 	 * the accuracy of its result. At any given time, the majority of the
 	 * Hoppers in the Population will have very rough estimates for their
@@ -215,19 +191,21 @@ public class Population extends ArrayList<Hopper> {
 	 * @return Average fitness of Population as a float.
 	 */
 	public float getAverageFitness() {
-		float sum = 0.0f;
-		for (Hopper h : this) {
-			sum += h.getFitness();
+		synchronized (this) {
+			float sum = 0.0f;
+			for (Hopper h : this) {
+				sum += h.getFitness();
+			}
+			
+			return sum / size();
 		}
-		
-		return sum / size();
 	}
 	
 	/**
 	 * Sort this Population according to its natural ordering: ascending Hopper
 	 * fitness.
 	 */
-	public void sort() {
+	private void sort() {
 		Collections.sort(this);
 	}
 	
@@ -235,8 +213,25 @@ public class Population extends ArrayList<Hopper> {
 	 * Sort this Population according to the reverse of its natural ordering:
 	 * descending Hopper fitness.
 	 */
-	public void reverse() {
+	private void reverse() {
 		Collections.sort(this, Collections.reverseOrder());
+	}
+	
+	/**
+	 * Override of get by index - returns a copy of the requested Hopper.
+	 * 
+	 * @param index Index of Hopper of which to return a copy.
+	 * @return Deep clone of the Hopper at index.
+	 */
+	@Override
+	public Hopper get(int index) {
+		synchronized (this) {
+			try {
+				return new Hopper(super.get(index));
+			} catch (IllegalArgumentException | GeneticsException e) {
+				return null;
+			}
+		}
 	}
 	
 	/**
@@ -247,26 +242,16 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public String toString() {
-		StringBuilder output = new StringBuilder("<population>"
-												 + Helper.NEWLINE);
-		output.append("<hoppers>" + Helper.NEWLINE);
-		for (Hopper h : this) {
-			output.append(h.toString() + Helper.NEWLINE);
-		}
-		output.append("</hoppers> + Helper.NEWLINE");
-		output.append("<breeders> + Helper.NEWLINE");
-		for (Hopper h : breeders) {
-			output.append(h.toString() + Helper.NEWLINE);
-		}
-		output.append("</breeders>" + Helper.NEWLINE);
-		output.append("<climbers>" + Helper.NEWLINE);
-		for (Hopper h : climbers) {
-			output.append(h.toString() + Helper.NEWLINE);
-		}
-		output.append("</climbers>" + Helper.NEWLINE);
-		output.append("</population>");
-		
-		return output.toString();
+		synchronized (this) {
+			StringBuilder output = new StringBuilder("<population>"
+													 + Helper.NEWLINE);
+			for (Hopper h : this) {
+				output.append(h.toString() + Helper.NEWLINE);
+			}
+			output.append("</population>");
+
+			return output.toString();
+		}	
 	}
 	
 	/**
@@ -276,6 +261,7 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	public static void main(String[] args) {
 		Population pop = new Population(10);
+		System.out.println(pop);
 	}
 	
 }

@@ -67,7 +67,8 @@ public class Hopper implements Comparable<Hopper> {
 			throw ex;
 		}
 		if (genotype == null || phenotype == null) {
-			System.err.println("Error: genotype/phenotype invalid.");
+			System.err.println(
+					"Error: Hopper genotype/phenotype instantiation was null.");
 		}
 		this.name = name;
 		age = 0;
@@ -87,6 +88,12 @@ public class Hopper implements Comparable<Hopper> {
 	public Hopper(Hopper source) throws IllegalArgumentException,
 			GeneticsException {
 		this(new Genotype(source.getGenotype()), new String(source.getName()));
+		age = source.age;
+		timesHillClimbed = source.getTimesHillClimbed();
+		timesBred = source.getTimesBred();
+		children = source.getChildren();
+		realFitness = source.isRealFitness();
+		// attractor = source.getAttractor();
 	}
 
 	/**
@@ -98,7 +105,7 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	public Hopper(Genotype genotype) throws IllegalArgumentException,
 			GeneticsException {
-		this(genotype, randomName());
+		this(new Genotype(genotype), randomName());
 	}
 
 	/**
