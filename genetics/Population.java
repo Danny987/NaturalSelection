@@ -34,7 +34,7 @@ public class Population extends ArrayList<Hopper> {
 	// The hill-climbing Tribe brain for this Population.
 	private TribeBrain brain = new TribeBrain();
 	// A pointer to the Hopper with the highest fitness.
-	private Hopper overachiever;
+	private Hopper overachiever = null;
 	
 	/**
 	 * The default constructor creates an empty Population.
@@ -45,7 +45,6 @@ public class Population extends ArrayList<Hopper> {
 		breeders = new ArrayList<Hopper>();
 		crossover = new Crossover();
 		sort();
-		overachiever = get(size() - 1);
 	}
 	
 	/**
@@ -58,7 +57,7 @@ public class Population extends ArrayList<Hopper> {
 		int i = 0;
 		while (i < num) {
 			try {
-				add(new Hopper());
+				super.add(new Hopper());
 				i++;
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				System.out.println("Creature[" + i + "] " + ex);
@@ -171,7 +170,9 @@ public class Population extends ArrayList<Hopper> {
 			// but cull will sort them again first.
 			cull(count);
 			sort();
-			overachiever = get(size() - 1);
+			if (size() > 0) {
+				overachiever = get(size() - 1);
+			}
 		}
 	}
 	
@@ -220,8 +221,8 @@ public class Population extends ArrayList<Hopper> {
 					breeders.remove(parentB);
 					parentA.increaseBreedCount();
 					parentB.increaseBreedCount();
-					add(parentA);
-					add(parentB);
+					super.add(parentA);
+					super.add(parentB);
 					// Figure out how many valid offspring were actually
 					// produced.
 					count += children.size();
@@ -250,7 +251,7 @@ public class Population extends ArrayList<Hopper> {
 				try {
 					Hopper newHotness = brain.performHillClimbing(original);
 					remove(original);
-					add(newHotness);
+					super.add(newHotness);
 					newHotness.hillClimbed();
 				} catch (IllegalArgumentException ex) {
 					System.out.println(
@@ -321,7 +322,8 @@ public class Population extends ArrayList<Hopper> {
 			Hopper newGuy = null;
 			try {
 				newGuy = new Hopper(overachiever);
-			// Should never fail since it's cloning a Hopper that's already valid.
+			// Should never fail since it's cloning a Hopper that's already
+			//valid.
 			} catch (IllegalArgumentException | GeneticsException e) {}
 			return newGuy;
 		}
@@ -407,7 +409,7 @@ public class Population extends ArrayList<Hopper> {
 	@Override
 	public int size() {
 		synchronized (this) {
-			return size();
+			return super.size();
 		}
 	}
 	
