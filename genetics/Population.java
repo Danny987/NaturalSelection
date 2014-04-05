@@ -208,7 +208,9 @@ public class Population extends ArrayList<Hopper> {
 							strategy);
 					if (offspring != null) {
 						for (Genotype g : offspring) {
-							children.add(new Hopper(g));
+							if (g != null) {
+								children.add(new Hopper(g));
+							}
 						}
 					}
 				} catch (IllegalArgumentException | GeneticsException ex) {
