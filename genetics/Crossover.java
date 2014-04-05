@@ -440,6 +440,9 @@ public class Crossover {
 	 * @return A new Allele with the adjusted weight.
 	 */
 	private Allele adjustWeight(Allele allele) {
+		if (allele == null) {
+			return allele;
+		}
 		Allele newAllele;
 		float weight = allele.getWeight();
 		if (!weightMap.containsKey(allele)) {

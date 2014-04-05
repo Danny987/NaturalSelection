@@ -633,6 +633,26 @@ public class Genotype {
 		
 		return i;
 	}
+	
+	/**
+	 * Build and validate the Hopper's phenotype. Used by hill climbing to
+	 * validate changes.
+	 * 
+	 * Note: this method should only ever be called on clones and never on
+	 * actual members of the Population, as it invalidates the Genotype if it
+	 * fails.
+	 * 
+	 * @return True if there were no problems creating the phenotype, false if
+	 *             phenotype creation threw an exception.
+	 */
+	public boolean validatePhenotype() {
+		try {
+			phenotype = buildPhenotype();
+			return true;
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			return false;
+		}
+	}
 
 	/**
 	 * Evaluates the Genotype to create the Creature (phenotype) with default
