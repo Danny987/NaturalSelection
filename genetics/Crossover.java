@@ -40,6 +40,36 @@ public class Crossover {
 	}
 	
 	/**
+	 * Instantiate a new Crossover as a deep clone of a passed Crossover.
+	 * 
+	 * @param cross Crossover object to deep clone.
+	 */
+	public Crossover(Crossover cross) {
+		weights = new HashMap<Trait, Float>();
+		for (Map.Entry<Trait, Float> entry : cross.weights.entrySet()) {
+			weights.put(entry.getKey(), new Float(entry.getValue()));
+		}
+	}
+	
+	/**
+	 * A special constructor that instantiates a new Crossover with the data
+	 * from two passed Crossover objects. Used for inter-Population Crossover.
+	 * 
+	 * @param crossA Crossover object from Population 1.
+	 * @param crossB Crossover object from Population 2.
+	 */
+	public Crossover(Crossover crossA, Crossover crossB) {
+		this();
+		// Average the weights from the two input Crossovers.
+		for (Map.Entry<Trait, Float> entry : weights.entrySet()) {
+			Trait trait = entry.getKey();
+			float weightA = crossA.weights.get(trait);
+			float weightB = crossB.weights.get(trait);
+			weights.put(trait, (weightA + weightB) / 2);
+		}
+	}
+	
+	/**
 	 * Perform crossover on two parents based on a provided strategy. Since the
 	 * positions of blocks don't matter and we need the key genes to line up,
 	 * first align the strands and shift the root block to the beginning.
@@ -49,13 +79,17 @@ public class Crossover {
 	 * @param Strategy strategy Strategy to use for crossover.
 	 * @return Two-element array of Genotypes for children. If there were
 	 *         problems creating any of the genes (e.g. if the alleles didn't
-	 *         trait match properly), returns null.
+	 *         trait match properly), or either parent was null, returns null.
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	public Genotype[] crossover(Genotype parentA, Genotype parentB,
 			Strategy strategy) throws IllegalArgumentException,
 			GeneticsException {
+		// Verify that both parents exist.
+		if (parentA == null || parentB == null) {
+			return null;
+		}
 		@SuppressWarnings("unchecked")
 		ArrayList<Gene>[] children = new ArrayList[2];
 		

@@ -34,7 +34,6 @@ public class Hopper implements Comparable<Hopper> {
 	private int children;
 	private float fitness;
 	private boolean realFitness;
-//	private Attractor attractor;
 
 	/**
 	 * Instantiate a new Hopper with random Genotype and name.
@@ -93,7 +92,6 @@ public class Hopper implements Comparable<Hopper> {
 		timesBred = source.getTimesBred();
 		children = source.getChildren();
 		realFitness = source.isRealFitness();
-		// attractor = source.getAttractor();
 	}
 
 	/**
@@ -250,24 +248,6 @@ public class Hopper implements Comparable<Hopper> {
 	public Creature getPhenotype() {
 		return phenotype;
 	}
-
-//	/**
-//	 * Getter for attractor.
-//	 * 
-//	 * @return The Hopper's Attractor.
-//	 */
-//	public Attractor getAttractor() {
-//		return attractor;
-//	}
-//
-//	/**
-//	 * Setter for attractor.
-//	 * 
-//	 * @param attractor New Attractor to give this Hopper.
-//	 */
-//	public void setAttractor(Attractor attractor) {
-//		this.attractor = attractor;
-//	}
 	
 	/**
 	 * Increment timesHillClimbed.

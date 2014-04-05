@@ -28,7 +28,7 @@ public class Helper {
 	public static final float BREED_PERCENTAGE = 0.2f; 
 	// Allow up to 50 errors to accrue during random Genotype generation before
 	// giving up.
-	public static final int FAULT_TOLERENCE = 50;
+	public static final int FAULT_TOLERENCE = 100;
 	// Seed constants.
 	public static final int SEED_MAX_BLOCKS = 10;
 	public static final int SEED_MAX_SIZE = 10;

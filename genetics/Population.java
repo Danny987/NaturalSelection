@@ -12,7 +12,8 @@ package creature.geeksquad.genetics;
 import java.util.*;
 
 import creature.geeksquad.library.Helper;
-import creature.geeksquad.hillclimbing.*;
+import creature.geeksquad.genetics.Crossover.Strategy;
+import creature.geeksquad.hillclimbing.TribeBrain;
 
 /**
  * A class for a sortable Population of Hoppers in an extended ArrayList.
@@ -23,6 +24,7 @@ import creature.geeksquad.hillclimbing.*;
  */
 @SuppressWarnings("serial")
 public class Population extends ArrayList<Hopper> {
+	private static Random random = Helper.RANDOM;
 	private int generations;
 	// Sub-collections allow the Population to separate the Hoppers that need
 	// special handling from those in the general population.
@@ -53,7 +55,7 @@ public class Population extends ArrayList<Hopper> {
 			try {
 				add(new Hopper());
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				ex.printStackTrace();
+				System.out.println("Creature[" + i + "] " + ex);
 			}
 		}
 	}
@@ -67,7 +69,78 @@ public class Population extends ArrayList<Hopper> {
 	 * @param pop2 Second Population to interbreed.
 	 */
 	public static void interbreed(Population pop1, Population pop2) {
-		// TODO
+		// Make breeder lists of the highest-fitness creatures from each
+		// Population. Also get a copy of each Population's Crossover module.
+		ArrayList<Hopper> breeders1;
+		ArrayList<Hopper> breeders2;
+		ArrayList<Hopper> children1 = new ArrayList<Hopper>();
+		ArrayList<Hopper> children2 = new ArrayList<Hopper>();
+		Crossover crossover1;
+		Crossover crossover2;
+		synchronized (pop1) {
+			pop1.moveBreeders();
+			breeders1 = new ArrayList<Hopper>(pop1.breeders);
+			crossover1 = new Crossover(pop1.crossover);
+			pop1.flushBreeders();
+		}
+		
+		int size = breeders1.size();
+				
+		synchronized (pop2) {
+			// Passing the size of breeders1 as an argument guarantees that
+			// both collections have the same number of Hoppers.
+			pop2.moveBreeders(size);
+			breeders2 = new ArrayList<Hopper>(pop2.breeders);
+			crossover2 = new Crossover(pop2.crossover);
+			pop2.flushBreeders();
+		}
+		Collections.shuffle(breeders1);
+		Collections.shuffle(breeders2);
+		
+		// Create a special Crossover object for this occasion.
+		Crossover cross = new Crossover(crossover1, crossover2);
+		
+		for (int i = 0; i < size; i++) {
+			Hopper parentA = breeders1.get(i);
+			Hopper parentB = breeders2.get(i);
+			// Pick a random Crossover strategy.
+			Strategy strategy = Strategy.values()
+					[random.nextInt(Strategy.values().length)];
+			// Determine which Population the offspring
+			try {
+				Genotype[] offspring = cross.crossover(
+						parentA.getGenotype(), parentB.getGenotype(),
+						strategy);
+				if (offspring != null) {
+					for (int j = 0; j < offspring.length; j++) {
+						if (offspring[j] != null) {
+							Hopper child = new Hopper(offspring[j]);
+							if (child != null) {
+								if (j % 2 == 0) {
+									children1.add(child);
+								} else {
+									children2.add(child);
+								}
+							}
+						}
+					}
+				}
+			} catch (IllegalArgumentException | GeneticsException ex) {
+				System.out.println(
+						"Intercrossover offspring invalid. Continuing.");
+			}
+		}
+		
+		// Add the children to their respective populations.
+		synchronized (pop1) {
+			pop1.cull(children1.size());
+			pop1.addAll(children1);
+		}
+		synchronized(pop2) {
+			pop2.cull(children2.size());
+			pop2.addAll(children2);
+		}
+		
 	}
 	
 	/**
@@ -91,27 +164,82 @@ public class Population extends ArrayList<Hopper> {
 	/**
 	 * Breed, perform selection and crossover, within the population.
 	 * 
-	 * @return The number of new Hoppers that were added to the population.
-	 *         Needed to tell how many Hoppers should be culled.
+	 * @return The number of new, valid Hoppers that were added to the
+	 * 		   population. Needed to tell how many Hoppers should be culled.
 	 */
 	private int breed() {
-		int offspring = 0;
-		//
-		// TODO
-		//
-		return offspring;
+		int count = 0;
+		synchronized (this) {
+			// In the interest of preserving diversity, shuffle the breeders
+			// list so the Hoppers within it match up semi-randomly.
+			Collections.shuffle(breeders);
+			
+			for (Iterator<Hopper> it = breeders.iterator(); it.hasNext(); ) {
+				ArrayList<Hopper> children = new ArrayList<Hopper>();
+				Hopper parentA = it.next();
+				// Check to make sure there's another parent to match it with.
+				if (!it.hasNext()) {
+					// If not, remove the highest-fitness creature from the
+					// general Population and add it instead.
+					breeders.add(remove(size()));
+				}
+				Hopper parentB = it.next();
+				// Pick a random Crossover strategy.
+				Strategy strategy = Strategy.values()
+						[random.nextInt(Strategy.values().length)];
+				try {
+					Genotype[] offspring = crossover.crossover(
+							parentA.getGenotype(), parentB.getGenotype(),
+							strategy);
+					if (offspring != null) {
+						for (Genotype g : offspring) {
+							children.add(new Hopper(g));
+						}
+					}
+				} catch (IllegalArgumentException | GeneticsException ex) {
+					System.out.println(
+							"Crossover offspring invalid. Continuing.");
+				} finally {
+					// Always return the parents to the general Population
+					// after breeding.
+					breeders.remove(parentA);
+					breeders.remove(parentB);
+					add(parentA);
+					add(parentB);
+					// Figure out how many valid offspring were actually
+					// produced.
+					count += children.size();
+					addAll(children);
+				}
+			}
+		}
+		
+		// One final check to make sure all breeders were returned to the
+		// general Population properly.
+		if (!breeders.isEmpty()) {
+			flushBreeders();
+		}
+		
+		return count;
 	}
 	
 	/**
 	 * Perform hill-climbing on all members of the Population.
 	 */
 	private void hillClimb() {
-		Iterator<Hopper> i = iterator();
-		while (i.hasNext()) {
-			Hopper original = i.next();
-			Hopper newHotness = brain.performHillClimbing(original);
-			remove(original);
-			add(newHotness);
+		synchronized (this) {
+			Iterator<Hopper> i = iterator();
+			while (i.hasNext()) {
+				Hopper original = i.next();
+				try {
+					Hopper newHotness = brain.performHillClimbing(original);
+					remove(original);
+					add(newHotness);
+				} catch (IllegalArgumentException ex) {
+					System.out.println(
+						"HillClimbing produced an illegal creature. Skipping.");
+				}
+			}
 		}
 	}
 	
@@ -143,6 +271,14 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
+	 * Move all Hoppers in the breeders list back into the general population.
+	 */
+	private void flushBreeders() {
+		addAll(breeders);
+		breeders.clear();
+	}
+	
+	/**
 	 * Kill off the lowest-fitness n individuals in the general Population.
 	 * 
 	 * @param n Number of individuals to kill off.
@@ -156,19 +292,6 @@ public class Population extends ArrayList<Hopper> {
 				clear();
 			}
 		}
-	}
-	
-	/**
-	 * Kill off a percentage of the lowest-fitness individuals in the general
-	 * Population.
-	 * 
-	 * @param f Percentage of individuals to kill off (as a float).
-	 */
-	private void cull(float f) {
-		if (f > 1.0f) {
-			f = 1.0f;
-		}
-		cull((int) (f * size()));
 	}
 	
 	/**
@@ -207,14 +330,6 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	private void sort() {
 		Collections.sort(this);
-	}
-	
-	/**
-	 * Sort this Population according to the reverse of its natural ordering:
-	 * descending Hopper fitness.
-	 */
-	private void reverse() {
-		Collections.sort(this, Collections.reverseOrder());
 	}
 	
 	/**
