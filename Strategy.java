@@ -10,13 +10,14 @@ import creature.geeksquad.genetics.Allele;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
+import creature.geeksquad.genetics.Allele.Trait;
 import creature.phenotype.Creature;
+import creature.phenotype.EnumJointSite;
 import creature.phenotype.EnumJointType;
 import creature.phenotype.EnumNeuronInputType;
 import creature.phenotype.EnumOperatorBinary;
 import creature.phenotype.EnumOperatorUnary;
 import creature.phenotype.NeuronInput;
-
 import creature.geeksquad.library.*;
 
 /**
@@ -32,11 +33,17 @@ public abstract class Strategy {
 	HashMap<Integer,Integer> alleleWeights = new HashMap<Integer,Integer>();
 
 	//rule neuron input maps
-	HashMap<EnumNeuronInputType, Integer> aRuleWeights = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> bRuleWeights = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> cRuleWeights = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> dRuleWeights = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> eRuleWeights = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> aRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> bRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> cRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> dRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> eRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
+
+	HashMap<EnumNeuronInputType, Integer> aRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> bRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> cRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> dRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
+	HashMap<EnumNeuronInputType, Integer> eRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
 
 	//binary enum maps
 	HashMap<EnumOperatorBinary, Integer> binaryOneWeights = new HashMap<EnumOperatorBinary, Integer>();
@@ -73,9 +80,18 @@ public abstract class Strategy {
 		case INDEX_TO_PARENT:
 			return "INDEX";
 
+		case JOINT_SITE_ON_CHILD:
+			return "JOINT_CHILD";
+
+		case JOINT_SITE_ON_PARENT:
+			return "JOINT_PARENT";
+
 		case JOINT_TYPE:
 			EnumJointType j = (EnumJointType) allele.getValue();
 			return "JOINT";
+
+		case JOINT_ORIENTATION:
+			return "ORIENTATION";
 
 		case RULE_INPUT_A:
 			return "RULE_A";
@@ -121,7 +137,7 @@ public abstract class Strategy {
 		float f = (Float) allele.getValue();
 
 		//add step to allele value
-		allele.setValue(f + (stepSize*direction));	
+		allele.setValue(f + (stepSize*direction));
 	}
 
 	/**
@@ -134,9 +150,13 @@ public abstract class Strategy {
 	 * @param boxIndex - box index of the neuron rule allele
 	 * @return neuron - the changed neuron
 	 */
-	public NeuronInput climbRule(NeuronInput neuron, char ruleType, int boxIndex){
+	public NeuronInput climbRule(NeuronInput neuron, char ruleType, int boxIndex, int ruleDoF){
 		//get a new rule from the maps based on the rule type
-		EnumNeuronInputType newRuleValue = pickRuleValue(ruleType);
+		EnumNeuronInputType newRuleValue = pickRuleValue(ruleType, ruleDoF);
+
+		if(neuron.getType().equals(newRuleValue)){
+			newRuleValue = pickRuleValue(ruleType, ruleDoF);
+		}
 
 		//check what neuron input was obtained from the maps and return it
 		if(newRuleValue.equals(EnumNeuronInputType.TIME))
@@ -148,8 +168,164 @@ public abstract class Strategy {
 		else if(newRuleValue.equals(EnumNeuronInputType.JOINT))
 			return new NeuronInput(newRuleValue, boxIndex, neuron.getDOF());
 
-		//return starting neuron if no change occures
+		//return starting neuron if no change occurs
 		return neuron;
+	}
+
+	public EnumJointSite climbJointSite(EnumJointSite clonedJointSite){
+		EnumJointSite jointSite = clonedJointSite;
+
+		while(jointSite == clonedJointSite){
+			jointSite = EnumJointSite.values()
+					[Helper.RANDOM.nextInt(EnumJointSite.values().length)];
+		}
+		return jointSite;
+	}
+
+	public Genotype climbJointType(Genotype genotype, Allele allele, int geneIndex){
+		EnumJointType startingJointType = (EnumJointType)allele.getValue();
+		EnumJointType jointType = startingJointType;
+
+		while(jointType == startingJointType){
+			jointType = EnumJointType.values()
+					[Helper.RANDOM.nextInt(EnumJointType.values().length)];
+		}
+
+		allele.setValue(jointType);
+
+		ArrayList<Gene> geneList = genotype.getChromosome();
+		
+		int boxIndex = getBoxIndex(geneList, geneIndex);
+
+		if(jointType.getDoF() == 0){
+			//remove rules
+			int i = geneIndex + 4; //go to first rule
+			while(i < geneList.size() && 
+					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
+				geneList.remove(i); //remove gene at index
+			}
+
+		}
+		else if(startingJointType.getDoF() == 2 && jointType.getDoF() == 1){
+			//remove 1 set of rules
+
+			//index to the closest dof marker or length allele
+			int i = geneIndex;
+			while(i < geneList.size() &&
+					(!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.DOF_MARKER) ||
+							!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH))){
+				if (geneList.get(i).getDominant().getTrait().equals(Allele.Trait.DOF_MARKER)) {
+					break;
+				}
+				i++; //go to next index
+			}
+			//at the dof marker or length
+			//remove up to the next length allele
+			while(i < geneList.size() && 
+					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
+				geneList.remove(i); //remove gene at index
+			}
+		}
+		else{
+			//add rules
+			int rulesLength = 0; //number of rule sets to add per DoF
+			int n = jointType.getDoF() - startingJointType.getDoF(); //how many DoFs need rules
+			int i = geneIndex;
+			
+			//move the index to where we need to add the rules
+			while(i < geneList.size() && 
+					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
+				i++;
+			}
+
+			if(startingJointType.getDoF() == 1 && jointType.getDoF() == 2){
+				//add a DoF marker
+				Allele allele1 = new Allele(Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f);
+				geneList.add(i, new Gene(allele1));
+				i++;
+			}
+
+			for(int j = 0; j < n; j++){
+				
+				if(j != 0){ //if adding a second DoF
+					//add a dof marker
+					Allele allele1 = new Allele(Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f);
+					geneList.add(i, new Gene(allele1));
+					i++;
+				}
+				
+				rulesLength = Helper.RANDOM.nextInt(Helper.SEED_MAX_CONSTANT);
+				for(int k = 0; k < rulesLength; k++){
+					Allele allele1;
+					Allele allele2;
+					//a
+					allele1 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'A', boxIndex, j+1));
+					allele2 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'A', boxIndex, j+1));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+					//b
+					allele1 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'B', boxIndex, j+1));
+					allele2 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'B', boxIndex, j+1));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+					//c
+					allele1 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'C', boxIndex, j+1));
+					allele2 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'C', boxIndex, j+1));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+					//d
+					allele1 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'D', boxIndex, j+1));
+					allele2 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'D', boxIndex, j+1));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+					//e
+					allele1 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'E', boxIndex, j+1));
+					allele2 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'E', boxIndex, j+1));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+					//bin1
+					allele1 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0.5f);
+					allele1.setValue(pickBinaryValue('1'));
+					allele2 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0.5f);
+					allele2.setValue(pickBinaryValue('1'));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+					//un2
+					allele1 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, 0.3f);
+					allele1.setValue(pickUnaryValue('2'));
+					allele2 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, 0.3f);
+					allele2.setValue(pickUnaryValue('2'));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+					//bin3
+					allele1 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0.5f);
+					allele1.setValue(pickBinaryValue('3'));
+					allele2 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0.5f);
+					allele2.setValue(pickBinaryValue('3'));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+					//un4
+					allele1 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, 0.3f);
+					allele1.setValue(pickUnaryValue('4'));
+					allele2 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, 0.3f);
+					allele2.setValue(pickUnaryValue('4'));
+					geneList.add(i, new Gene(allele1, allele2));
+					i++;
+				}
+			}
+		}
+		System.out.println(genotype.toString());
+		return genotype;
 	}
 
 	/*public void climbInt(Allele allele){
@@ -215,35 +391,65 @@ public abstract class Strategy {
 	public void initializeMaps(){
 
 		//neuron input maps
-		aRuleWeights.put(EnumNeuronInputType.CONSTANT, 1);
-		aRuleWeights.put(EnumNeuronInputType.HEIGHT, 1);
-		aRuleWeights.put(EnumNeuronInputType.JOINT, 1);
-		aRuleWeights.put(EnumNeuronInputType.TIME, 1);
-		aRuleWeights.put(EnumNeuronInputType.TOUCH, 1);
+		aRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
+		aRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
+		aRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
+		aRuleWeights1.put(EnumNeuronInputType.TIME, 1);
+		aRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
 
-		bRuleWeights.put(EnumNeuronInputType.CONSTANT, 1);
-		bRuleWeights.put(EnumNeuronInputType.HEIGHT, 1);
-		bRuleWeights.put(EnumNeuronInputType.JOINT, 1);
-		bRuleWeights.put(EnumNeuronInputType.TIME, 1);
-		bRuleWeights.put(EnumNeuronInputType.TOUCH, 1);
+		bRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
+		bRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
+		bRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
+		bRuleWeights1.put(EnumNeuronInputType.TIME, 1);
+		bRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
 
-		cRuleWeights.put(EnumNeuronInputType.CONSTANT, 1);
-		cRuleWeights.put(EnumNeuronInputType.HEIGHT, 1);
-		cRuleWeights.put(EnumNeuronInputType.JOINT, 1);
-		cRuleWeights.put(EnumNeuronInputType.TIME, 1);
-		cRuleWeights.put(EnumNeuronInputType.TOUCH, 1);
+		cRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
+		cRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
+		cRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
+		cRuleWeights1.put(EnumNeuronInputType.TIME, 1);
+		cRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
 
-		dRuleWeights.put(EnumNeuronInputType.CONSTANT, 1);
-		dRuleWeights.put(EnumNeuronInputType.HEIGHT, 1);
-		dRuleWeights.put(EnumNeuronInputType.JOINT, 1);
-		dRuleWeights.put(EnumNeuronInputType.TIME, 1);
-		dRuleWeights.put(EnumNeuronInputType.TOUCH, 1);
+		dRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
+		dRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
+		dRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
+		dRuleWeights1.put(EnumNeuronInputType.TIME, 1);
+		dRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
 
-		eRuleWeights.put(EnumNeuronInputType.CONSTANT, 1);
-		eRuleWeights.put(EnumNeuronInputType.HEIGHT, 1);
-		eRuleWeights.put(EnumNeuronInputType.JOINT, 1);
-		eRuleWeights.put(EnumNeuronInputType.TIME, 1);
-		eRuleWeights.put(EnumNeuronInputType.TOUCH, 1);
+		eRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
+		eRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
+		eRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
+		eRuleWeights1.put(EnumNeuronInputType.TIME, 1);
+		eRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
+
+		aRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
+		aRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
+		aRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
+		aRuleWeights2.put(EnumNeuronInputType.TIME, 1);
+		aRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
+
+		bRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
+		bRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
+		bRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
+		bRuleWeights2.put(EnumNeuronInputType.TIME, 1);
+		bRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
+
+		cRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
+		cRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
+		cRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
+		cRuleWeights2.put(EnumNeuronInputType.TIME, 1);
+		cRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
+
+		dRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
+		dRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
+		dRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
+		dRuleWeights2.put(EnumNeuronInputType.TIME, 1);
+		dRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
+
+		eRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
+		eRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
+		eRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
+		eRuleWeights2.put(EnumNeuronInputType.TIME, 1);
+		eRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
 
 		//binary operator maps
 		binaryOneWeights.put(EnumOperatorBinary.ADD, 1);
@@ -287,15 +493,36 @@ public abstract class Strategy {
 	 * @param geneIndex - location of the gene to check
 	 * @return int - box index of the gene
 	 */
-	public int getBoxIndex(Genotype genotype, int geneIndex){
-		ArrayList<Gene> geneList = genotype.getChromosome();
+	public int getBoxIndex(ArrayList<Gene> geneList, int geneIndex){
 		int blockCount = 0;
 
 		for(int i = 0; i <= geneIndex; i++){
-			if(geneList.get(i).getTrait() == Allele.Trait.LENGTH)
+			if(geneList.get(i).getTrait().equals(Allele.Trait.LENGTH))
 				blockCount++;
 		}
 		return blockCount;
+	}
+
+	/**
+	 * Given a chromosome and index, locates which DoF the index is in.
+	 * 
+	 * @param geneList ArrayList of gene, aka the chromosome
+	 * @param geneIndex location of given gene
+	 * @return dof that the geneIndex is in
+	 */
+	public int getRuleDoF(ArrayList<Gene> geneList, int geneIndex){
+		//go backwards through the gene list
+		for(int i = geneIndex; i >= 0; i--){
+			//if we get to a joint type allele
+			if(geneList.get(i).getTrait().equals(Allele.Trait.JOINT_TYPE)){
+				return 1; //index was in DoF 1
+			}
+			//if we get to a DoF marker
+			if(geneList.get(i).getTrait().equals(Allele.Trait.DOF_MARKER)){
+				return 2; //index was in DoF 2
+			}
+		}
+		return 0;
 	}
 
 	/**
@@ -305,17 +532,32 @@ public abstract class Strategy {
 	 * @param ruleType - type of rule, A,B,C,D,E
 	 * @return EnumNeuronInputType - neuron input gotten from the maps
 	 */
-	public EnumNeuronInputType pickRuleValue(char ruleType){
+	public EnumNeuronInputType pickRuleValue(char ruleType, int ruleDoF){
 		//initialize the map that will be used to get the neuron input
 		HashMap<EnumNeuronInputType, Integer> weightMap = null;
 
 		//set the weight map to the appropriate rule type map based on the
 		//rule type based in.
-		if(ruleType == 'A') weightMap = aRuleWeights;
-		else if(ruleType == 'B') weightMap = bRuleWeights;
-		else if(ruleType == 'C') weightMap = cRuleWeights;
-		else if(ruleType == 'D') weightMap = dRuleWeights;
-		else if(ruleType == 'E') weightMap = eRuleWeights;
+		if(ruleType == 'A'){
+			if(ruleDoF == 1) weightMap = aRuleWeights1;
+			else if(ruleDoF == 2) weightMap = aRuleWeights2;
+		}
+		else if(ruleType == 'B'){
+			if(ruleDoF == 1) weightMap = bRuleWeights1;
+			else if(ruleDoF == 2) weightMap = bRuleWeights2;
+		}
+		else if(ruleType == 'C'){
+			if(ruleDoF == 1 ) weightMap = cRuleWeights1;
+			else if(ruleDoF == 2) weightMap = cRuleWeights2;
+		}
+		else if(ruleType == 'D'){
+			if(ruleDoF == 1) weightMap = dRuleWeights1;
+			else if(ruleDoF == 2) weightMap = dRuleWeights2;
+		}
+		else if(ruleType == 'E'){
+			if(ruleDoF == 1) weightMap = eRuleWeights1;
+			else if(ruleDoF == 2) weightMap = eRuleWeights2;
+		}
 
 		//pick a neuron type based on weights
 		int weightSum = 0;

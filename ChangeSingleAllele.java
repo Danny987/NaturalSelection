@@ -8,8 +8,10 @@ import java.util.HashMap;
 
 import creature.geeksquad.genetics.Allele;
 import creature.geeksquad.genetics.Gene;
+import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
+import creature.phenotype.EnumJointSite;
 import creature.phenotype.EnumOperatorBinary;
 import creature.phenotype.EnumOperatorUnary;
 import creature.phenotype.NeuronInput;
@@ -34,6 +36,7 @@ public class ChangeSingleAllele extends Strategy{
 	int geneIndex = 0; //index in gene array list of the gene we're modifying
 
 	public ChangeSingleAllele() {
+		//TODO average number of rules in genotype
 	}
 
 	/**
@@ -48,8 +51,13 @@ public class ChangeSingleAllele extends Strategy{
 
 		if(DEBUG)System.out.println("Starting Fitness: " + hopperToClimb.getFitness());
 
-		//pick allele based on weighted probability
-		Allele allele = pickAllele(genotypeToClimb);
+		//pick allele based on weighted probability --------
+		ArrayList<Gene> geneList = genotypeToClimb.getChromosome();
+		
+		int geneIndex = pickAllele(genotypeToClimb); //index of the allele
+		
+		Allele allele = geneList.get(geneIndex).getDominant(); //the actual allele
+		//----------------------------------------------------
 
 		if(DEBUG)System.out.println("Allele chosen to climb: " + allele);
 
@@ -61,23 +69,28 @@ public class ChangeSingleAllele extends Strategy{
 		if(climbType == null){
 			System.out.println("Sorry! Can't hill climb this type of allele yet!");
 		}
-		else if(climbType.equals("FLOAT")){
+		else if(climbType.equals("FLOAT") || climbType.equals("ORIENTATION")){
 			climbFloatAllele(hopperToClimb, allele);
 		}
 		else if(climbType.equals("INDEX")){
 			climbIndexAllele(allele);
 		}
+		else if(climbType.equals("JOINT_CHILD") || climbType.equals("JOINT_PARENT")){
+			climbJointSiteAllele(hopperToClimb, genotypeToClimb, allele);
+		}
 		else if(climbType.equals("JOINT")){
-			climbJointAllele(allele);
+			climbJointTypeAllele(hopperToClimb, genotypeToClimb, allele, geneIndex);
 		}
 		else if(climbType.equals("RULE_A") || climbType.equals("RULE_B") || 
 				climbType.equals("RULE_C") || climbType.equals("RULE_D") ||
 				climbType.equals("RULE_E")){
 
 			//get box index
-			int boxIndex = getBoxIndex(genotypeToClimb, geneIndex);
-
-			climbRuleAllele(hopperToClimb, allele, climbType, boxIndex);
+			int boxIndex = getBoxIndex(geneList, geneIndex);
+			//get rule DoF location
+			int ruleDoF = getRuleDoF(geneList, geneIndex);
+			
+			climbRuleAllele(hopperToClimb, allele, climbType, boxIndex, ruleDoF);
 		}
 		else if(climbType.equals("BINARY_1") || climbType.equals("BINARY_3")){
 			climbBinaryAllele(hopperToClimb, allele, climbType);
@@ -96,7 +109,7 @@ public class ChangeSingleAllele extends Strategy{
 	}//end climb method
 
 	/**
-	 * Climbs a foat-type allele.
+	 * Climbs a float-type allele.
 	 * 
 	 * @param hopper - Hopper object to climb
 	 * @param allele - specific allele to climb in hopper
@@ -113,7 +126,6 @@ public class ChangeSingleAllele extends Strategy{
 		boolean hillClimb = true; //flag to turn on and off hill climbing
 
 		while(hillClimb){ //while hillclimbing flag is set to true
-
 			//do 1 step of float hillclimbing
 			climbFloat(allele, direction, stepSize);
 
@@ -124,6 +136,7 @@ public class ChangeSingleAllele extends Strategy{
 			}
 			//if worse
 			else{
+				climbFloat(allele, direction, -stepSize);
 				//if last step improved
 				if(stepSize > initialStepSize){
 					//set step size to midpoint
@@ -138,8 +151,8 @@ public class ChangeSingleAllele extends Strategy{
 					//if midpoint is worse
 					else{
 						//go back a step
+						climbFloat(allele, direction, -stepSize);
 						stepSize = (2*stepSize) / 3;
-						climbFloat(allele, direction, stepSize); //add step to allele value
 						hillClimb = false;
 					}
 				}
@@ -162,16 +175,72 @@ public class ChangeSingleAllele extends Strategy{
 	}
 
 	//change the type of joint at this allele
-	public void climbJointAllele(Allele allele){
+	public void climbJointTypeAllele(Hopper hopper, Genotype genotype, Allele allele, int geneIndex){
+		//clone genotype
+		Genotype originalValue = null;
+		Genotype clonedValue = null;
+		try {
+			originalValue = new Genotype(genotype);
+			clonedValue = new Genotype(genotype);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+		} catch (GeneticsException e) {
+			e.printStackTrace();
+		}
+		
+		genotype.getChromosome();
+		
+		//perform the joint change to the genotype
+		clonedValue = climbJointType(clonedValue, allele, geneIndex);
+		
+		genotype = clonedValue;
+		
+		if(!improved(hopper)){
+			genotype = originalValue;
+		}
 	}
 
 	public void climbIndexAllele(Allele allele){
 	}
 
-	public void climbJointSiteAllele(Allele allele){
+	public void climbJointSiteAllele(Hopper hopper, Genotype genotype, Allele allele){
+		//original value
+		EnumJointSite originalValue = (EnumJointSite)allele.getValue();
+		//cloned value
+		EnumJointSite clonedValue = (EnumJointSite)allele.getValue();
+
+		int attempts = 25;
+
+		for(int i = 0; i < attempts; i++){
+			//get the new joint site
+			clonedValue = climbJointSite(clonedValue);
+
+			System.out.println("Trying " + clonedValue);
+
+			//change joint site of allele to new one
+			allele.setValue(clonedValue);
+
+			//try creating creature
+			try {
+				genotype.buildPhenotype();
+				break;
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (GeneticsException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+
+		if(!improved(hopper)){
+			allele.setValue(originalValue);
+		}
+
+
 	}
 
-	public void climbRuleAllele(Hopper hopper, Allele allele, String climbType, int boxIndex){
+	public void climbRuleAllele(Hopper hopper, Allele allele, String climbType, int boxIndex, int ruleDoF){
 		//starting neuron input
 		NeuronInput originalValue = (NeuronInput)allele.getValue();
 		//clone of starting neuron
@@ -180,19 +249,19 @@ public class ChangeSingleAllele extends Strategy{
 		//figure out what type of rule the allele contains
 		if(climbType.equals("RULE_A")){
 			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'A', boxIndex);
+			clonedValue = climbRule(clonedValue, 'A', boxIndex, ruleDoF);
 		} else if(climbType.equals("RULE_B")){
 			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'B', boxIndex);
+			clonedValue = climbRule(clonedValue, 'B', boxIndex, ruleDoF);
 		} else if(climbType.equals("RULE_C")){
 			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'C', boxIndex);
+			clonedValue = climbRule(clonedValue, 'C', boxIndex, ruleDoF);
 		} else if(climbType.equals("RULE_D")){
 			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'D', boxIndex);
+			clonedValue = climbRule(clonedValue, 'D', boxIndex, ruleDoF);
 		} else if(climbType.equals("RULE_E")){
 			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'E', boxIndex);
+			clonedValue = climbRule(clonedValue, 'E', boxIndex, ruleDoF);
 		}
 
 		allele.setValue(clonedValue);
@@ -244,14 +313,14 @@ public class ChangeSingleAllele extends Strategy{
 		EnumOperatorUnary originalValue = (EnumOperatorUnary) allele.getValue();
 		//cloned operator
 		EnumOperatorUnary clonedValue = (EnumOperatorUnary) allele.getValue();
-		
+
 		if(climbType.equals("UNARY_2")){
 			clonedValue = pickUnaryValue('2');
 		}
 		else if(climbType.equals("UNARY_4")){
 			clonedValue = pickUnaryValue('4');
 		}
-		
+
 		allele.setValue(clonedValue);
 
 		//if improved, replace neuron
@@ -274,7 +343,7 @@ public class ChangeSingleAllele extends Strategy{
 
 
 
-	private Allele pickAllele(Genotype currentGenotype) {
+	private int pickAllele(Genotype currentGenotype) {
 		ArrayList<Gene> geneList = currentGenotype.getChromosome();
 
 		//if gene map is empty
@@ -282,33 +351,33 @@ public class ChangeSingleAllele extends Strategy{
 			//pick a gene at random
 			geneIndex = (int)(Math.random()*geneList.size());
 
-			return geneList.get(geneIndex).getDominant();
+			return geneIndex;
 		}
 		//check map of probabilities to pick a gene
 		//keep track of gene index for updating weights
 		//get dominant allele from gene
 		//return allele
-		return null;
+		return 0;
 	}
 
 	/*
 	 *  EMPTY, // E (empty Allele) 
-		LENGTH, // L (length) - float
-		WIDTH, // W (width) - float
-		HEIGHT, // H (height) - float
+		done LENGTH, // L (length) - float
+		done WIDTH, // W (width) - float
+		done HEIGHT, // H (height) - float
 		INDEX_TO_PARENT, // I (index to parent) - int
 		JOINT_TYPE, // T (joint Type)
-		JOINT_ORIENTATION, // O (joint orientation)
-		JOINT_SITE_ON_PARENT, // P (joint site on Parent)
-		JOINT_SITE_ON_CHILD, // C (joint site on Child)
-		RULE_INPUT_A, // a (the five inputs to a rule)
-		RULE_INPUT_B, // b (the five inputs to a rule)
-		RULE_INPUT_C, // c (the five inputs to a rule)
-		RULE_INPUT_D, // d (the five inputs to a rule)
-		RULE_INPUT_E, // e (the five inputs to a rule)
-		BINARY_OPERATOR_1, // 1 (binary operator in the 1st neuron of a rule)
-		UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule)
-		BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
-		UNARY_OPERATOR_4; // 4 (unary operator in the 2nd neuron of a rule)
+		done JOINT_ORIENTATION, // O (joint orientation)
+		done JOINT_SITE_ON_PARENT, // P (joint site on Parent)
+		done JOINT_SITE_ON_CHILD, // C (joint site on Child)
+		done RULE_INPUT_A, // a (the five inputs to a rule)
+		done RULE_INPUT_B, // b (the five inputs to a rule)
+		done RULE_INPUT_C, // c (the five inputs to a rule)
+		done RULE_INPUT_D, // d (the five inputs to a rule)
+		done RULE_INPUT_E, // e (the five inputs to a rule)
+		done BINARY_OPERATOR_1, // 1 (binary operator in the 1st neuron of a rule)
+		done UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule)
+		done BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
+		done UNARY_OPERATOR_4; // 4 (unary operator in the 2nd neuron of a rule)
 	 */
 }

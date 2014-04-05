@@ -39,9 +39,9 @@ public class BrainTester {
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, Block.PARENT_INDEX_NONE,
 				0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.SPHERICAL,
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID,
 				0.2f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.HINGE, 0.0f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.0f));
 		// Second block.
 		alleles.add(new Allele(Trait.LENGTH, 21.4f, 0.2f));
 		alleles.add(new Allele(Trait.LENGTH, 20.0f, 0.199f));
@@ -51,8 +51,8 @@ public class BrainTester {
 		alleles.add(new Allele(Trait.WIDTH, 25.5f, 0.6f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 0, 0.63f));
 		alleles.add(new Allele(Trait.INDEX_TO_PARENT, 1, 0.4f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.TWIST, 0.0f));
-		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.SPHERICAL,
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID, 0.0f));
+		alleles.add(new Allele(Trait.JOINT_TYPE, EnumJointType.RIGID,
 				0.2f));
 		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
 		alleles.add(new Allele(Trait.JOINT_ORIENTATION, 0.5f, 0.5f));
@@ -64,7 +64,7 @@ public class BrainTester {
 				EnumJointSite.EDGE_BACK_SOUTH, 0.6f));
 		alleles.add(new Allele(Trait.JOINT_SITE_ON_CHILD,
 				EnumJointSite.EDGE_BACK_WEST, 0.7f));
-		alleles.add(new Allele(Trait.RULE_INPUT_A,
+		/*alleles.add(new Allele(Trait.RULE_INPUT_A,
 				new NeuronInput(EnumNeuronInputType.TIME), 0.3f));
 		alleles.add(new Allele(Trait.RULE_INPUT_A,
 				new NeuronInput(EnumNeuronInputType.TIME), 0.25f));
@@ -137,7 +137,7 @@ public class BrainTester {
 		alleles.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS,
 				0.3f));
 		alleles.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.EXP,
-				0.2f));
+				0.2f));*/
 
 		genes = Gene.allelesToGenes(alleles);
 
