@@ -65,6 +65,7 @@ public class Renderer implements GLEventListener {
         gl.glTranslatef(0, -30, 0);
         //used to see the creature from different angles
         gl.glRotatef(testTheta, 0, 1, 0);
+        testTheta++;
 
         // It's ALIVE!!!
 
