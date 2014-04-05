@@ -60,7 +60,8 @@ public class Population extends ArrayList<Hopper> {
 				super.add(new Hopper());
 				i++;
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				System.out.println("Creature[" + i + "] " + ex);
+				System.out.println("Creature[" + i + "] " + ex
+								   + " Rebuilding.");
 			}
 		}
 	}
@@ -158,20 +159,18 @@ public class Population extends ArrayList<Hopper> {
 	 * Update the population.
 	 */
 	public void update() {
-		synchronized (this) {
-			generations++;
-			hillClimb();
-			// Hill climbing the population will change the creatures, which
-			// means their sorting will no longer be valid. However,
-			// moveBreeders will sort them again, so it's fine.
-			moveBreeders();
-			int count = breed();
-			// Like above, breeding will change the creatures in the collection,
-			// but cull will sort them again first.
-			cull(count);
-			if (size() > 0) {
-				overachiever = get(size() - 1);
-			}
+		generations++;
+		hillClimb();
+		// Hill climbing the population will change the creatures, which
+		// means their sorting will no longer be valid. However,
+		// moveBreeders will sort them again, so it's fine.
+		moveBreeders();
+		int count = breed();
+		// Like above, breeding will change the creatures in the collection,
+		// but cull will sort them again first.
+		cull(count);
+		if (size() > 0) {
+			overachiever = get(size() - 1);
 		}
 	}
 	
@@ -183,46 +182,48 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	private int breed() {
 		ArrayList<Hopper> children = new ArrayList<Hopper>();
-		synchronized (this) {
-			// In the interest of preserving diversity, shuffle the breeders
-			// list so the Hoppers within it match up semi-randomly.
-			Collections.shuffle(breeders);
-			
-			for (int i = 0; i < breeders.size(); i++) {
-				Hopper parentA = breeders.get(i);
-				// Check to make sure there's another parent to match it with.
-				if (i + 1 >= breeders.size()) {
-					// If not, remove the highest-fitness creature from the
-					// general Population and add it instead.
+		// In the interest of preserving diversity, shuffle the breeders
+		// list so the Hoppers within it match up semi-randomly.
+		Collections.shuffle(breeders);
+		
+		for (int i = 0; i < breeders.size(); i++) {
+			Hopper parentA = breeders.get(i);
+			// Check to make sure there's another parent to match it with.
+			if (i + 1 >= breeders.size()) {
+				// If not, remove the highest-fitness creature from the
+				// general Population and add it instead.
+				synchronized (this) {
 					breeders.add(remove(size() - 1));
 				}
-				Hopper parentB = breeders.get(++i);
-				// Pick a random Crossover strategy.
-				Strategy strategy = Strategy.values()
-						[random.nextInt(Strategy.values().length)];
-				try {
-					Genotype[] offspring = crossover.crossover(
-							parentA.getGenotype(), parentB.getGenotype(),
-							strategy);
-					if (offspring != null) {
-						for (Genotype g : offspring) {
-							if (g != null) {
-								children.add(new Hopper(g));
-							}
+			}
+			Hopper parentB = breeders.get(++i);
+			// Pick a random Crossover strategy.
+			Strategy strategy = Strategy.values()
+					[random.nextInt(Strategy.values().length)];
+			try {
+				Genotype[] offspring = crossover.crossover(
+						parentA.getGenotype(), parentB.getGenotype(),
+						strategy);
+				if (offspring != null) {
+					for (Genotype g : offspring) {
+						if (g != null) {
+							children.add(new Hopper(g));
 						}
 					}
-				} catch (IllegalArgumentException | GeneticsException ex) {
-					System.out.println(
-							"Breed offspring invalid. Continuing.");
-				} finally {
-					parentA.increaseBreedCount();
-					parentB.increaseBreedCount();
 				}
+			} catch (IllegalArgumentException | GeneticsException ex) {
+				System.out.println(
+						"Breed offspring invalid. Continuing.");
+			} finally {
+				parentA.increaseBreedCount();
+				parentB.increaseBreedCount();
 			}
 		}
-		
+		// flushBreeders is already synchronized.
 		flushBreeders();
-		addAll(children);
+		synchronized (this) {
+			addAll(children);
+		}
 		
 		return children.size();
 	}
@@ -231,19 +232,22 @@ public class Population extends ArrayList<Hopper> {
 	 * Perform hill-climbing on all members of the Population.
 	 */
 	private void hillClimb() {
-		synchronized (this) {
-			int size = size();
-			for (int i = 0; i < size; i++) {
-				Hopper original = get(i);
-				try {
-					Hopper newHotness = brain.performHillClimbing(original);
+		int size = size();
+		for (int i = 0; i < size; i++) {
+			Hopper original;
+			synchronized (this) {
+				original = super.get(i);
+			}
+			try {
+				Hopper newHotness = brain.performHillClimbing(original);
+				newHotness.hillClimbed();
+				synchronized (this) {
 					remove(original);
 					super.add(newHotness);
-					newHotness.hillClimbed();
-				} catch (IllegalArgumentException ex) {
-					System.out.println(
-						"HillClimbing produced an illegal creature. Skipping.");
 				}
+			} catch (IllegalArgumentException ex) {
+				System.out.println(
+					"HillClimbing produced an illegal creature. Skipping.");
 			}
 		}
 	}
@@ -263,14 +267,16 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	private void moveBreeders(float f) {
 		sort();
-		int size = size();
-		int stop = (int) (size - (f * size));
-		if (stop >= size) {
-			breeders.addAll(this);
-			clear();
-		} else {
-			for (int i = size - 1; i >= stop; i--) {
-				breeders.add(remove(i));
+		synchronized (this) {
+			int size = size();
+			int stop = (int) (size - (f * size));
+			if (stop >= size) {
+				breeders.addAll(this);
+				clear();
+			} else {
+				for (int i = size - 1; i >= stop; i--) {
+					breeders.add(remove(i));
+				}
 			}
 		}
 	}
@@ -279,7 +285,9 @@ public class Population extends ArrayList<Hopper> {
 	 * Move all Hoppers in the breeders list back into the general population.
 	 */
 	private void flushBreeders() {
-		addAll(breeders);
+		synchronized (this) {
+			addAll(breeders);
+		}
 		breeders.clear();
 	}
 	
@@ -289,11 +297,13 @@ public class Population extends ArrayList<Hopper> {
 	 * @param n Number of individuals to kill off.
 	 */
 	private void cull(int n) {
-		synchronized (this) {
-			sort();
-			if (n < size()) {
+		sort();
+		if (n < super.size()) {
+			synchronized (this) {
 				removeRange(0, n);
-			} else {
+			}
+		} else {
+			synchronized (this) {
 				clear();
 			}
 		}
@@ -305,15 +315,17 @@ public class Population extends ArrayList<Hopper> {
 	 * @return Deep clone of Hopper with the highest fitness.
 	 */
 	public Hopper getOverachiever() {
-		synchronized (this) {
-			Hopper newGuy = null;
-			try {
+		Hopper newGuy = null;
+		try {
+			synchronized (this) {
 				newGuy = new Hopper(overachiever);
-			// Should never fail since it's cloning a Hopper that's already
-			// valid.
-			} catch (IllegalArgumentException | GeneticsException e) {}
-			return newGuy;
+			}
+		// Should never fail since it's cloning a Hopper that's already
+		// valid.
+		} catch (IllegalArgumentException | GeneticsException e) {
+			System.out.println("Cloning Hopper for getOverachiever failed.");
 		}
+		return newGuy;
 	}
 	
 	/**
@@ -333,14 +345,17 @@ public class Population extends ArrayList<Hopper> {
 	 * @return Average fitness of Population as a float.
 	 */
 	public float getAverageFitness() {
+		float sum = 0.0f;
+		ArrayList<Hopper> hoppers;
 		synchronized (this) {
-			float sum = 0.0f;
-			for (Hopper h : this) {
-				sum += h.getFitness();
-			}
-			
-			return sum / size();
+			hoppers = new ArrayList<Hopper>(this);
 		}
+		int size = super.size();
+		for (Hopper h : hoppers) {
+			sum += h.getFitness();
+		}
+
+		return sum / size;
 	}
 	
 	/**
@@ -348,23 +363,45 @@ public class Population extends ArrayList<Hopper> {
 	 * fitness.
 	 */
 	private void sort() {
-		Collections.sort(this);
+		synchronized (this) {
+			Collections.sort(this);
+		}
 	}
 	
 	/**
-	 * Override of add - adds a copy of the requested Hopper.
+	 * Override of add - adds a copy of the requested Hopper. Since this always
+	 * adds the Hopper to the end of the list, it doesn't need to be
+	 * synchronized.
 	 * 
 	 * @param hopper Hopper to add to the Population.
+	 * @return True if add succeeded, else false.
 	 */
 	@Override
 	public boolean add(Hopper hopper) {
-		synchronized (this) {
-			try {
-				add(new Hopper(hopper));
-			} catch (IllegalArgumentException | GeneticsException e) {
-				return false;
+		try {
+			super.add(new Hopper(hopper));
+		} catch (IllegalArgumentException | GeneticsException e) {
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Override of add by index - adds a copy of the requested Hopper. Since
+	 * this always inserts the Hopper into the middle of the collection, it
+	 * does need to be synchronized.
+	 * 
+	 * @param index Index at which to insert the Hopper.
+	 * @param hopper Hopper to add to the Population.
+	 */
+	@Override
+	public void add(int index, Hopper hopper) {
+		try {
+			synchronized (this) {
+				super.add(index, new Hopper(hopper));
 			}
-			return true;
+		} catch (IllegalArgumentException | GeneticsException e) {
+			System.out.println("Adding Hopper to Population failed.");
 		}
 	}
 	
@@ -376,12 +413,12 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public Hopper get(int index) {
-		synchronized (this) {
-			try {
+		try {
+			synchronized (this) {
 				return new Hopper(super.get(index));
-			} catch (IllegalArgumentException | GeneticsException e) {
-				return null;
 			}
+		} catch (IllegalArgumentException | GeneticsException e) {
+			return null;
 		}
 	}
 	
@@ -405,21 +442,23 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public String toString() {
+		ArrayList<Hopper> hoppers;
 		synchronized (this) {
-			StringBuilder output = new StringBuilder("<population>"
-													 + Helper.NEWLINE);
-			output.append("<hoppers>" + Helper.NEWLINE);
-			for (Hopper h : this) {
-				output.append(h.toString() + Helper.NEWLINE);
-			}
-			output.append("</hoppers>" + Helper.NEWLINE);
-			output.append("<crossover>" + Helper.NEWLINE);
-			output.append(crossover.toString() + Helper.NEWLINE);
-			output.append("</crossover>" + Helper.NEWLINE);
-			output.append("</population>");
+			hoppers = new ArrayList<Hopper>(this);
+		}
+		StringBuilder output = new StringBuilder("<population>"
+												 + Helper.NEWLINE);
+		output.append("<hoppers>" + Helper.NEWLINE);
+		for (Hopper h : hoppers) {
+			output.append(h.toString() + Helper.NEWLINE);
+		}
+		output.append("</hoppers>" + Helper.NEWLINE);
+		output.append("<crossover>" + Helper.NEWLINE);
+		output.append(crossover.toString() + Helper.NEWLINE);
+		output.append("</crossover>" + Helper.NEWLINE);
+		output.append("</population>");
 
-			return output.toString();
-		}	
+		return output.toString();
 	}
 	
 	/**

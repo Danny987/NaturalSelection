@@ -107,7 +107,6 @@ public class Genotype {
 		
 		// Add many blocks.
 		int i = 0;
-		int errors = 0;
 		while (i < numBlocks) {
 			// Clone the current Genotype for testing.
 			Genotype testGenotype = new Genotype(this);
@@ -126,16 +125,10 @@ public class Genotype {
 						i++;
 					}
 				} catch (IllegalArgumentException | GeneticsException ex) {
-					errors++;
+					// Prevent endless looping.
+					throw new GeneticsException("Block[" + i + "]: "
+							+ "random Genotype seeding failed.");
 				}
-			} else {
-				errors++;
-			}
-			// A redundant check to prevent endless looping.
-			if (errors >= Helper.FAULT_TOLERENCE) {
-				throw new GeneticsException("Block[" + i + "]: "
-						+ "random Genotype seeding failed; errors exceed "
-						+ Helper.FAULT_TOLERENCE + ".");
 			}
 		}
 		body = buildBody();
@@ -958,7 +951,7 @@ public class Genotype {
 		JointBuilder jointBuilder = makeRandomJoint(index);
 
 		/* ****************************************************************** */
-		/* Make Joel give you a way to check if a joint site is blocked.
+		/* Make Joel give you a better way to check if a joint site is blocked.
 		/* ****************************************************************** */
 		int indexToParent = (index <= 1 ? 0 : random.nextInt(index - 1));
 		EnumJointSite siteOnParent = EnumJointSite.values()

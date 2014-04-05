@@ -509,6 +509,52 @@ public class Allele {
 	}
 	
 	/**
+	 * A static helper method that compares two NeuronInputs and returns if
+	 * they're equals. More specifically, returns true if their types are the
+	 * same and their relevant data is the same for their type. Not all data
+	 * fields are utilized in all types.
+	 * 
+	 * @param NeuronInput neuronA First NeuronInput to compare.
+	 * @param NeuronInput neuronB Second NeuronInput to compare.
+	 * @return True if neuronA equals neuronB, false otherwise.
+	 */
+	public static boolean sameNeuron(NeuronInput neuronA, NeuronInput neuronB) {
+		EnumNeuronInputType typeA = neuronA.getType();
+		EnumNeuronInputType typeB = neuronB.getType();
+		float constantA, constantB;
+		int boxIndexA, boxIndexB;
+		int dofA, dofB;
+		// Check types.
+		if (typeA != typeB) {
+			return false;
+		}
+		// Check relevant data fields based on which fields are utilized for
+		// their type.
+		switch (typeA) {
+			case TIME:
+				return true;
+			case CONSTANT:
+				constantA = neuronA.getConstantValue();
+				constantB = neuronB.getConstantValue();
+				return constantA == constantB;
+			case HEIGHT: case TOUCH:
+				boxIndexA = neuronA.getBoxIndex();
+				boxIndexB = neuronB.getBoxIndex();
+				return boxIndexA == boxIndexB;
+			case JOINT:
+				boxIndexA = neuronA.getBoxIndex();
+				boxIndexB = neuronB.getBoxIndex();
+				dofA = neuronA.getDOF();
+				dofB = neuronB.getDOF();
+				return boxIndexA == boxIndexB && dofA == dofB;
+			default:
+				// Fall through.
+		}
+		
+		return false;
+	}
+	
+	/**
 	 * Override of equals. Alleles are considered equal if their Traits and
 	 * values are the same. Weights do not affect equality.
 	 * 
@@ -518,11 +564,23 @@ public class Allele {
 	@Override
 	public boolean equals(Object other) {
 		if (other instanceof Allele) {
-			return trait.equals(((Allele) other).getTrait()) &&
-				   value == ((Allele) other).getValue();
-		} else {
-			return false;
+			if (trait.equals(((Allele) other).getTrait())) {
+				if (trait.equals(Trait.RULE_INPUT_A)
+						|| trait.equals(Trait.RULE_INPUT_B)
+						|| trait.equals(Trait.RULE_INPUT_C)
+						|| trait.equals(Trait.RULE_INPUT_D)
+						|| trait.equals(Trait.RULE_INPUT_E)) {
+					NeuronInput thisNeuron = (NeuronInput) value;
+					NeuronInput otherNeuron =
+							(NeuronInput) (((Allele) other).getValue());
+					return sameNeuron(thisNeuron, otherNeuron);
+				} else {
+					return value == ((Allele) other).getValue();
+				}
+			}
 		}
+
+		return false;
 	}
 	
 	/**

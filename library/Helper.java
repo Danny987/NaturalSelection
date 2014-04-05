@@ -38,7 +38,7 @@ public class Helper {
 	public static final float MEDIAN_WEIGHT = 0.5f;
 	public static final float MAX_WEIGHT = 1.0f;
 	// Percentage by which to increase/decrease Allele weights.
-	public static final float WEIGHT_STEP = 0.1f;
+	public static final float WEIGHT_STEP = 0.05f;
 	
 	/**
 	 * Sets the random number generator's seed.
