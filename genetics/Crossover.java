@@ -191,7 +191,7 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private static ArrayList<Gene>[] singlePoint(ArrayList<Gene> chromosomeA,
+	private ArrayList<Gene>[] singlePoint(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		
@@ -250,7 +250,7 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private static ArrayList<Gene>[] doublePoint(ArrayList<Gene> chromosomeA,
+	private ArrayList<Gene>[] doublePoint(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		int size = chromosomeA.size();
@@ -309,7 +309,7 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private static ArrayList<Gene>[] cutAndSplice(ArrayList<Gene> chromosomeA,
+	private ArrayList<Gene>[] cutAndSplice(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		int size = chromosomeA.size();
@@ -378,7 +378,7 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private static ArrayList<Gene>[] randomCross(ArrayList<Gene> chromosomeA,
+	private ArrayList<Gene>[] randomCross(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		int size = chromosomeA.size();
@@ -406,10 +406,12 @@ public class Crossover {
 			int b2 = (b1 == 1 ? 0 : 1);
 			// Create deep clones of the genes for the children.
 			try {
-				Gene childGeneA = new Gene(parentGeneA.getAlleles()[a1],
-						                   parentGeneB.getAlleles()[b1]);
-				Gene childGeneB = new Gene(parentGeneA.getAlleles()[a2],
-						                   parentGeneB.getAlleles()[b2]);
+				Gene childGeneA = adjustWeight(
+								  new Gene(parentGeneA.getAlleles()[a1],
+						                   parentGeneB.getAlleles()[b1]));
+				Gene childGeneB = adjustWeight(
+								  new Gene(parentGeneA.getAlleles()[a2],
+						                   parentGeneB.getAlleles()[b2]));
 				childA.add(childGeneA);
 				childB.add(childGeneB);
 			} catch (IllegalArgumentException ex) {
@@ -446,7 +448,7 @@ public class Crossover {
 		}
 		float mapWeight = weightMap.get(allele);
 	
-		// Adjust the child Allele's weight toward the 
+		// Adjust the child Allele's weight toward the map weight.
 		if (weight > mapWeight) {
 			newAllele = new Allele(allele, weight - Helper.WEIGHT_STEP);
 		} else if (weight < mapWeight) {
@@ -456,6 +458,19 @@ public class Crossover {
 		}
 		
 		return newAllele;
+	}
+	
+	/**
+	 * Performs adjustWeight(Allele) on both Alleles in a Gene.
+	 * 
+	 * @param gene Gene whose Alleles should go through adjustWeight(Allele).
+	 * @return A new Gene with the adjusted Alleles.
+	 */
+	private Gene adjustWeight(Gene gene) {
+		Allele[] alleles = gene.getAlleles();
+		alleles[0] = adjustWeight(alleles[0]);
+		alleles[1] = adjustWeight(alleles[1]);
+		return new Gene(alleles);
 	}
 	
 	/**
@@ -549,7 +564,7 @@ public class Crossover {
 	/**
 	 * Setter for the weights of the Traits in the weight table. If not in the
 	 * range Helper.MIN_WEIGHT (0.0f) to Helper.MAX_WEIGHT (1.0f), sets it to
-	 * the appropriate extrema instead.
+	 * the appropriate extreme instead.
 	 * 
 	 * @param allele Allele key to change in the weights table.
 	 * @param value Value of the Allele to change in the weights table.

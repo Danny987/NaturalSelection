@@ -31,7 +31,6 @@ public class Hopper implements Comparable<Hopper> {
 	private int timesBred;
 	private int children;
 	private float fitness;
-	private boolean realFitness;
 
 	/**
 	 * Instantiate a new Hopper with random Genotype and name.
@@ -77,7 +76,6 @@ public class Hopper implements Comparable<Hopper> {
 		timesBred = 0;
 		children = 0;
 		fitness = evalFitness();
-		realFitness = true;
 	}
 
 	/**
@@ -94,7 +92,6 @@ public class Hopper implements Comparable<Hopper> {
 		timesHillClimbed = source.getTimesHillClimbed();
 		timesBred = source.getTimesBred();
 		children = source.getChildren();
-		realFitness = source.isRealFitness();
 	}
 
 	/**
@@ -179,24 +176,6 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	public void setFitness(float fitness) {
 		this.fitness = fitness;
-	}
-	
-	/**
-	 * Sets the realFitness flag to true.
-	 */
-	public void setRealFitness() {
-		realFitness = true;
-	}
-	
-	/**
-	 * Checks if the fitness value is the real fitness from the simulation or
-	 * just an estimate.
-	 * 
-	 * @return True if fitness is the real fitness from the simulation, false
-	 *             if it's just an estimate.
-	 */
-	public boolean isRealFitness() {
-		return realFitness;
 	}
 
 	/**
@@ -340,10 +319,15 @@ public class Hopper implements Comparable<Hopper> {
 			System.out.println(hopper1.getPhenotype());
 			System.out.println("---Fitness 1---");
 			System.out.println(hopper1.getFitness());
-			for (int i = 0; i < 10000; i++) {
-				System.out.println("Fitness: "
-						+ hopper1.getPhenotype().advanceSimulation());
+			float fitness = 0;
+			for (int i = 0; i < 1000; i++) {
+				float current = hopper1.getPhenotype().advanceSimulation();
+				if (current > fitness) {
+					fitness = current;
+				}
+				System.out.println("Fitness: " + current);
 			}
+			System.out.println("Peak Fitness: " + fitness);
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}

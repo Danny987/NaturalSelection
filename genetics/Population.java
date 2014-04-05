@@ -138,7 +138,7 @@ public class Population extends ArrayList<Hopper> {
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				System.out.println(
-						"Intercrossover offspring invalid. Continuing.");
+						"Interbreed produced offspring invalid. Continuing.");
 			}
 		}
 		
@@ -169,7 +169,6 @@ public class Population extends ArrayList<Hopper> {
 			// Like above, breeding will change the creatures in the collection,
 			// but cull will sort them again first.
 			cull(count);
-			sort();
 			if (size() > 0) {
 				overachiever = get(size() - 1);
 			}
@@ -214,7 +213,7 @@ public class Population extends ArrayList<Hopper> {
 					}
 				} catch (IllegalArgumentException | GeneticsException ex) {
 					System.out.println(
-							"Crossover offspring invalid. Continuing.");
+							"Breed offspring invalid. Continuing.");
 				} finally {
 					parentA.increaseBreedCount();
 					parentB.increaseBreedCount();
@@ -311,7 +310,7 @@ public class Population extends ArrayList<Hopper> {
 			try {
 				newGuy = new Hopper(overachiever);
 			// Should never fail since it's cloning a Hopper that's already
-			//valid.
+			// valid.
 			} catch (IllegalArgumentException | GeneticsException e) {}
 			return newGuy;
 		}
@@ -329,10 +328,7 @@ public class Population extends ArrayList<Hopper> {
 	/**
 	 * Get the average fitness of this Population. Takes n time since it has
 	 * to iterate over the whole array. This method makes no guarantees about
-	 * the accuracy of its result. At any given time, the majority of the
-	 * Hoppers in the Population will have very rough estimates for their
-	 * individual fitness, and not all Hoppers are guaranteed to be in the
-	 * general population. The sub-collections are not automatically included.
+	 * the accuracy of its result.
 	 * 
 	 * @return Average fitness of Population as a float.
 	 */
