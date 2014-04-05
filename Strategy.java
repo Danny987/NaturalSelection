@@ -89,6 +89,9 @@ public abstract class Strategy {
 		case JOINT_TYPE:
 			EnumJointType j = (EnumJointType) allele.getValue();
 			return "JOINT";
+			
+		case JOINT_ORIENTATION:
+			return "ORIENTATION";
 
 		case JOINT_ORIENTATION:
 			return "ORIENTATION";
@@ -174,22 +177,35 @@ public abstract class Strategy {
 
 	public EnumJointSite climbJointSite(EnumJointSite clonedJointSite){
 		EnumJointSite jointSite = clonedJointSite;
+<<<<<<< HEAD
 
+=======
+		
+>>>>>>> 7c73ea5b5927c4fa566705c3e972d8cca4557b5e
 		while(jointSite == clonedJointSite){
 			jointSite = EnumJointSite.values()
 					[Helper.RANDOM.nextInt(EnumJointSite.values().length)];
 		}
 		return jointSite;
 	}
+<<<<<<< HEAD
 
 	public Genotype climbJointType(Genotype genotype, Allele allele, int geneIndex){
 		EnumJointType startingJointType = (EnumJointType)allele.getValue();
 		EnumJointType jointType = startingJointType;
 
+=======
+	
+	public Genotype climbJointType(Genotype genotype, Allele allele, int geneIndex){
+		EnumJointType startingJointType = (EnumJointType)allele.getValue();
+		EnumJointType jointType = startingJointType;
+		
+>>>>>>> 7c73ea5b5927c4fa566705c3e972d8cca4557b5e
 		while(jointType == startingJointType){
 			jointType = EnumJointType.values()
 					[Helper.RANDOM.nextInt(EnumJointType.values().length)];
 		}
+<<<<<<< HEAD
 
 		allele.setValue(jointType);
 
@@ -198,22 +214,44 @@ public abstract class Strategy {
 		int boxIndex = getBoxIndex(geneList, geneIndex);
 
 		if(jointType.getDoF() == 0){
+=======
+		
+		allele.setValue(jointType);
+		
+		int dofChange = startingJointType.getDoF() - jointType.getDoF();
+		
+		ArrayList<Gene> geneList = genotype.getChromosome();
+		
+		if(jointType.getDoF() < 1){
+>>>>>>> 7c73ea5b5927c4fa566705c3e972d8cca4557b5e
 			//remove rules
 			int i = geneIndex + 4; //go to first rule
 			while(i < geneList.size() && 
 					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
 				geneList.remove(i); //remove gene at index
 			}
+<<<<<<< HEAD
 
 		}
 		else if(startingJointType.getDoF() == 2 && jointType.getDoF() == 1){
 			//remove 1 set of rules
 
+=======
+			
+		}
+		else if(dofChange > 0){
+			//remove 1 set of rules
+			
+>>>>>>> 7c73ea5b5927c4fa566705c3e972d8cca4557b5e
 			//index to the closest dof marker or length allele
 			int i = geneIndex;
 			while(i < geneList.size() &&
 					(!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.DOF_MARKER) ||
+<<<<<<< HEAD
 							!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH))){
+=======
+					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH))){
+>>>>>>> 7c73ea5b5927c4fa566705c3e972d8cca4557b5e
 				if (geneList.get(i).getDominant().getTrait().equals(Allele.Trait.DOF_MARKER)) {
 					break;
 				}
@@ -226,6 +264,7 @@ public abstract class Strategy {
 				geneList.remove(i); //remove gene at index
 			}
 		}
+<<<<<<< HEAD
 		else{
 			//add rules
 			int rulesLength = 0; //number of rule sets to add per DoF
@@ -325,6 +364,13 @@ public abstract class Strategy {
 			}
 		}
 		System.out.println(genotype.toString());
+=======
+		else if(dofChange < 0){
+			//add rules
+			int rulesToAdd = -dofChange;
+			System.out.println("#of rule sets to add: " + rulesToAdd);
+		}
+>>>>>>> 7c73ea5b5927c4fa566705c3e972d8cca4557b5e
 		return genotype;
 	}
 
