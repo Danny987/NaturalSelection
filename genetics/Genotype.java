@@ -223,20 +223,22 @@ public class Genotype {
 		}
 		
 		Allele length = new Allele(Trait.LENGTH, new Float(block.getLength()),
-					0.0f);
+					random.nextFloat());
 		Allele height = new Allele(Trait.HEIGHT, new Float(block.getHeight()),
-					0.0f);
-		Allele width = new Allele(Trait.WIDTH, block.getWidth(), 0.0f);
+				random.nextFloat());
+		Allele width = new Allele(Trait.WIDTH, block.getWidth(),
+				random.nextFloat());
 		Allele indexToParent = new Allele(Trait.INDEX_TO_PARENT,
-										  block.getIndexOfParent(), 0.0f);
+				block.getIndexOfParent(), random.nextFloat());
 		Joint joint = block.getJointToParent();
-		Allele jointType = new Allele(Trait.JOINT_TYPE, joint.getType(), 0.0f);
+		Allele jointType = new Allele(Trait.JOINT_TYPE, joint.getType(),
+				random.nextFloat());
 		Allele jointOrientation = new Allele(Trait.JOINT_ORIENTATION,
-											 joint.getOrientation(), 0.0f);
+				joint.getOrientation(), random.nextFloat());
 		Allele jointSiteOnParent = new Allele(Trait.JOINT_SITE_ON_PARENT,
-											  joint.getSiteOnParent(), 0.0f);
+				joint.getSiteOnParent(), random.nextFloat());
 		Allele jointSiteOnChild = new Allele(Trait.JOINT_SITE_ON_CHILD,
-										     joint.getSiteOnChild(), 0.0f);
+				joint.getSiteOnChild(), random.nextFloat());
 		ArrayList<Rule> ruleList1 = new ArrayList<Rule>();
 		ArrayList<Rule> ruleList2 = new ArrayList<Rule>();
 		int maxDoF = joint.getType().getDoF();
@@ -271,23 +273,23 @@ public class Genotype {
 		
 		for (Rule r : ruleList1) {
 			Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, r.getInput(0),
-										   0.0f);
+										   random.nextFloat());
 			Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, r.getInput(1),
-										   0.0f);
+										   random.nextFloat());
 			Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, r.getInput(2),
-										   0.0f);
+										   random.nextFloat());
 			Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, r.getInput(3),
-										   0.0f);
+										   random.nextFloat());
 			Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, r.getInput(4),
-										   0.0f);
+										   random.nextFloat());
 			Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-										   r.getOp1(), 0.0f);
+										   r.getOp1(), random.nextFloat());
 			Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-					   					   r.getOp2(), 0.0f);
+					   					   r.getOp2(), random.nextFloat());
 			Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-					   					   r.getOp3(), 0.0f);
+					   					   r.getOp3(), random.nextFloat());
 			Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
-					   					   r.getOp2(), 0.0f);
+					   					   r.getOp2(), random.nextFloat());
 			
 			chromosome.add(++index, new Gene(ruleInputA));
 			chromosome.add(++index, new Gene(ruleInputB));
@@ -303,23 +305,23 @@ public class Genotype {
 		if (maxDoF > 1) {
 			for (Rule r : ruleList2) {
 				Allele ruleInputA = new Allele(Trait.RULE_INPUT_A,
-						r.getInput(0), 0.0f);
+						r.getInput(0), random.nextFloat());
 				Allele ruleInputB = new Allele(Trait.RULE_INPUT_B,
-						r.getInput(1), 0.0f);
+						r.getInput(1), random.nextFloat());
 				Allele ruleInputC = new Allele(Trait.RULE_INPUT_C,
-						r.getInput(2), 0.0f);
+						r.getInput(2), random.nextFloat());
 				Allele ruleInputD = new Allele(Trait.RULE_INPUT_D,
-						r.getInput(3), 0.0f);
+						r.getInput(3), random.nextFloat());
 				Allele ruleInputE = new Allele(Trait.RULE_INPUT_E,
-						r.getInput(4), 0.0f);
+						r.getInput(4), random.nextFloat());
 				Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-											   r.getOp1(), 0.0f );
+											   r.getOp1(), random.nextFloat());
 				Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-						   					   r.getOp2(), 0.0f);
+						   					   r.getOp2(), random.nextFloat());
 				Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-						   					   r.getOp3(), 0.0f);
+						   					   r.getOp3(), random.nextFloat());
 				Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
-						   					   r.getOp2(), 0.0f);
+						   					   r.getOp2(), random.nextFloat());
 				
 				chromosome.add(++index, new Gene(ruleInputA));
 				chromosome.add(++index, new Gene(ruleInputB));
@@ -412,7 +414,7 @@ public class Genotype {
 		// Add a DoF marker if needed.
 		if (chromosome.get(i).getTrait() == Trait.LENGTH) {
 			chromosome.add(--i, new Gene(
-					new Allele(Trait.DOF_MARKER, 2, 0.0f)));
+					new Allele(Trait.DOF_MARKER, 2, random.nextFloat())));
 		}
 		i++;
 		
@@ -432,23 +434,23 @@ public class Genotype {
 		}
 		
 		Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, rule.getInput(0),
-						   0.0f);
+						   random.nextFloat());
 		Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, rule.getInput(1),
-						   0.0f);
+						   random.nextFloat());
 		Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, rule.getInput(2),
-						   0.0f);
+						   random.nextFloat());
 		Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, rule.getInput(3),
-						   0.0f);
+						   random.nextFloat());
 		Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, rule.getInput(4),
-						   0.0f);
+						   random.nextFloat());
 		Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-						   rule.getOp1(), 0.0f);
+						   rule.getOp1(), random.nextFloat());
 		Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-						   rule.getOp2(), 0.0f);
+						   rule.getOp2(), random.nextFloat());
 		Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-						   rule.getOp3(), 0.0f);
+						   rule.getOp3(), random.nextFloat());
 		Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_4,
-						   rule.getOp2(), 0.0f);
+						   rule.getOp2(), random.nextFloat());
 		
 		chromosome.add(i, new Gene(ruleInputA));
 		chromosome.add(++i, new Gene(ruleInputB));
