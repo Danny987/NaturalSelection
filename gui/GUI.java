@@ -118,7 +118,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private JComboBox tribes;
 
     // Disable or enable all searching threads
-    private boolean paused = false;
+    private boolean paused = true;
     private int numberofcores;
 
     /**
@@ -131,22 +131,16 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         this.nameList = nameList;
 
         currentTribe = tribeList.get(0);
+        while (currentTribe.getSize() == -1) {
+            currentTribe = tribeList.get(0);
+        }
 
         try {
-            if (currentTribe.getSize() == -1) {
-                hopper = new Hopper();
-            }
-            else {
-                hopper = new Hopper(currentTribe.getHopper(0));
-            }
+            hopper = new Hopper(currentTribe.getHopper(0));
         } catch (GeneticsException | NullPointerException ex) {
             System.out.println(ex);
         }
 
-//        while(currentTribe.getSize() == -1){
-//            currentTribe = tribeList.get(0);
-//        }
-        
         init();
 
         setVisible(true);
@@ -179,23 +173,30 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             // Animate Crature
             case "Animate":
                 if (!graphicsPanel.animating()) {
+                    animate.setText("Animator On");
                     graphicsPanel.startAnimator();
                 }
                 else {
+                    animate.setText("Animator Off");
                     graphicsPanel.stopAnimator();
                 }
                 break;
 
             //Pause all threads
             case "Pause":
-                if (!paused) {
+                paused = !paused;
+
+                for (Tribe t : tribeList) {
+                    t.interrupt();
+                }
+
+                if (paused) {
                     pause.setText("Start");
-                    paused = true;
                 }
                 else {
                     pause.setText("Pause");
-                    paused = false;
                 }
+                
                 break;
 
             // Write the currently selected genome to use selected file.
@@ -275,6 +276,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
         else {
             graphicsPanel.startAnimator();
+            animate.setText("Animator On");
         }
 
         try {
@@ -400,6 +402,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 renderer.setHopper(hopper);
                 mainTab.setTitleAt(1, hopper.getName());
                 graphicsPanel.startAnimator();
+                animate.setText("Animator On");
 
                 secondsSinceStart = 0;
                 minutesSinceStart = 0;
@@ -444,6 +447,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         GLCapabilities caps = new GLCapabilities(glp);
         graphicsPanel = new GraphicsPanel(500, HEIGHT, caps);
         renderer = graphicsPanel.getRenderer();
+        renderer.setHopper(hopper);
 
         //////////////////////////////////////////////////
         // main tab///////////////////////////////////////
@@ -486,6 +490,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         //Initialize buttons
         pause = new Button(130, 20, "Pause");
+        pause.setText("Start");
+
         animate = new Button(130, 20, "Animate");
         nextGeneration = new Button(130, 20, "Next Generation");
         writeFile = new Button(130, 20, "Write Genome");
@@ -502,7 +508,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 0, numberofcores, 0);
+        slider = new Slider("Creature", 0, currentTribe.getSize(), 0);
         slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 

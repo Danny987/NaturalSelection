@@ -21,10 +21,12 @@ public class Creatures {
     public static void main(String args[]) {
         Names.loadFiles();
         SwingUtilities.invokeLater(new Runnable() {
+            @Override
             public void run() {
                 int numberofcores = Runtime.getRuntime().availableProcessors();
                 List<Tribe> tribeList = new ArrayList<>();
                 List<String> nameList = new ArrayList<>();
+                
                 for (int i = 0; i < numberofcores; i++) {
                     String name = i + ": " + Names.getTribeName();
                     tribeList.add(new Tribe(name));

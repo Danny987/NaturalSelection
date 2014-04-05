@@ -17,10 +17,10 @@ public class Slider extends JSlider{
 
     /**
      *
-     * @param name
-     * @param min
-     * @param max
-     * @param init
+     * @param name Slider Name
+     * @param min Min number
+     * @param max max number
+     * @param init initial number
      */
     public Slider(String name, int min, int max, int init){
         super(JSlider.VERTICAL, min, max, init);
