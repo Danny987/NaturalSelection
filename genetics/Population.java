@@ -412,14 +412,14 @@ public class Population extends ArrayList<Hopper> {
 		synchronized (this) {
 			StringBuilder output = new StringBuilder("<population>"
 													 + Helper.NEWLINE);
-			output.append("<hoppers>");
+			output.append("<hoppers>" + Helper.NEWLINE);
 			for (Hopper h : this) {
 				output.append(h.toString() + Helper.NEWLINE);
 			}
-			output.append("</hoppers>");
-			output.append("<crossover>");
-			output.append(crossover.toString());
-			output.append("</crossover>");
+			output.append("</hoppers>" + Helper.NEWLINE);
+			output.append("<crossover>" + Helper.NEWLINE);
+			output.append(crossover.toString() + Helper.NEWLINE);
+			output.append("</crossover>" + Helper.NEWLINE);
 			output.append("</population>");
 
 			return output.toString();
@@ -432,7 +432,7 @@ public class Population extends ArrayList<Hopper> {
 	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
-		Population pop = new Population(10);
+		Population pop = new Population(1000);
 		System.out.println(pop);
 	}
 	
