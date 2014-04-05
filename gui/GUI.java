@@ -26,6 +26,7 @@ import java.util.List;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.swing.BorderFactory;
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
@@ -45,7 +46,7 @@ import javax.swing.tree.DefaultTreeModel;
  *
  * @author Marcos
  */
-public class GUI extends JFrame implements ActionListener, MouseListener, Runnable {
+public class GUI extends JFrame implements ActionListener, MouseListener {
 
     //Size
     private final int WIDTH = 700;
@@ -59,14 +60,14 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
     private final JFileChooser fileChooser = new JFileChooser();
 
     //Tribe Names
-    private final List<String> nameList = new ArrayList<>();
-    private final List<Tribe> tribeList = new ArrayList<>();
-    private List<Hopper> currentTribe = new ArrayList<>();
+    private List<String> nameList = new ArrayList<>();
+    private List<Tribe> tribeList = new ArrayList<>();
+    private Tribe currentTribe;
 
     // Contains opengl graphics
     private GraphicsPanel graphicsPanel;
     private Renderer renderer;
-    
+
     private Timer timer;
 
     private Hopper hopper;
@@ -82,13 +83,18 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
     // panel for the slider and or jcombobox
     private Panel bottomPanel;
-    
+
     // Display the statistics
     private JScrollPane scroll;
     private Panel stats;
     private JLabel time;
+    private JLabel generations;
+    private JLabel generationsPerSecond;
+
+    private int totalGenerations = 0;
+    private int minutesSinceStart = 0;
     private int secondsSinceStart = 0;
-    
+
     private Panel table;
     private JTree tree;
     private DefaultMutableTreeNode root;
@@ -113,27 +119,37 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
     // Disable or enable all searching threads
     private boolean paused = false;
+    private int numberofcores;
 
     /**
      * Calls JPanel super and initializes the list of name.
      */
-    public GUI() {
+    public GUI(List<Tribe> tribeList, List<String> nameList) {
         super("Creature Creator");
 
-        int numberofcores = Runtime.getRuntime().availableProcessors();
-        for (int i = 0; i < numberofcores; i++) {
-            String name = i + ": " + Names.getTribeName();
-            tribeList.add(new Tribe(name));
-            nameList.add(name);
-        }
+        this.tribeList = tribeList;
+        this.nameList = nameList;
 
-        currentTribe = tribeList.get(0).getList();
+        currentTribe = tribeList.get(0);
 
         try {
-            hopper = new Hopper(currentTribe.get(0));
-        } catch (GeneticsException ex) {
-            ex.printStackTrace();
+            if (currentTribe.getSize() == -1) {
+                hopper = new Hopper();
+            }
+            else {
+                hopper = new Hopper(currentTribe.getHopper(0));
+            }
+        } catch (GeneticsException | NullPointerException ex) {
+            System.out.println(ex);
         }
+
+//        while(currentTribe.getSize() == -1){
+//            currentTribe = tribeList.get(0);
+//        }
+        
+        init();
+
+        setVisible(true);
     }
 
     /**
@@ -143,25 +159,30 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
      */
     @Override
     public void actionPerformed(ActionEvent e) {
-        if(e.getSource().equals(timer)){
-            if(!paused) {
-                time.setText((Integer.toString(secondsSinceStart++)));
-                
+        if (e.getSource().equals(timer)) {
+            if (!paused) {
+                time.setText(" Time: " + time());
+                totalGenerations = currentTribe.getGenerations();
+                generations.setText("Total Generations: " + totalGenerations);
+
+                if (secondsSinceStart != 0) {
+                    generationsPerSecond.setText("Generations/second: " + totalGenerations / secondsSinceStart);
+                }
             }
-            
+
             return;
         }
-        
+
         mainTab.getSelectedIndex();
         switch (e.getActionCommand()) {
 
             // Animate Crature
             case "Animate":
-                if (graphicsPanel.animating()) {
-                    graphicsPanel.stopAnimator();
+                if (!graphicsPanel.animating()) {
+                    graphicsPanel.startAnimator();
                 }
                 else {
-                    graphicsPanel.startAnimator();
+                    graphicsPanel.stopAnimator();
                 }
                 break;
 
@@ -189,16 +210,26 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
             // Step Next Generation
             case "Next Generation":
-                tribeList.get(0).nextGeneration();
-                currentTribe = tribeList.get(0).getList();
-                hopper = currentTribe.get(0);
-                renderer.setHopper(hopper);
+                for (Tribe t : tribeList) {
+                    t.nextGeneration();
+                }
+
+                currentTribe = tribeList.get(tribes.getSelectedIndex());
+                slider.setMaximum(currentTribe.getSize());
+
+                try {
+                    hopper = new Hopper(currentTribe.getHopper(0));
+                    renderer.setHopper(hopper);
+                } catch (GeneticsException ex) {
+                    System.err.println(ex);
+                }
                 break;
 
             case "Change Tribe":
-                currentTribe = tribeList.get(tribes.getSelectedIndex()).getList();
+                currentTribe = tribeList.get(tribes.getSelectedIndex());
                 try {
-                    hopper = new Hopper(currentTribe.get(0));
+                    hopper = new Hopper(currentTribe.getHopper(0));
+                    slider.setMaximum(currentTribe.getSize());
                     slider.setValue(0);
                     renderer.setHopper(hopper);
                     mainTab.setTitleAt(1, hopper.getName());
@@ -212,11 +243,31 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         nextGeneration.setEnabled(paused);
     }
 
-    public void mouseClicked(MouseEvent e) {}
-    public void mouseEntered(MouseEvent e) {}
-    public void mouseExited(MouseEvent e) {}
-    public void mousePressed(MouseEvent e) {}
-    
+    public String time() {
+        int seconds;
+        secondsSinceStart++;
+        if (secondsSinceStart == 60) {
+            minutesSinceStart++;
+        }
+
+        seconds = secondsSinceStart % 60;
+
+        return minutesSinceStart + ":"
+                + (seconds > 9 ? seconds : "0" + seconds);
+    }
+
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    public void mouseExited(MouseEvent e) {
+    }
+
+    public void mousePressed(MouseEvent e) {
+    }
+
     @Override
     public void mouseReleased(MouseEvent e) {
         if (mainTab.getSelectedIndex() == 1) {
@@ -227,23 +278,13 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         }
 
         try {
-            hopper = new Hopper(currentTribe.get(slider.getValue()));
+            hopper = new Hopper(currentTribe.getHopper(slider.getValue()));
             renderer.setHopper(hopper);
-            graphicsPanel.startAnimator();
-            graphicsPanel.stopAnimator();
+
             mainTab.setTitleAt(1, hopper.getName());
         } catch (GeneticsException ex) {
             ex.printStackTrace();
         }
-    }
-
-    /**
-     * Runs on it's own thread
-     */
-    @Override
-    public void run() {
-        init();
-        setVisible(true);
     }
 
     /**
@@ -253,23 +294,26 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         DefaultMutableTreeNode block = null;
         String[] str;
         str = hopper.toString().split("\n");
-        
-        
-        if(str == null) return;
-        
+
+        if (str == null) {
+            return;
+        }
+
         String title = str[2];
-        
+
         root.removeAllChildren();
-        DefaultTreeModel model = (DefaultTreeModel)tree.getModel();
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         model.reload();
-        
-        for(int i = 5; i < str.length; i++){
-            if(str[i].equals("<//genotype>") || str[i].equals("}")) break;
-            if(str[i].contains("LENGTH")){
+
+        for (int i = 5; i < str.length; i++) {
+            if (str[i].equals("</genotype>") || str[i].equals("}")) {
+                break;
+            }
+            if (str[i].contains("LENGTH")) {
                 block = new DefaultMutableTreeNode(str[i++] + str[i++] + str[i++]);
                 root.add(block);
             }
-            else{
+            else {
                 block.add(new DefaultMutableTreeNode(str[i]));
             }
         }
@@ -291,7 +335,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
         if (option != JFileChooser.CANCEL_OPTION) {
             File f = fileChooser.getSelectedFile();
-            
 
             try {
                 writer = new BufferedWriter(new FileWriter(f));
@@ -309,51 +352,58 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
     private void loadGenotype() {
         BufferedReader reader;
         int option = fileChooser.showOpenDialog(this);
-        
+
         if (option != JFileChooser.CANCEL_OPTION) {
             File f = fileChooser.getSelectedFile();
-            System.out.println(f);
             try {
                 String[] lineArray;
                 String name;
                 List<Allele> alleles = new ArrayList<>();
                 ArrayList<Gene> genes;
-                
+
                 reader = new BufferedReader(new FileReader(f));
-                
+
                 String line = reader.readLine();
                 reader.readLine();
                 name = reader.readLine();
                 reader.readLine();
                 reader.readLine();
-                
-                while(line != null){
+
+                while (line != null) {
                     line = reader.readLine();
-                    
-                    if(line.startsWith("{")){
+
+                    if (line.startsWith("{")) {
                         line = line.replace("{", "");
                     }
-                    if(line.endsWith("}")){
+                    if (line.endsWith("}")) {
                         line = line.replace("}", "");
                     }
-                    
-                    line = line.substring(1, line.length() -1);
-                    
+
+                    line = line.substring(1, line.length() - 1);
+
                     lineArray = line.split("\\)\\(");
-                    
-                    if(lineArray.length < 2){
+
+                    if (lineArray.length < 2) {
                         break;
                     }
-                    
+
                     alleles.add(Allele.stringToAllele(lineArray[0] + ")"));
                     alleles.add(Allele.stringToAllele("(" + lineArray[1]));
                 }
-                
+
                 genes = Gene.allelesToGenes(alleles);
                 Genotype genotype = new Genotype(genes);
-                
-                currentTribe.add(0, new Hopper(genotype, name));
-                
+                hopper = new Hopper(genotype, name);
+
+                currentTribe.addHopper(hopper);
+
+                renderer.setHopper(hopper);
+                mainTab.setTitleAt(1, hopper.getName());
+                graphicsPanel.startAnimator();
+
+                secondsSinceStart = 0;
+                minutesSinceStart = 0;
+                totalGenerations = 0;
             } catch (FileNotFoundException ex) {
                 System.out.println(ex);
             } catch (IllegalArgumentException | GeneticsException | IOException ex) {
@@ -361,6 +411,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
             }
 
         }
+
     }
 
     /**
@@ -380,6 +431,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
             @Override
             public void windowClosing(WindowEvent e) {
                 graphicsPanel.kill();
+                for (Tribe t : tribeList) {
+                    t.kill();
+                }
                 System.exit(0);
             }
         });
@@ -391,13 +445,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         graphicsPanel = new GraphicsPanel(500, HEIGHT, caps);
         renderer = graphicsPanel.getRenderer();
 
-        try {
-            renderer.setHopper(new Hopper(hopper));
-        } catch (GeneticsException ex) {
-            ex.printStackTrace();
-        }
         //////////////////////////////////////////////////
-
         // main tab///////////////////////////////////////
         mainTab = new JTabbedPane();
         mainTab.setSize(WIDTH, HEIGHT);
@@ -413,19 +461,27 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         buttonsPanel.setBackground(BACKGROUND_COLOR);
 
         bottomPanel = new Panel(WIDTH, 20);
-        bottomPanel.setBackground(Color.RED);
-        
+        bottomPanel.setBackground(BACKGROUND_COLOR);
+
         stats = new Panel(140, 140);
-        time = new JLabel("0");
+        time = new JLabel(" Time: 0:00");
         time.setForeground(FONTCOLOR);
 
-        JLabel timeTitle = new JLabel("Timer");
-        timeTitle.setForeground(FONTCOLOR);
-        
-        stats.add(timeTitle);
-        stats.add(time);
         stats.setForeground(FONTCOLOR);
         stats.setBackground(BACKGROUND_COLOR);
+
+        // labels /////////////////////////////////////////////////////////
+        generationsPerSecond = new JLabel("Generations/second: 0");
+
+        generations = new JLabel("Total Generations: " + totalGenerations);
+        generations.setForeground(FONTCOLOR);
+
+        bottomPanel.add(Box.createHorizontalStrut(5));
+        bottomPanel.add(time);
+        bottomPanel.add(Box.createHorizontalStrut(5));
+        bottomPanel.add(generations);
+        bottomPanel.add(Box.createHorizontalStrut(5));
+        bottomPanel.add(generationsPerSecond);
         //////////////////////////////////////////////////////////////////
 
         //Initialize buttons
@@ -446,16 +502,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 0, Tribe.POPULATION_SIZE - 1, 0);
+        slider = new Slider("Creature", 0, numberofcores, 0);
         slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 
         // Current Creature Label/////////////////////////////////
         currentCreature = new JLabel("   Current Creature   ");
         currentCreature.setForeground(FONTCOLOR);
-        
-        //////////////////////////////////////////////////////////
 
+        //////////////////////////////////////////////////////////
         // Setup default table/////////////////////////////////////
         table = new Panel(WIDTH, HEIGHT);
         table.setAlignmentX(CENTER_ALIGNMENT);
@@ -533,7 +588,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener, Runnab
 
         // Pack because why not?
         pack();
-        
+
         timer = new Timer(1000, this);
         timer.start();
     }

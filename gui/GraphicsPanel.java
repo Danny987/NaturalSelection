@@ -21,10 +21,10 @@ public class GraphicsPanel extends GLCanvas {
 
     /**
      * GraphixsPanel creates a GLCanvas used for opengl
-     * 
+     *
      * @param width
      * @param height
-     * @param caps 
+     * @param caps
      */
     public GraphicsPanel(int width, int height, GLCapabilities caps) {
         super(caps);
@@ -34,7 +34,7 @@ public class GraphicsPanel extends GLCanvas {
         setMinimumSize(size);
         setMaximumSize(size);
         setBackground(Color.BLACK);
-        
+
         renderer = new Renderer();
 
         addGLEventListener(renderer);
@@ -49,22 +49,32 @@ public class GraphicsPanel extends GLCanvas {
      *
      * @return
      */
-    public boolean animating(){return !animator.isPaused();}
+    public boolean animating() {
+        return !animator.isPaused();
+    }
 
     /**
      *
      */
-    public void startAnimator(){animator.resume();}
+    public void startAnimator() {
+            animator.resume();
+    }
 
     /**
      *
      */
-    public void stopAnimator(){animator.pause();}
+    public void stopAnimator() {
+        animator.pause();
+    }
 
     /**
      *
      */
-    public void kill(){animator.stop();}
-    
-    public Renderer getRenderer(){ return renderer;}
+    public void kill() {
+        animator.stop();
+    }
+
+    public Renderer getRenderer() {
+        return renderer;
+    }
 }

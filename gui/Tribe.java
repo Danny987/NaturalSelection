@@ -1,10 +1,7 @@
 package creature.geeksquad.gui;
 
-import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
-import creature.geeksquad.hillclimbing.TribeBrain;
-import java.util.ArrayList;
-import java.util.List;
+import creature.geeksquad.genetics.Population;
 
 /**
  *
@@ -12,72 +9,71 @@ import java.util.List;
  */
 public class Tribe extends Thread {
 
-    public static final int POPULATION_SIZE = 1000;
+    public static final int POPULATION_SIZE = 100;
+    private Population population;
+
     private String name;
-    private List<Hopper> hoppers = new ArrayList<>();
+
     private boolean paused = false;
-    private boolean running = true;
-
-    private TribeBrain brain;
-
+    private boolean running = false;
+    private final Object lock = new Object();
+    
     public Tribe(String name) {
-        brain = new TribeBrain();
-
         this.name = name;
-
-        String hopperName;
-        for (int i = 0; i < POPULATION_SIZE; i++) {
-            hoppers.add(generateHopper());
-        }
     }
 
     /**
      * Call things to run hill climbing and cross over.
      */
     public void nextGeneration() {
-        hoppers.add(0, brain.performHillClimbing(hoppers.get(0)));
+        population.update();
     }
 
     @Override
     public void run() {
+        population = new Population(POPULATION_SIZE);
+        running = true;
         while (running) {
+            synchronized (this) {
 
-            // if the thread is interupted pause or unpause
-            if (Thread.interrupted()) {
-                paused = !paused;
-            }
+                // if the thread is interupted pause or unpause
+                if (Thread.interrupted()) {
+                    paused = !paused;
+                }
 
-            // if not paused let them mutate
-            if (!paused) {
-                nextGeneration();
+                // if not paused let them mutate
+                if (!paused) {
+                    nextGeneration();
+                }
             }
         }
+        System.out.println("i died");
+    }
+
+    public int getGenerations() {
+        if(running) return population.getGenerations();
+        else return 0;
     }
 
     /**
      * Returns the Tribes population.
      *
-     * @return List of Hopper
+     * @param index
+     *
+     * @return hopper at index
      */
-    public synchronized List<Hopper> getList() {
-        return hoppers;
+    public Hopper getHopper(int index) {
+        if(running) return population.get(index);
+        else return null;
     }
 
-    /**
-     * generates a functional hopper.
-     *
-     * @return new Hopper
-     */
-    private Hopper generateHopper() {
-        Hopper newBorn = null;
+    public void addHopper(Hopper h) {
+        if(running) population.add(h);
+    }
 
-        try {
-            newBorn = new Hopper();
-        } catch (GeneticsException ex) {
-            System.out.println(ex);
-        }
-
-        return newBorn;
+    public int getSize() {
+        if(running) return population.size();
+        else return -1;
     }
 
     /**

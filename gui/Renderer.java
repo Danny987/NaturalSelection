@@ -23,7 +23,7 @@ public class Renderer implements GLEventListener {
     private Creature phenotype;
     private Block[] body;
     private final GLU glu = new GLU();
-    
+
     private float testTheta = 0;
 
     /**
@@ -58,34 +58,33 @@ public class Renderer implements GLEventListener {
         gl.glLoadIdentity();
 
         // Move the hopper away from the camera
-       
-        
         gl.glTranslatef(0, 0, -100);
-        
+
         // Drawing stuff ////////////////////////////////////////////////////
         gl.glPushMatrix();
-        
+        gl.glTranslatef(0, -30, 0);
         //used to see the creature from different angles
         gl.glRotatef(testTheta, 0, 1, 0);
-        testTheta += .5;
-        
-        
-        // It's ALIVE!!!
-        hopper.getPhenotype().advanceSimulation();
-  
-        // Draw the body block by block.
-        for (int i = 0; i < body.length; i++) {
-            length = body[i].getLength();
-            height = body[i].getHeight();
-            width = body[i].getWidth();
-            center = phenotype.getBlockCenter(i);
-            up = phenotype.getBlockUpVector(i);
-            forward = phenotype.getBlockForwardVector(i);
 
-            // Draw the current block
-            drawBlock(gl, length, height, width, center, up, forward);
+        // It's ALIVE!!!
+
+        // Draw the body block by block.
+        if (hopper != null) {
+            hopper.getPhenotype().advanceSimulation();
+            for (int i = 0; i < body.length; i++) {
+                length = body[i].getLength();
+                height = body[i].getHeight();
+                width = body[i].getWidth();
+                center = phenotype.getBlockCenter(i);
+
+                up = phenotype.getBlockUpVector(i);
+                forward = phenotype.getBlockForwardVector(i);
+
+                // Draw the current block
+                drawBlock(gl, length, height, width, center, up, forward);
+            }
         }
-        
+        drawFloor(gl);
         gl.glPopMatrix();
         /////////////////////////////////////////////////////////////////////////
     }
@@ -127,6 +126,7 @@ public class Renderer implements GLEventListener {
 
     /**
      * Initialize everything for lighting
+     *
      * @param gl
      */
     private void doLighting(GL2 gl) {
@@ -135,7 +135,7 @@ public class Renderer implements GLEventListener {
         lightPos[1] = 0;                          // y position
         lightPos[2] = -5000;                      // z position
         lightPos[3] = 1;
-        
+
         // enable lighting
         gl.glEnable(GLLightingFunc.GL_LIGHTING);
         gl.glEnable(GLLightingFunc.GL_LIGHT0);
@@ -151,34 +151,35 @@ public class Renderer implements GLEventListener {
         gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_DIFFUSE, diffuse, 0);
         gl.glLightfv(GLLightingFunc.GL_LIGHT0, GLLightingFunc.GL_POSITION, lightPos, 0);
     }
-    
+
     /**
      * draws whatever block you give it
+     *
      * @unfinished still needs need to into consideration the vectors
-     * 
+     *
      * @param gl
      * @param length
      * @param height
      * @param width
      * @param center
      * @param up
-     * @param forward 
+     * @param forward
      */
     public void drawBlock(GL2 gl, float length, float height, float width, Vector3 center, Vector3 up, Vector3 forward) {
         gl.glPushMatrix();
-        
+
         // move to the center of the block
-        gl.glTranslatef(center.x , center.y, center.z);
-        
+        gl.glTranslatef(center.x, center.y, center.z);
+
         float[] rotationMatrix = new float[16];
         Vector3.vectorsToRotationMatrix(rotationMatrix, forward, up);
         gl.glMultMatrixf(rotationMatrix, 0);
-        
+
         // scale to the size of the given block
         gl.glScalef(length, height, width);
-        
+
 //        System.out.println("Up Vector = " + up + "Forward Vector = " + forward);
-        setColor(gl, length/10, height/10, width/10);
+        setColor(gl, length / 10, height / 10, width / 10);
 
         // Draw the vertecies 
         gl.glBegin(GL.GL_TRIANGLES);
@@ -239,23 +240,96 @@ public class Renderer implements GLEventListener {
         gl.glEnd();
         gl.glPopMatrix();
     }
-    
-    private void setColor(GL2 gl, float r, float g, float b){
+
+    private void setColor(GL2 gl, float r, float g, float b) {
         //Set material and shininess!
         gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, new float[]{r, g, b, 1}, 0);
         gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_SPECULAR, new float[]{r, g, b, 1}, 0);
         gl.glMaterialf(GL.GL_FRONT_AND_BACK, GL2.GL_SHININESS, .5f);
 
     }
-    
-    private void drawFloor(GL2 gl){
+
+    private void drawFloor(GL2 gl) {
+        Vector3 center = new Vector3(0, 500, 0);
+        Vector3 up = Vector3.UP;
+        Vector3 forward = Vector3.FORWARD;
+        float length = 500;
+        float height = 500;
+        float width = 500;
+
+        drawBlock(gl, 500, 500, 500, new Vector3(0, 500, 0), Vector3.UP, Vector3.FORWARD);
+        gl.glPushMatrix();
+
+        // move to the center of the block
+        gl.glTranslatef(center.x, center.y, center.z);
+
+        float[] rotationMatrix = new float[16];
+        Vector3.vectorsToRotationMatrix(rotationMatrix, forward, up);
+        gl.glMultMatrixf(rotationMatrix, 0);
+
+        // scale to the size of the given block
+        gl.glScalef(length, height, width);
+
+        // Draw the vertecies 
+        gl.glBegin(GL.GL_TRIANGLES);
+
+        //Front
+        setColor(gl, .25f, .25f, .75f);
+        gl.glNormal3f(0, 0, 1);
+        gl.glVertex3f(1, 1, -1);
+        gl.glVertex3f(-1, 1, -1);
+        gl.glVertex3f(-1, -1, -1);
+        gl.glVertex3f(-1, -1, -1);
+        gl.glVertex3f(1, -1, -1);
+        gl.glVertex3f(1, 1, -1);
+
+        //Back
+        gl.glNormal3f(0, 0, -1);
+        gl.glVertex3f(1, 1, 1);
+        gl.glVertex3f(-1, 1, 1);
+        gl.glVertex3f(-1, -1, 1);
+        gl.glVertex3f(-1, -1, 1);
+        gl.glVertex3f(1, -1, 1);
+        gl.glVertex3f(1, 1, 1);
+
+        //Left
+        gl.glNormal3f(1, 0, 0);
+        gl.glVertex3f(-1, -1, -1);
+        gl.glVertex3f(-1, 1, -1);
+        gl.glVertex3f(-1, -1, 1);
+        gl.glVertex3f(-1, 1, -1);
+        gl.glVertex3f(-1, -1, 1);
+        gl.glVertex3f(-1, 1, 1);
+
+        //Right
+        gl.glNormal3f(-1, 0, 0);
+        gl.glVertex3f(1, -1, -1);
+        gl.glVertex3f(1, 1, -1);
+        gl.glVertex3f(1, -1, 1);
+        gl.glVertex3f(1, 1, -1);
+        gl.glVertex3f(1, -1, 1);
+        gl.glVertex3f(1, 1, 1);
+
+        //Top
+        gl.glNormal3f(0, - 1, 0);
+        gl.glVertex3f(-1, 1, 1);
+        gl.glVertex3f(1, 1, 1);
+        gl.glVertex3f(1, 1, -1);
+        gl.glVertex3f(-1, 1, 1);
+        gl.glVertex3f(1, 1, -1);
+        gl.glVertex3f(-1, 1, -1);
+
+        //Bottom
+        setColor(gl, .75f, .50f, .25f);
         gl.glNormal3f(0, 1, 0);
         gl.glVertex3f(-1, -1, 1);
         gl.glVertex3f(1, -1, 1);
         gl.glVertex3f(1, -1, -1);
         gl.glVertex3f(-1, -1, 1);
         gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(-1, -1, -1);  
+        gl.glVertex3f(-1, -1, -1);
+        gl.glEnd();
+        gl.glPopMatrix();
     }
 
 }
