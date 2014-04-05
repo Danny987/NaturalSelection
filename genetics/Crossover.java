@@ -427,6 +427,67 @@ public class Crossover {
 	}
 	
 	/**
+	 * Perform 50/50 random crossover with cut-and-splice on two parents to
+	 * create twin children.
+	 * 
+	 * @param chromosomeA ArrayList<Gene> from parent A.
+	 * @param chromosomeB ArrayList<Gene> from parent B.
+	 * @return Two-element ArrayList<Gene> array for children. If there were
+	 *         problems creating any of the genes (e.g. if the alleles didn't
+	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
+	 */
+	@SuppressWarnings("unchecked")
+	private ArrayList<Gene>[] randomCutAndSplice(ArrayList<Gene> chromosomeA,
+			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
+			GeneticsException {
+		int size = chromosomeA.size();
+		// Create the chromosomes for the twin children.
+		ArrayList<Gene> childA = new ArrayList<Gene>();
+		ArrayList<Gene> childB = new ArrayList<Gene>();
+
+		// Align the key genes.
+		ArrayList<Gene>[] newChromosomes = align(chromosomeA, chromosomeB);
+		chromosomeA = newChromosomes[0];
+		chromosomeB = newChromosomes[1];
+		
+		if (chromosomeA == null || chromosomeB == null) {
+			throw new GeneticsException(
+					"Crossover.align produced one or more null chromosomes.");
+		}
+		
+		// Iterate over the lists and pick a random allele from each parent.
+		for (int i = 0; i < size; i++) {
+			Gene parentGeneA = new Gene(chromosomeA.get(i));
+			Gene parentGeneB = new Gene(chromosomeB.get(i));
+			int a1 = Helper.choose();
+			int b1 = Helper.choose();
+			int a2 = (a1 == 1 ? 0 : 1);
+			int b2 = (b1 == 1 ? 0 : 1);
+			// Create deep clones of the genes for the children.
+			try {
+				Gene childGeneA = adjustWeight(
+								  new Gene(parentGeneA.getAlleles()[a1],
+						                   parentGeneB.getAlleles()[b1]));
+				Gene childGeneB = adjustWeight(
+								  new Gene(parentGeneA.getAlleles()[a2],
+						                   parentGeneB.getAlleles()[b2]));
+				childA.add(childGeneA);
+				childB.add(childGeneB);
+			} catch (IllegalArgumentException ex) {
+				throw ex;
+			}
+		}
+		// If the child Gene pulled a matched pair of empty Alleles, it will
+		// be trimmed when instantiating the new Genotypes.
+		@SuppressWarnings("rawtypes")
+		ArrayList[] children = {childA, childB};
+		
+		return children;
+	}
+	
+	/**
 	 * Evaluates the weight associated with a particular Allele's
 	 * Trait-to-value pairing. If the pairing isn't already in the table,
 	 * adds it and returns its current weight. If it is in the table, the
@@ -626,7 +687,8 @@ public class Crossover {
 	 * A nested enum representing the strategy of Crossover to use.
 	 */
 	public enum Strategy {
-		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM;
+		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM,
+		RANDOM_CUT_AND_SPLICE;
 	}
 	
 	/**
