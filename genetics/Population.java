@@ -183,20 +183,19 @@ public class Population extends ArrayList<Hopper> {
 	 * 		   population. Needed to tell how many Hoppers should be culled.
 	 */
 	private int breed() {
-		int count = 0;
+		ArrayList<Hopper> children = new ArrayList<Hopper>();
 		synchronized (this) {
 			// In the interest of preserving diversity, shuffle the breeders
 			// list so the Hoppers within it match up semi-randomly.
 			Collections.shuffle(breeders);
 			
 			for (int i = 0; i < breeders.size(); i++) {
-				ArrayList<Hopper> children = new ArrayList<Hopper>();
 				Hopper parentA = breeders.get(i);
 				// Check to make sure there's another parent to match it with.
 				if (i + 1 >= breeders.size()) {
 					// If not, remove the highest-fitness creature from the
 					// general Population and add it instead.
-					breeders.add(remove(size()));
+					breeders.add(remove(size() - 1));
 				}
 				Hopper parentB = breeders.get(++i);
 				// Pick a random Crossover strategy.
@@ -217,29 +216,16 @@ public class Population extends ArrayList<Hopper> {
 					System.out.println(
 							"Crossover offspring invalid. Continuing.");
 				} finally {
-					// Always return the parents to the general Population
-					// after breeding.
-					breeders.remove(parentA);
-					breeders.remove(parentB);
 					parentA.increaseBreedCount();
 					parentB.increaseBreedCount();
-					super.add(parentA);
-					super.add(parentB);
-					// Figure out how many valid offspring were actually
-					// produced.
-					count += children.size();
-					addAll(children);
 				}
 			}
 		}
 		
-		// One final check to make sure all breeders were returned to the
-		// general Population properly.
-		if (!breeders.isEmpty()) {
-			flushBreeders();
-		}
+		flushBreeders();
+		addAll(children);
 		
-		return count;
+		return children.size();
 	}
 	
 	/**
