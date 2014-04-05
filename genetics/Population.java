@@ -33,6 +33,8 @@ public class Population extends ArrayList<Hopper> {
 	private Crossover crossover;
 	// The hill-climbing Tribe brain for this Population.
 	private TribeBrain brain = new TribeBrain();
+	// A pointer to the Hopper with the highest fitness.
+	private Hopper overachiever;
 	
 	/**
 	 * The default constructor creates an empty Population.
@@ -42,6 +44,8 @@ public class Population extends ArrayList<Hopper> {
 		generations = 0;
 		breeders = new ArrayList<Hopper>();
 		crossover = new Crossover();
+		sort();
+		overachiever = get(size() - 1);
 	}
 	
 	/**
@@ -82,6 +86,9 @@ public class Population extends ArrayList<Hopper> {
 		synchronized (pop1) {
 			pop1.moveBreeders();
 			breeders1 = new ArrayList<Hopper>(pop1.breeders);
+			for (Hopper h : breeders1) {
+				h.increaseBreedCount();
+			}
 			crossover1 = new Crossover(pop1.crossover);
 			pop1.flushBreeders();
 		}
@@ -93,6 +100,9 @@ public class Population extends ArrayList<Hopper> {
 			// both collections have the same number of Hoppers.
 			pop2.moveBreeders(size);
 			breeders2 = new ArrayList<Hopper>(pop2.breeders);
+			for (Hopper h : breeders2) {
+				h.increaseBreedCount();
+			}
 			crossover2 = new Crossover(pop2.crossover);
 			pop2.flushBreeders();
 		}
@@ -160,6 +170,8 @@ public class Population extends ArrayList<Hopper> {
 			// Like above, breeding will change the creatures in the collection,
 			// but cull will sort them again first.
 			cull(count);
+			sort();
+			overachiever = get(size() - 1);
 		}
 	}
 	
@@ -176,16 +188,16 @@ public class Population extends ArrayList<Hopper> {
 			// list so the Hoppers within it match up semi-randomly.
 			Collections.shuffle(breeders);
 			
-			for (Iterator<Hopper> it = breeders.iterator(); it.hasNext(); ) {
+			for (int i = 0; i < breeders.size(); i++) {
 				ArrayList<Hopper> children = new ArrayList<Hopper>();
-				Hopper parentA = it.next();
+				Hopper parentA = breeders.get(i);
 				// Check to make sure there's another parent to match it with.
-				if (!it.hasNext()) {
+				if (i + 1 >= breeders.size()) {
 					// If not, remove the highest-fitness creature from the
 					// general Population and add it instead.
 					breeders.add(remove(size()));
 				}
-				Hopper parentB = it.next();
+				Hopper parentB = breeders.get(++i);
 				// Pick a random Crossover strategy.
 				Strategy strategy = Strategy.values()
 						[random.nextInt(Strategy.values().length)];
@@ -206,6 +218,8 @@ public class Population extends ArrayList<Hopper> {
 					// after breeding.
 					breeders.remove(parentA);
 					breeders.remove(parentB);
+					parentA.increaseBreedCount();
+					parentB.increaseBreedCount();
 					add(parentA);
 					add(parentB);
 					// Figure out how many valid offspring were actually
@@ -237,6 +251,7 @@ public class Population extends ArrayList<Hopper> {
 					Hopper newHotness = brain.performHillClimbing(original);
 					remove(original);
 					add(newHotness);
+					newHotness.hillClimbed();
 				} catch (IllegalArgumentException ex) {
 					System.out.println(
 						"HillClimbing produced an illegal creature. Skipping.");
@@ -293,6 +308,22 @@ public class Population extends ArrayList<Hopper> {
 			} else {
 				clear();
 			}
+		}
+	}
+	
+	/**
+	 * Getter a clone of the Hopper with the highest fitness.
+	 * 
+	 * @return Deep clone of Hopper with the highest fitness.
+	 */
+	public Hopper getOverachiever() {
+		synchronized (this) {
+			Hopper newGuy = null;
+			try {
+				newGuy = new Hopper(overachiever);
+			// Should never fail since it's cloning a Hopper that's already valid.
+			} catch (IllegalArgumentException | GeneticsException e) {}
+			return newGuy;
 		}
 	}
 	

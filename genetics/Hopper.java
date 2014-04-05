@@ -9,9 +9,6 @@
  */
 package creature.geeksquad.genetics;
 
-import java.util.ArrayList;
-
-import creature.geeksquad.genetics.Crossover.Strategy;
 import creature.geeksquad.gui.Names;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
@@ -75,7 +72,8 @@ public class Hopper implements Comparable<Hopper> {
 		timesHillClimbed = 0;
 		timesBred = 0;
 		children = 0;
-		realFitness = false;
+		fitness = evalFitness();
+		realFitness = true;
 	}
 
 	/**
@@ -115,39 +113,6 @@ public class Hopper implements Comparable<Hopper> {
 	public static String randomName() {
 		return Names.getHopperName();
 	}
-
-	/**
-	 * Breed two Hoppers.
-	 * 
-	 * @param parentA First parent Hopper.
-	 * @param parentB Second parent Hopper.
-	 * @param strategy Strategy of Crossover to use in breeding.
-	 * @param crossover Crossover instance to use for this breed session.
-	 * @return An array of twin child Hoppers resulting from the crossover of
-	 *             the parents' genotypes.
-	 * @throws IllegalArgumentException if generated Genotypes/Phenotypes
-	 *             are invalid.
-	 * @throws GeneticsException if thrown by Genotype constructor.
-	 */
-	public static Hopper[] breed(Hopper parentA, Hopper parentB,
-			Strategy strategy, Crossover crossover) throws 
-			IllegalArgumentException, GeneticsException {
-		try {
-			Genotype[] genotypes = crossover.crossover(parentA.getGenotype(),
-					parentB.getGenotype(), strategy);
-			ArrayList<Hopper> hoppers = new ArrayList<Hopper>();
-
-			for (Genotype g : genotypes) {
-				hoppers.add(new Hopper(g));
-			}
-
-			parentA.timesBred++;
-			parentB.timesBred++;
-			return (Hopper[]) hoppers.toArray();
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			throw ex;
-		}
-	}
 	
 	/**
 	 * Evaluate the Hopper's fitness using the physics simulator.
@@ -157,7 +122,6 @@ public class Hopper implements Comparable<Hopper> {
 	public float evalFitness() {
 		int steps = 0;
 		float peak = -1.0f;
-		boolean goneUp = false;
 		boolean done = false;
 		
 		while (!done) {			
@@ -173,16 +137,10 @@ public class Hopper implements Comparable<Hopper> {
 			// the initial jump, we can stop the simulation as soon as the
 			// creature starts to descend. However, if the creature spawns in
 			// the air or its body settles before it starts its initial jump,
-			// we want to let that happen so the jump can occur.
-			if (change <= 0) {
-				// Provides a buffer 
-//				if (goneUp && steps > (1/Simulator.DEFAULT_TIME_STEP * ) {
-//					done = true;
-//				}
-			}
-			// Ascending.
-			if (change > 0) {
-				
+			// we want to let that happen so the jump can occur. One full
+			// second of padding is provided as a safety measure.
+			if (change <= 0 && steps >= 1/Simulator.DEFAULT_TIME_STEP) {
+				done = true;
 			}
 			steps++;
 		}
@@ -306,6 +264,13 @@ public class Hopper implements Comparable<Hopper> {
 	public int getTimesHillClimbed() {
 		return timesHillClimbed;
 	}
+	
+	/**
+	 * Increment timesBred.
+	 */
+	public void increaseBreedCount() {
+		timesBred++;
+	}
 
 	/**
 	 * Getter for timesBred.
@@ -369,6 +334,12 @@ public class Hopper implements Comparable<Hopper> {
 			System.out.println(hopper1);
 			System.out.println("---Phenotype 1---");
 			System.out.println(hopper1.getPhenotype());
+			System.out.println("---Fitness 1---");
+			System.out.println(hopper1.getFitness());
+			for (int i = 0; i < 10000; i++) {
+				System.out.println("Fitness: "
+						+ hopper1.getPhenotype().advanceSimulation());
+			}
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
