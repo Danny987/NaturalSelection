@@ -51,9 +51,11 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	public Population(int num) {
 		this();
-		for (int i = 0; i < num; i++) {
+		int i = 0;
+		while (i < num) {
 			try {
 				add(new Hopper());
+				i++;
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				System.out.println("Creature[" + i + "] " + ex);
 			}
