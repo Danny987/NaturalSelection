@@ -432,7 +432,7 @@ public class Population extends ArrayList<Hopper> {
 	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
-		Population pop = new Population(1000);
+		Population pop = new Population(10);
 		System.out.println(pop);
 	}
 	

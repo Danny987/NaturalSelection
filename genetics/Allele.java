@@ -9,6 +9,7 @@
  */
 package creature.geeksquad.genetics;
 
+import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
 
 /**
@@ -58,6 +59,17 @@ public class Allele {
 	 */
 	public Allele(Allele source) {
 		this(source.getTrait(), source.getValue(), source.getWeight());
+	}
+	
+	/**
+	 * Instantiates an Allele as a copy of a source Allele but with its own
+	 * weight.
+	 * 
+	 * @param source Allele to copy.
+	 * @param weight Float of weight to assign to this Allele.
+	 */
+	public Allele(Allele source, float weight) {
+		this(source.getTrait(), source.getValue(), weight);
 	}
 	
 	
@@ -185,6 +197,13 @@ public class Allele {
 				}
 			default:
 				// Fall through.
+		}
+		
+		// Constrain weight.
+		if (weight > Helper.MAX_WEIGHT) {
+			weight = Helper.MAX_WEIGHT;
+		} else if (weight < Helper.MIN_WEIGHT) {
+			weight = Helper.MIN_WEIGHT;
 		}
 		
 		this.trait = trait;
@@ -490,7 +509,8 @@ public class Allele {
 	}
 	
 	/**
-	 * Override of equals.
+	 * Override of equals. Alleles are considered equal if their Traits and
+	 * values are the same. Weights do not affect equality.
 	 * 
 	 * @param other Allele to compare to.
 	 * @return True if same trait and value match; false otherwise.

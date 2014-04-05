@@ -28,16 +28,13 @@ import creature.geeksquad.library.Helper;
  */
 public class Crossover {
 	private static Random rand = Helper.RANDOM;
-	private Map<Trait, Map<Float, Float>> weightMap;
+	private Map<Allele, Float> weightMap;
 	
 	/**
 	 * Instantiate a new Crossover and initialize the weight table.
 	 */
 	public Crossover() {
-		weightMap = new HashMap<Trait, Map<Float, Float>>();
-		for (Trait t : Trait.values()) {
-			weightMap.put(t, new HashMap<Float, Float>());
-		}
+		weightMap = new HashMap<Allele, Float>();
 	}
 	
 	/**
@@ -59,19 +56,10 @@ public class Crossover {
 	public Crossover(Crossover crossA, Crossover crossB) {
 		this();
 		// Average the weights from the two input Crossovers.
-		for (Map.Entry<Trait, Map<Float, Float>> entry
-				: weightMap.entrySet()) {
-			Trait trait = entry.getKey();
-			Map<Float, Float> entryMap = entry.getValue();
-			Map<Float, Float> newMap = new HashMap<Float, Float>();
-			for (Map.Entry<Float, Float> subEntry : entryMap.entrySet()) {
-				float subKey = subEntry.getKey();
-				float weightA = crossA.weightMap.get(trait).get(subKey);
-				float weightB = crossB.weightMap.get(trait).get(subKey);
-				float newWeight = (weightA + weightB) / 2;
-				newMap.put(subKey, newWeight);
-			}
-			weightMap.put(entry.getKey(), newMap);
+		for (Map.Entry<Allele, Float> entry : weightMap.entrySet()) {
+			Allele allele = entry.getKey();
+			float weight = entry.getValue();
+			weightMap.put(new Allele(allele), weight);
 		}
 	}
 	
@@ -80,19 +68,14 @@ public class Crossover {
 	 * map doesn't contain data for a particular key, it assigns the value for
 	 * that key to Helper.MEDIAN_WEIGHT.
 	 * 
-	 * @param map Map<Trait, Map<Float, Float> containing the data for this
-	 *            Crossover.
+	 * @param map Map<Allele, Float> containing the data for this Crossover.
 	 */
-	public Crossover(Map<Trait, Map<Float, Float>> map) {
+	public Crossover(Map<Allele, Float> map) {
 		this();
-		for (Entry<Trait, Map<Float, Float>> entry
-				: map.entrySet()) {
-			Map<Float, Float> entryMap = entry.getValue();
-			Map<Float, Float> newMap = new HashMap<Float, Float>();
-			for (Entry<Float, Float> subEntry : entryMap.entrySet()) {
-				newMap.put(subEntry.getKey(), subEntry.getValue());
-			}
-			weightMap.put(entry.getKey(), newMap);
+		for (Entry<Allele, Float> entry : map.entrySet()) {
+			Allele allele = entry.getKey();
+			float weight = entry.getValue();
+			weightMap.put(new Allele(allele), weight);
 		}
 	}
 	
@@ -455,8 +438,24 @@ public class Crossover {
 	 * @return A new Allele with the adjusted weight.
 	 */
 	private Allele adjustWeight(Allele allele) {
+		Allele newAllele;
+		float weight = allele.getWeight();
+		if (!weightMap.containsKey(allele)) {
+			weightMap.put(allele, weight);
+			return allele;
+		}
+		float mapWeight = weightMap.get(allele);
+	
+		// Adjust the child Allele's weight toward the 
+		if (weight > mapWeight) {
+			newAllele = new Allele(allele, weight - Helper.WEIGHT_STEP);
+		} else if (weight < mapWeight) {
+			newAllele = new Allele(allele, weight + Helper.WEIGHT_STEP);
+		} else {
+			newAllele = new Allele(allele, weight);
+		}
 		
-		return null;
+		return newAllele;
 	}
 	
 	/**
@@ -540,12 +539,11 @@ public class Crossover {
 	/**
 	 * Getter for the weights in the weight table.
 	 * 
-	 * @param trait Trait key to look up in the weights table.
-	 * @param value Value of the Allele to look up in the weights table.
+	 * @param allele Allele key to look up in the weights table.
 	 * @return The weight attached to key Trait and value in the weights table.
 	 */
-	public float getWeight(Trait trait, Float value) {
-		return weightMap.get(trait).get(value);
+	public float getWeight(Allele allele) {
+		return weightMap.get(allele);
 	}
 	
 	/**
@@ -553,49 +551,46 @@ public class Crossover {
 	 * range Helper.MIN_WEIGHT (0.0f) to Helper.MAX_WEIGHT (1.0f), sets it to
 	 * the appropriate extrema instead.
 	 * 
-	 * @param key Trait key to set in the rule table.
+	 * @param allele Allele key to change in the weights table.
 	 * @param value Value of the Allele to change in the weights table.
 	 * @param weight New weight float to assign to key in the weight table.
 	 */
-	public void setWeight(Trait trait, float value, float weight) {
-		Map<Float, Float> weights = weightMap.get(trait);
+	public void setWeight(Allele allele, float weight) {
 		if (weight > Helper.MAX_WEIGHT) {
 			weight = Helper.MAX_WEIGHT;
 		} else if (weight < Helper.MIN_WEIGHT) {
 			weight = Helper.MIN_WEIGHT;
 		}
-		weights.put(value, weight);
+		weightMap.put(new Allele(allele), weight);
 	}
 	
 	/**
 	 * Change a weight of a Trait in the weight table by a percentage of the
 	 * current value.
 	 * 
-	 * @param trait Trait key to set in the rule table.
-	 * @param value Value of the Allele to change in the weights table.
-	 * @param percent Percentage float by which to change the weight. If positive,
-	 *            increases the value; if negative, decreases the value.
+	 * @param allele Allele key to change in the weights table.
+	 * @param percent Percentage float by which to change the weight. If
+	 * 		      positive, increases the value; if negative, decreases.
 	 */
-	public void setWeightPercent(Trait trait, float value, float percent) {
-		Map<Float, Float> weights = weightMap.get(trait);
-		float old = weights.get(value);
+	public void setWeightPercent(Allele allele, float percent) {
+		float old = weightMap.get(allele);
 		if (old * percent > Helper.MAX_WEIGHT) {
 			percent = Helper.MAX_WEIGHT;
 		} else if (old * percent < Helper.MIN_WEIGHT) {
 			percent = Helper.MIN_WEIGHT;
 		}
-		weights.put(value, percent);
+		weightMap.put(new Allele(allele), percent);
 	}
 	
 	/**
 	 * Increase weight in the weight table by a fixed percentage of the
 	 * current value.
 	 * 
-	 * @param key Trait key to increase in the rule table.
+	 * @param allele Allele key to change in the weights table.
 	 * @param value Value of the Allele to change in the weights table.
 	 */
-	public void increaseWeight(Trait trait, float value) {
-		setWeightPercent(trait, value, Helper.WEIGHT_STEP);
+	public void increaseWeight(Allele allele) {
+		setWeightPercent(allele, Helper.WEIGHT_STEP);
 	}
 	
 	/**
@@ -605,8 +600,8 @@ public class Crossover {
 	 * @param trait Trait key to increase in the rule table.
 	 * @param value Value of the Allele to change in the weights table.
 	 */
-	public void decreaseWeight(Trait trait, float value) {
-		setWeightPercent(trait, value, -Helper.WEIGHT_STEP);
+	public void decreaseWeight(Allele allele) {
+		setWeightPercent(allele, -Helper.WEIGHT_STEP);
 	}
 	
 	/**
@@ -625,21 +620,15 @@ public class Crossover {
 	public String toString() {
 		StringBuilder builder = new StringBuilder("");
 		builder.append("{");
-		for (Map.Entry<Trait, Map<Float, Float>> entry : weightMap.entrySet()) {
-			Map<Float, Float> subMap = entry.getValue();
-			builder.append("[");
+		for (Map.Entry<Allele, Float> entry : weightMap.entrySet()) {
 			builder.append(entry.getKey());
-				for (Map.Entry<Float, Float> subEntry : subMap.entrySet()) {
-					builder.append("(");
-					builder.append(subEntry.getKey());
-					builder.append(":");
-					builder.append(subEntry.getValue());
-					builder.append(")");
-				}
-			builder.append("]");
+			builder.append(":");
+			builder.append(entry.getValue());
 			builder.append(Helper.NEWLINE);
 		}
-		builder.deleteCharAt(builder.length() - 1);
+		if (builder.length() > 1) {
+			builder.deleteCharAt(builder.length() - 1);
+		}
 		builder.append('}');
 		
 		return builder.toString();
