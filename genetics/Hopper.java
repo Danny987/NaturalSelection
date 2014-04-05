@@ -15,6 +15,7 @@ import creature.geeksquad.genetics.Crossover.Strategy;
 import creature.geeksquad.gui.Names;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
+import creature.physics.Simulator;
 
 /**
  * A wrapper class for the Genotype and associated Creature (phenotype),
@@ -146,6 +147,47 @@ public class Hopper implements Comparable<Hopper> {
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			throw ex;
 		}
+	}
+	
+	/**
+	 * Evaluate the Hopper's fitness using the physics simulator.
+	 * 
+	 * @return float Hopper's highest fitness achieved during the simulation.
+	 */
+	public float evalFitness() {
+		int steps = 0;
+		float peak = -1.0f;
+		boolean goneUp = false;
+		boolean done = false;
+		
+		while (!done) {			
+			float test1 = phenotype.advanceSimulation();
+			float test2 = phenotype.advanceSimulation();
+			float currentMax = (test1 > test2 ? test1 : test2);
+			if (currentMax > peak) {
+				peak = currentMax;
+			}
+			
+			float change = test2 - test1;
+			// Descending or still - since the bounces are always lower than
+			// the initial jump, we can stop the simulation as soon as the
+			// creature starts to descend. However, if the creature spawns in
+			// the air or its body settles before it starts its initial jump,
+			// we want to let that happen so the jump can occur.
+			if (change <= 0) {
+				// Provides a buffer 
+//				if (goneUp && steps > (1/Simulator.DEFAULT_TIME_STEP * ) {
+//					done = true;
+//				}
+			}
+			// Ascending.
+			if (change > 0) {
+				
+			}
+			steps++;
+		}
+		
+		return peak;
 	}
 	
 	/**

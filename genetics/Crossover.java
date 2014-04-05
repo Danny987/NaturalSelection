@@ -70,6 +70,21 @@ public class Crossover {
 	}
 	
 	/**
+	 * Instantiates a new Crossover with the data from the provided map. If the
+	 * map doesn't contain data for a particular key, it assigns the value for
+	 * that key to Helper.MEDIAN_WEIGHT.
+	 * 
+	 * @param map Map<Trait, Float> containing the data for this Crossover.
+	 */
+	public Crossover(Map<Trait, Float> map) {
+		this();
+		for (Map.Entry<Trait, Float> entry : map.entrySet()) {
+			Trait trait = entry.getKey();
+			weights.put(trait, entry.getValue());
+		}
+	}
+	
+	/**
 	 * Perform crossover on two parents based on a provided strategy. Since the
 	 * positions of blocks don't matter and we need the key genes to line up,
 	 * first align the strands and shift the root block to the beginning.
@@ -562,6 +577,29 @@ public class Crossover {
 	 */
 	public enum Strategy {
 		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM;
+	}
+	
+	/**
+	 * Override of toString. Used for saving the state of the Crossover.
+	 * 
+	 * @return Formatted String representing the state of this Crossover.
+	 */
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder("");
+		builder.append("{");
+		for (Map.Entry<Trait, Float> entry : weights.entrySet()) {
+			builder.append("(");
+			builder.append(entry.getKey());
+			builder.append(":");
+			builder.append(entry.getValue());
+			builder.append(")");
+			builder.append(Helper.NEWLINE);
+		}
+		builder.deleteCharAt(builder.length() - 1);
+		builder.append('}');
+		
+		return builder.toString();
 	}
 
 }

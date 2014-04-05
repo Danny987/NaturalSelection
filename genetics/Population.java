@@ -230,9 +230,9 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	private void hillClimb() {
 		synchronized (this) {
-			Iterator<Hopper> i = iterator();
-			while (i.hasNext()) {
-				Hopper original = i.next();
+			int size = size();
+			for (int i = 0; i < size; i++) {
+				Hopper original = get(i);
 				try {
 					Hopper newHotness = brain.performHillClimbing(original);
 					remove(original);
