@@ -23,7 +23,7 @@ import creature.physics.Simulator;
  * @group Marcos Lemus
  */
 public class Hopper implements Comparable<Hopper> {
-	private final String name;
+	private String name = "";
 	private int age;
 	private Genotype genotype;
 	private Creature phenotype;
@@ -67,7 +67,11 @@ public class Hopper implements Comparable<Hopper> {
 			System.err.println(
 					"Error: Hopper genotype/phenotype instantiation was null.");
 		}
-		this.name = name;
+		if (name != null) {
+			this.name = name;
+		} else {
+			name = randomName();
+		}
 		age = 0;
 		timesHillClimbed = 0;
 		timesBred = 0;

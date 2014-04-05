@@ -442,6 +442,24 @@ public class Crossover {
 	}
 	
 	/**
+	 * Evaluates the weight associated with a particular Allele's
+	 * Trait-to-value pairing. If the pairing isn't already in the table,
+	 * adds it and returns its current weight. If it is in the table, the
+	 * method determines if the weight in the table should be changed and/or
+	 * if the weight for the child should be changed. After changing/not
+	 * changing the weight, it returns it returns a new Allele with the
+	 * adjusted weight.
+	 * 
+	 * @param allele The Allele whose Trait->value->weight mapping should be
+	 *            evaluated.
+	 * @return A new Allele with the adjusted weight.
+	 */
+	private Allele adjustWeight(Allele allele) {
+		
+		return null;
+	}
+	
+	/**
 	 * Helper method for Crossover that matches the locations of the key genes
 	 * on two strands.
 	 * 
