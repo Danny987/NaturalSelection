@@ -335,6 +335,23 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
+	 * Override of add - adds a copy of the requested Hopper.
+	 * 
+	 * @param hopper Hopper to add to the Population.
+	 */
+	@Override
+	public boolean add(Hopper hopper) {
+		synchronized (this) {
+			try {
+				add(new Hopper(hopper));
+			} catch (IllegalArgumentException | GeneticsException e) {
+				return false;
+			}
+			return true;
+		}
+	}
+	
+	/**
 	 * Override of get by index - returns a copy of the requested Hopper.
 	 * 
 	 * @param index Index of Hopper of which to return a copy.
@@ -352,6 +369,18 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
+	 * Override of size returns the current size of the Population.
+	 *
+	 * @return Size of the population.
+	 */
+	@Override
+	public int size() {
+		synchronized (this) {
+			return size();
+		}
+	}
+	
+	/**
 	 * Override of toString: returns an exportable representation of this
 	 * population's current state.
 	 * 
@@ -362,9 +391,14 @@ public class Population extends ArrayList<Hopper> {
 		synchronized (this) {
 			StringBuilder output = new StringBuilder("<population>"
 													 + Helper.NEWLINE);
+			output.append("<hoppers>");
 			for (Hopper h : this) {
 				output.append(h.toString() + Helper.NEWLINE);
 			}
+			output.append("</hoppers>");
+			output.append("<crossover>");
+			output.append(crossover.toString());
+			output.append("</crossover>");
 			output.append("</population>");
 
 			return output.toString();
