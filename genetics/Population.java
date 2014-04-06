@@ -26,6 +26,7 @@ import creature.geeksquad.hillclimbing.TribeBrain;
 public class Population extends ArrayList<Hopper> {
 	private static Random random = Helper.RANDOM;
 	private int generations;
+	private int failedAdds;
 	// Sub-collections allow the Population to separate the Hoppers that need
 	// special handling from those in the general population.
 	private final ArrayList<Hopper> breeders;
@@ -42,6 +43,7 @@ public class Population extends ArrayList<Hopper> {
 	public Population() {
 		super();
 		generations = 0;
+		failedAdds = 0;
 		breeders = new ArrayList<Hopper>();
 		crossover = new Crossover();
 		sort();
@@ -57,7 +59,7 @@ public class Population extends ArrayList<Hopper> {
 		int i = 0;
 		while (i < num) {
 			try {
-				super.add(new Hopper());
+				add(new Hopper());
 				i++;
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				System.out.println("Creature[" + i + "] " + ex
@@ -239,7 +241,7 @@ public class Population extends ArrayList<Hopper> {
 				newHotness.hillClimbed();
 				synchronized (this) {
 					remove(original);
-					super.add(newHotness);
+					add(newHotness);
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				System.out.println(
@@ -294,15 +296,16 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	private void cull(int n) {
 		sort();
-		if (n < super.size()) {
+		if (n - failedAdds < super.size()) {
 			synchronized (this) {
-				removeRange(0, n);
+				removeRange(0, n - failedAdds);
 			}
 		} else {
 			synchronized (this) {
 				clear();
 			}
 		}
+		failedAdds = 0;
 	}
 	
 	/**
@@ -374,9 +377,16 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public boolean add(Hopper hopper) {
+		if (hopper.getGenotype() == null || hopper.getPhenotype() == null
+				|| hopper.getBody() == null) {
+			failedAdds++;
+			return false;
+		}
+		
 		try {
-			super.add(new Hopper(hopper));
+			add(new Hopper(hopper));
 		} catch (IllegalArgumentException | GeneticsException e) {
+			failedAdds++;
 			return false;
 		}
 		return true;
@@ -392,11 +402,18 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public void add(int index, Hopper hopper) {
+		if (hopper.getGenotype() == null || hopper.getPhenotype() == null
+				|| hopper.getBody() == null) {
+			failedAdds++;
+			return;
+		}
+		
 		try {
 			synchronized (this) {
-				super.add(index, new Hopper(hopper));
+				add(index, new Hopper(hopper));
 			}
 		} catch (IllegalArgumentException | GeneticsException e) {
+			failedAdds++;
 			System.out.println("Adding Hopper to Population failed.");
 		}
 	}

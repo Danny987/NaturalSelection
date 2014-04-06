@@ -574,7 +574,8 @@ public class Crossover {
 	public void validateCrossover(Hopper parentA, Hopper parentB,
 			Hopper childA, Hopper childB) {
 		/* ****************************************************************** */
-		/* TODO: Does nothing because fitness simulation still doesn't work.  */
+		/* TODO: Waiting on Joel's code.                                      */
+		/* Does nothing because fitness simulation still doesn't work.        */
 		/* ****************************************************************** */
 	}
 	
