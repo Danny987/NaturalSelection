@@ -571,22 +571,46 @@ public class Crossover {
 	 * @param childA First child Hopper.
 	 * @param childB Second child Hopper.
 	 */
-	public void validateCrossover(Hopper parentA, Hopper parentB,
+	private void validateCrossover(Hopper parentA, Hopper parentB,
 			Hopper childA, Hopper childB) {
 		/* ****************************************************************** */
 		/* TODO: Waiting on Joel's code.                                      */
 		/* Does nothing because fitness simulation still doesn't work.        */
 		/* ****************************************************************** */
-		float fitnessParentA = parentA.getFitness();
-		float fitnessParentB = parentB.getFitness();
-		float fitnessChildA = childA.getFitness();
-		float fitnessChildB = childB.getFitness();
 		
-		if (fitnessChildA > fitnessParentA) {
-			
+		validateHelper(parentA, childA);
+		validateHelper(parentA, childB);
+		validateHelper(parentB, childA);
+		validateHelper(parentB, childB);
+	}
+	
+	/**
+	 * Helper method for validateCrossover - takes one parent and one child
+	 * and adjusts their weights.
+	 * 
+	 * @param parent Parent Hopper to compare.
+	 * @param child Child Hopper to compare.
+	 */
+	private void validateHelper(Hopper parentHopper, Hopper childHopper) {
+		ArrayList<Gene> parent = parentHopper.getChromosome();
+		ArrayList<Gene> child = childHopper.getChromosome();
+		float parentFitness = parentHopper.getFitness();
+		float childFitness = childHopper.getFitness();
+		int parentSize = parent.size();
+		int childSize = child.size();
+		for (int i = 0; i < childSize && i < parentSize; i++) {
+			Allele parentAllele = parent.get(i).getDominant();
+			Allele childAllele = child.get(i).getDominant();
+			if (!childAllele.equals(parentAllele)) {
+				if (childFitness > parentFitness) {
+					increaseWeight(childAllele);
+					decreaseWeight(parentAllele);
+				} else if (parentFitness > childFitness) {
+					increaseWeight(parentAllele);
+					decreaseWeight(childAllele);
+				}
+			}
 		}
-		
-		
 	}
 	
 	/**
@@ -704,13 +728,15 @@ public class Crossover {
 	 * 		      positive, increases the value; if negative, decreases.
 	 */
 	public void setWeightPercent(Allele allele, float percent) {
-		float old = weightMap.get(allele);
-		if (old * percent > Helper.MAX_WEIGHT) {
-			percent = Helper.MAX_WEIGHT;
-		} else if (old * percent < Helper.MIN_WEIGHT) {
-			percent = Helper.MIN_WEIGHT;
+		if (weightMap.containsKey(allele)) {
+			float old = weightMap.get(allele);
+			if (old * percent > Helper.MAX_WEIGHT) {
+				percent = Helper.MAX_WEIGHT;
+			} else if (old * percent < Helper.MIN_WEIGHT) {
+				percent = Helper.MIN_WEIGHT;
+			}
+			weightMap.put(new Allele(allele), percent);
 		}
-		weightMap.put(new Allele(allele), percent);
 	}
 	
 	/**

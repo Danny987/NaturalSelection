@@ -9,6 +9,8 @@
  */
 package creature.geeksquad.genetics;
 
+import java.util.ArrayList;
+
 import creature.geeksquad.gui.Names;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
@@ -248,6 +250,16 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	public Creature getPhenotype() {
 		return phenotype;
+	}
+	
+	/**
+	 * Getter for chromosome - a pass-through method for the Genotype's
+	 * getChromosome method.
+	 * 
+	 * @return ArrayList<Gene> containing the Hopper's chromosome.
+	 */
+	public ArrayList<Gene> getChromosome() {
+		return genotype.getChromosome();
 	}
 	
 	/**

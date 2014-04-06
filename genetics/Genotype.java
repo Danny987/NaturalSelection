@@ -129,6 +129,9 @@ public class Genotype {
 					throw new GeneticsException("Block[" + i + "]: "
 							+ "random Genotype seeding failed.");
 				}
+			} else {
+				throw new GeneticsException("Block[" + i + "]: "
+							+ "random Genotype BlockBuilder was null.");
 			}
 		}
 		phenotype = buildPhenotype();

@@ -194,7 +194,12 @@ public class Population extends ArrayList<Hopper> {
 				// If not, remove the highest-fitness creature from the
 				// general Population and add it instead.
 				synchronized (this) {
-					breeders.add(remove(size() - 1));
+					if (size() > 0) {
+						breeders.add(remove(size() - 1));
+					} else {
+						flushBreeders();
+						return 0;
+					}
 				}
 			}
 			Hopper parentB = breeders.get(++i);
@@ -489,6 +494,7 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public Hopper get(int index) {
+		System.out.println("size = " + size());
 		synchronized (this) {
 			try {
 				return new Hopper(super.get(index));
