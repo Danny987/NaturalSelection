@@ -1,9 +1,6 @@
 package creature.geeksquad.gui;
 
-import creature.geeksquad.genetics.Allele;
-import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
-import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -14,12 +11,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,7 +21,6 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -57,8 +48,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private final Color BACKGROUND_COLOR = new Color(55, 55, 55);
 
     //Read and save files
-    private final JFileChooser fileChooser = new JFileChooser();
-
     //Tribe Names
     private List<String> nameList = new ArrayList<>();
     private List<Tribe> tribeList = new ArrayList<>();
@@ -196,12 +185,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 else {
                     pause.setText("Pause");
                 }
-                
+
                 break;
 
             // Write the currently selected genome to use selected file.
             case "Write Genome":
-                writeGenome();
+                Log.hopper(this, hopper, currentTribe.getName());
                 break;
 
             // Read user selected Genome
@@ -280,6 +269,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
 
         try {
+            System.out.println(slider.getValue());
             hopper = new Hopper(currentTribe.getHopper(slider.getValue()));
             renderer.setHopper(hopper);
 
@@ -329,92 +319,26 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     }
 
     /**
-     * Opens a JFileChoose to select a file to save a genome to
-     */
-    private void writeGenome() {
-        BufferedWriter writer;
-        int option = fileChooser.showSaveDialog(this);
-
-        if (option != JFileChooser.CANCEL_OPTION) {
-            File f = fileChooser.getSelectedFile();
-
-            try {
-                writer = new BufferedWriter(new FileWriter(f));
-                writer.write(hopper.toString());
-                writer.close();
-            } catch (IOException ex) {
-                System.out.println("Error saving file.");
-            }
-        }
-    }
-
-    /**
      * Read Genotype from user selected file
      */
     private void loadGenotype() {
-        BufferedReader reader;
-        int option = fileChooser.showOpenDialog(this);
+        try {
+            Log.loadHopper(this, hopper);
+            currentTribe.addHopper(hopper);
 
-        if (option != JFileChooser.CANCEL_OPTION) {
-            File f = fileChooser.getSelectedFile();
-            try {
-                String[] lineArray;
-                String name;
-                List<Allele> alleles = new ArrayList<>();
-                ArrayList<Gene> genes;
+            renderer.setHopper(hopper);
+            mainTab.setTitleAt(1, hopper.getName());
+            graphicsPanel.startAnimator();
+            animate.setText("Animator On");
 
-                reader = new BufferedReader(new FileReader(f));
-
-                String line = reader.readLine();
-                reader.readLine();
-                name = reader.readLine();
-                reader.readLine();
-                reader.readLine();
-
-                while (line != null) {
-                    line = reader.readLine();
-
-                    if (line.startsWith("{")) {
-                        line = line.replace("{", "");
-                    }
-                    if (line.endsWith("}")) {
-                        line = line.replace("}", "");
-                    }
-
-                    line = line.substring(1, line.length() - 1);
-
-                    lineArray = line.split("\\)\\(");
-
-                    if (lineArray.length < 2) {
-                        break;
-                    }
-
-                    alleles.add(Allele.stringToAllele(lineArray[0] + ")"));
-                    alleles.add(Allele.stringToAllele("(" + lineArray[1]));
-                }
-
-                genes = Gene.allelesToGenes(alleles);
-                Genotype genotype = new Genotype(genes);
-                hopper = new Hopper(genotype, name);
-
-                currentTribe.addHopper(hopper);
-
-                renderer.setHopper(hopper);
-                mainTab.setTitleAt(1, hopper.getName());
-                graphicsPanel.startAnimator();
-                animate.setText("Animator On");
-
-                secondsSinceStart = 0;
-                minutesSinceStart = 0;
-                totalGenerations = 0;
-            } catch (FileNotFoundException ex) {
-                System.out.println(ex);
-            } catch (IllegalArgumentException | GeneticsException | IOException ex) {
-                System.out.println(ex);
-            }
-
+            secondsSinceStart = 0;
+            minutesSinceStart = 0;
+            totalGenerations = 0;
+        } catch (FileNotFoundException ex) {
+            Log.error(ex.toString());
+        } catch (IOException | GeneticsException ex) {
+            Log.error(ex.toString());
         }
-
     }
 
     /**
@@ -508,7 +432,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 0, currentTribe.getSize(), 0);
+        slider = new Slider("Creature", 0, currentTribe.getSize() - 1, 0);
         slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 

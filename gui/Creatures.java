@@ -24,6 +24,7 @@ public class Creatures {
             @Override
             public void run() {
                 int numberofcores = Runtime.getRuntime().availableProcessors();
+                Log.initialize(numberofcores);
                 List<Tribe> tribeList = new ArrayList<>();
                 List<String> nameList = new ArrayList<>();
                 

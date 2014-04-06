@@ -71,7 +71,7 @@ public class Renderer implements GLEventListener {
 
         // Draw the body block by block.
         if (hopper != null) {
-            hopper.getPhenotype().advanceSimulation();
+            phenotype.advanceSimulation();
             for (int i = 0; i < body.length; i++) {
                 length = body[i].getLength();
                 height = body[i].getHeight();
@@ -92,12 +92,13 @@ public class Renderer implements GLEventListener {
 
     @Override
     public void display(GLAutoDrawable drawable) {
+        
         render(drawable);
     }
 
     @Override
     public void dispose(GLAutoDrawable glad) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        
     }
 
     @Override

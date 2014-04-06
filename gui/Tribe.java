@@ -9,17 +9,15 @@ import creature.geeksquad.genetics.Population;
  */
 public class Tribe extends Thread {
 
-    public static final int POPULATION_SIZE = 1000;
+    public static final int POPULATION_SIZE = 1;
     private Population population;
-
-    private String name;
 
     private boolean paused = true;
     private boolean running = false;
     private final Object lock = new Object();
     
     public Tribe(String name) {
-        this.name = name;
+        this.setName(name);
     }
 
     /**
