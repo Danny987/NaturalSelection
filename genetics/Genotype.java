@@ -131,7 +131,6 @@ public class Genotype {
 				}
 			}
 		}
-		body = buildBody();
 		phenotype = buildPhenotype();
 	}
 
@@ -170,7 +169,6 @@ public class Genotype {
 					}
 				}
 			}
-			body = buildBody();
 			phenotype = buildPhenotype();
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			throw ex;
