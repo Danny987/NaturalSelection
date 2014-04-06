@@ -60,7 +60,7 @@ public class Genotype {
 	 */
 	public Genotype() throws IllegalArgumentException, GeneticsException {
 		chromosome = new ArrayList<Gene>();
-		int numBlocks = random.nextInt(Helper.SEED_MAX_BLOCKS - 1) + 1;
+		int numBlocks = random.nextInt(Helper.SEED_MAX_BLOCKS - 4) + 4;
 		
 		// Root block.
 		float length = random.nextInt(Helper.SEED_MAX_SIZE - 1)

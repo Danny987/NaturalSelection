@@ -153,20 +153,19 @@ public class Hopper implements Comparable<Hopper> {
 				
 				change = test2 - test1;
 			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
-				System.out.println("advanceSimulation on this Creature:");
+				System.out.println(
+						"advanceSimulation failed on this Creature:");
 				System.out.println(phenotype);
-				throw ex;
 			}
 			
 			// Descending or stationary - since the bounces are always lower
 			// than the initial jump, we can stop the simulation as soon as the
 			// creature starts to descend. However, if the creature spawns in
 			// the air or its body settles before it starts its initial jump,
-			// we want to let that happen so the jump can occur. Padding is
-			// provided as a safety measure for creatures that have to fall or
-			// settle when they first spawn in.
-			if (change <= 0 && steps >= 1/Simulator.DEFAULT_TIME_STEP) {
+			// we want to let that happen so the jump can occur. A small amount
+			// of padding is provided as a safety measure.
+//			if (change <= 0 && steps >= 1/Simulator.DEFAULT_TIME_STEP) {
+			if (change <= 0 && steps >= 5 * Simulator.DEFAULT_TIME_STEP) {
 				done = true;
 			}
 			steps++;

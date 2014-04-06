@@ -13,6 +13,7 @@ import java.util.*;
 
 import creature.geeksquad.library.Helper;
 import creature.geeksquad.genetics.Crossover.Strategy;
+import creature.geeksquad.gui.Log;
 import creature.geeksquad.hillclimbing.TribeBrain;
 
 /**
@@ -41,7 +42,7 @@ public class Population extends ArrayList<Hopper> {
 	private long lifetimeHillClimbs;
 	private long currentFailedBreeds;
 	private long currentFailedHillClimbs;
-	private long lifetimeFailedChildren;
+	private long lifetimeFailedBreeds;
 	private long lifetimeFailedHillClimbs;
 	private long failedRandomHoppers;
 	
@@ -59,7 +60,7 @@ public class Population extends ArrayList<Hopper> {
 		lifetimeHillClimbs = 0l;
 		currentFailedBreeds = 0l;
 		currentFailedHillClimbs = 0l;
-		lifetimeFailedChildren = 0l;
+		lifetimeFailedBreeds = 0l;
 		lifetimeFailedHillClimbs = 0l;
 		failedRandomHoppers = 0l;
 	}
@@ -153,7 +154,10 @@ public class Population extends ArrayList<Hopper> {
 					}
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				// TODO: log
+				pop1.currentFailedBreeds++;
+				pop2.currentFailedBreeds++;
+				pop1.lifetimeFailedBreeds++;
+				pop2.lifetimeFailedBreeds++;
 //				System.out.println(
 //						"Interbreed produced offspring invalid. Continuing.");
 			}
@@ -232,7 +236,8 @@ public class Population extends ArrayList<Hopper> {
 					}
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				// TODO: log
+				currentFailedBreeds++;
+				lifetimeFailedBreeds++;
 //				System.out.println(
 //						"Breed offspring invalid. Continuing.");
 			} finally {
@@ -266,7 +271,8 @@ public class Population extends ArrayList<Hopper> {
 					unsynchronizedAdd(newHotness);
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				// TODO: log
+				currentFailedHillClimbs++;
+				lifetimeFailedHillClimbs++;
 //				System.out.println(
 //					"HillClimbing produced an illegal creature. Skipping.");
 			}
@@ -349,7 +355,7 @@ public class Population extends ArrayList<Hopper> {
 		// Should never fail since it's cloning a Hopper that's already
 		// valid.
 		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO: log
+			Log.error("Cloning Hopper for getOverachiever failed.");
 //			System.out.println("Cloning Hopper for getOverachiever failed.");
 		}
 		return newGuy;
@@ -396,74 +402,103 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
-	 * Getter for lifetimeOffspring.
+	 * Getter/setter for lifetimeOffspring.
 	 * 
-	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime offspring.
 	 */
-	public synchronized long getLifetimeOffspring(boolean...writeNotRead) {
+	public synchronized long getLifetimeOffspring(long...writeNotRead) {
+		if (writeNotRead.length > 0) {
+			lifetimeOffspring = writeNotRead[0];
+		}
 		return lifetimeOffspring;
 	}
 	
 	/**
-	 * Getter for lifetimeHillClimbs.
+	 * Getter/setter for lifetimeHillClimbs.
 	 * 
-	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime hill climbs.
 	 */
-	public synchronized long getLifetimeHillClimbs(boolean...writeNotRead) {
+	public synchronized long getLifetimeHillClimbs(long...writeNotRead) {
+		if (writeNotRead.length > 0) {
+			lifetimeHillClimbs = writeNotRead[0];
+		}
 		return lifetimeHillClimbs;
 	}
 	
 	/**
-	 * Getter for currentFailedBreeds.
+	 * Getter/setter for currentFailedBreeds.
 	 * 
-	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime failed breeds.
 	 */
-	public synchronized long getCurrentFailedBreeds(boolean...writeNotRead) {
+	public synchronized long getCurrentFailedBreeds(long...writeNotRead) {
+		if (writeNotRead.length > 0) {
+			currentFailedBreeds = writeNotRead[0];
+		} else {
+			long oldValue = currentFailedBreeds;
+			currentFailedBreeds = 0;
+			return oldValue;
+		}
 		return currentFailedBreeds;
 	}
 	
 	/**
-	 * Getter for currentFailedHillClimbs.
+	 * Getter/setter for currentFailedHillClimbs.
 	 * 
-	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Failed hill climbs this generation.
 	 */
 	public synchronized long getCurrentFailedHillClimbs(
-			boolean...writeNotRead) {
+			long...writeNotRead) {
+		if (writeNotRead.length > 0) {
+			currentFailedHillClimbs = writeNotRead[0];
+		} else {
+			long oldValue = currentFailedHillClimbs;
+			currentFailedHillClimbs = 0;
+			return oldValue;
+		}
 		return currentFailedHillClimbs;
 	}
 	
 	/**
-	 * Getter for lifetimeFailedChildren.
+	 * Getter/setter for lifetimeFailedBreeds.
 	 * 
-	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime failed breeds.
 	 */
-	public synchronized long getLifetimeDeadChildren(boolean...writeNotRead) {
-		return lifetimeFailedChildren;
+	public synchronized long getLifetimeDeadChildren(long...writeNotRead) {
+		if (writeNotRead.length > 0) {
+			lifetimeOffspring = writeNotRead[0];
+		}
+		return lifetimeFailedBreeds;
 	}
 	
 	/**
-	 * Getter for lifetimeFailedHillClimbs.
+	 * Getter/setter for lifetimeFailedHillClimbs.
 	 * 
-	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime failed hill climbs.
 	 */
 	public synchronized long getLifetimeFailedHillClimbs(
-			boolean...writeNotRead) {
+			long...writeNotRead) {
+		if (writeNotRead.length > 0) {
+			lifetimeOffspring = writeNotRead[0];
+		}
 		return lifetimeFailedHillClimbs;
 	}
 	
 	/**
-	 * Getter for failedRandomHoppers.
+	 * Getter/setter for failedRandomHoppers.
 	 * 
-	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Number of failed random hopper creations during initialization.
 	 */
-	public synchronized long getFailedRandomHoppers(boolean...writeNotRead) {
+	public synchronized long getFailedRandomHoppers(long...writeNotRead) {
+		if (writeNotRead.length > 0) {
+			lifetimeOffspring = writeNotRead[0];
+		}
 		return failedRandomHoppers;
 	}
 	
@@ -509,7 +544,7 @@ public class Population extends ArrayList<Hopper> {
 		try {
 			super.add(new Hopper(hopper));
 		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO: log
+			Log.error("Adding Hopper to Population failed.");
 //			System.out.println("Adding Hopper to Population failed.");
 			return false;
 		}
@@ -538,7 +573,7 @@ public class Population extends ArrayList<Hopper> {
 				super.add(index, new Hopper(hopper));
 			}
 		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO: log
+			Log.error("Adding Hopper to Population failed.");
 //			System.out.println("Adding Hopper to Population failed.");
 		}
 	}
