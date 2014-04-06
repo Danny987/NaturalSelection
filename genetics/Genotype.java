@@ -1469,16 +1469,17 @@ public class Genotype {
 			System.out.println("Starting crossover test.");
 			
 			Crossover crossover = new Crossover();
-			Genotype[] children = crossover.crossover(genotype, genotype2,
+			Hopper[] children = crossover.crossover(new Hopper(genotype),
+					new Hopper(genotype2),
 					Strategy.RANDOM);
 			System.out.println("---Child 1---");
 			System.out.println(children[0]);
 			System.out.println("---Child 1 Phenotype---");
-			System.out.println(children[0].buildPhenotype());
+			System.out.println(children[0].getGenotype().buildPhenotype());
 			System.out.println("---Child 2---");
 			System.out.println(children[1]);
 			System.out.println("---Child 2 Phenotype---");
-			System.out.println(children[1].buildPhenotype());
+			System.out.println(children[1].getGenotype().buildPhenotype());
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}

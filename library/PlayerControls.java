@@ -15,7 +15,7 @@ import java.util.Map;
  * @author Ramon A. Lovato
  */
 public class PlayerControls {
-    // A hash map of key states booleans for the inputs.
+    // A hash map of key state booleans for the inputs.
     private Map<String, Boolean> input;
     
     /**

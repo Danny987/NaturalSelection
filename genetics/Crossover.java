@@ -31,7 +31,7 @@ public class Crossover {
 	private Map<Allele, Float> weightMap;
 	
 	/**
-	 * Instantiate a new Crossover and initialize the weight table.
+	 * Instantiate a new Crossover and initialize an empty weight table.
 	 */
 	public Crossover() {
 		weightMap = new HashMap<Allele, Float>();
@@ -84,19 +84,26 @@ public class Crossover {
 	 * positions of blocks don't matter and we need the key genes to line up,
 	 * first align the strands and shift the root block to the beginning.
 	 * 
-	 * @param Genotype parentA Genotype from parent A.
-	 * @param Genotype parentB Genotype from parent B.
+	 * @param Hopper hopperA First parent.
+	 * @param Hopper hopperB Second parent.
 	 * @param Strategy strategy Strategy to use for crossover.
-	 * @return Two-element array of Genotypes for children. If there were
-	 *         problems creating any of the genes (e.g. if the alleles didn't
+	 * @return Two-element array of Hoppers containing the children. If there
+	 *         were problems creating any of the genes (e.g. alleles didn't
 	 *         trait match properly), or either parent was null, returns null.
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	public Genotype[] crossover(Genotype parentA, Genotype parentB,
+	public Hopper[] crossover(Hopper hopperA, Hopper hopperB,
 			Strategy strategy) throws IllegalArgumentException,
 			GeneticsException {
+		Genotype parentA, parentB;
 		// Verify that both parents exist.
+		if (hopperA != null && hopperB != null) {
+			parentA = hopperA.getGenotype();
+			parentB = hopperB.getGenotype();
+		} else {
+			return null;
+		}
 		if (parentA == null || parentB == null) {
 			return null;
 		}
@@ -132,6 +139,15 @@ public class Crossover {
 				case RANDOM:
 					children = randomCross(chromosomeA, chromosomeB);
 					break;
+				case RANDOM_SINGLE_POINT:
+					children = randomSinglePoint(chromosomeA, chromosomeB);
+					break;
+				case RANDOM_DOUBLE_POINT:
+					children = randomDoublePoint(chromosomeA, chromosomeB);
+					break;
+				case RANDOM_CUT_AND_SPLICE:
+					children = randomCutAndSplice(chromosomeA, chromosomeB);
+					break;
 				default:
 					// Fall through.
 			}
@@ -141,42 +157,28 @@ public class Crossover {
 		
 		Genotype genome1 = null;
 		Genotype genome2 = null;
+		Hopper childA = null;
+		Hopper childB = null;
 		
 		try {
 			genome1 = new Genotype(children[0]);
+			childA = new Hopper(genome1);
+			
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			throw ex;
 		}
 		try {
 			genome2 = new Genotype(children[1]);
+			childB = new Hopper(genome2);
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			throw ex;
 		}
+
+		validateCrossover(hopperA, hopperB, childA, childB);
 		
-		Genotype[] genomes = {genome1, genome2};
+		Hopper[] offspring = {childA, childB};
 		
-		return genomes;
-	}
-	
-	/**
-	 * An overloaded crossover that just provides an alternate input method for
-	 * calling the primary crossover method.
-	 * 
-	 * Perform crossover on two parents based on a provided strategy. Since the
-	 * positions of blocks don't matter and we need the key genes to line up,
-	 * first align the strands and shift the root block to the beginning.
-	 * 
-	 * @param Genotype[] parents Genotype array containing parents A and B.
-	 * @param Strategy strategy Strategy to use for crossover.
-	 * @return Two-element array of Genotypes for children. If there were
-	 *         problems creating any of the genes (e.g. if the alleles didn't
-	 *         trait match properly), returns null.
-	 * @throws IllegalArgumentException from Genotype instantiation.
-	 * @throws GeneticsException from Genotype instantiation.
-	 */
-	public Genotype[] crossover(Genotype[] parents, Strategy strategy)
-			throws IllegalArgumentException, GeneticsException {
-		return crossover(parents[0], parents[1], strategy);
+		return offspring;
 	}
 	
 	/**
@@ -427,6 +429,62 @@ public class Crossover {
 	}
 	
 	/**
+	 * Perform 50/50 random crossover with single-point on two parents to
+	 * create twin children.
+	 * 
+	 * @param chromosomeA ArrayList<Gene> from parent A.
+	 * @param chromosomeB ArrayList<Gene> from parent B.
+	 * @return Two-element ArrayList<Gene> array for children. If there were
+	 *         problems creating any of the genes (e.g. if the alleles didn't
+	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
+	 */
+	@SuppressWarnings("unchecked")
+	private ArrayList<Gene>[] randomSinglePoint(ArrayList<Gene> chromosomeA,
+			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
+			GeneticsException {
+		ArrayList<Gene>[] children = new ArrayList[2];
+		if (chromosomeA != null && chromosomeB != null) {
+			children = singlePoint(chromosomeA, chromosomeB);
+		}
+		
+		if (children != null && children[0] != null && children[1] != null) {
+			return randomCross(children[0], children[1]);
+		} else {
+			return null;
+		}
+	}
+	
+	/**
+	 * Perform 50/50 random crossover with double-point on two parents to
+	 * create twin children.
+	 * 
+	 * @param chromosomeA ArrayList<Gene> from parent A.
+	 * @param chromosomeB ArrayList<Gene> from parent B.
+	 * @return Two-element ArrayList<Gene> array for children. If there were
+	 *         problems creating any of the genes (e.g. if the alleles didn't
+	 *         trait match properly), returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
+	 */
+	@SuppressWarnings("unchecked")
+	private ArrayList<Gene>[] randomDoublePoint(ArrayList<Gene> chromosomeA,
+			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
+			GeneticsException {
+		ArrayList<Gene>[] children = new ArrayList[2];
+		if (chromosomeA != null && chromosomeB != null) {
+			children = doublePoint(chromosomeA, chromosomeB);
+		}
+		
+		if (children != null && children[0] != null && children[1] != null) {
+			return randomCross(children[0], children[1]);
+		} else {
+			return null;
+		}
+	}
+	
+	/**
 	 * Perform 50/50 random crossover with cut-and-splice on two parents to
 	 * create twin children.
 	 * 
@@ -442,49 +500,16 @@ public class Crossover {
 	private ArrayList<Gene>[] randomCutAndSplice(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
-		int size = chromosomeA.size();
-		// Create the chromosomes for the twin children.
-		ArrayList<Gene> childA = new ArrayList<Gene>();
-		ArrayList<Gene> childB = new ArrayList<Gene>();
-
-		// Align the key genes.
-		ArrayList<Gene>[] newChromosomes = align(chromosomeA, chromosomeB);
-		chromosomeA = newChromosomes[0];
-		chromosomeB = newChromosomes[1];
-		
-		if (chromosomeA == null || chromosomeB == null) {
-			throw new GeneticsException(
-					"Crossover.align produced one or more null chromosomes.");
+		ArrayList<Gene>[] children = new ArrayList[2];
+		if (chromosomeA != null && chromosomeB != null) {
+			children = cutAndSplice(chromosomeA, chromosomeB);
 		}
 		
-		// Iterate over the lists and pick a random allele from each parent.
-		for (int i = 0; i < size; i++) {
-			Gene parentGeneA = new Gene(chromosomeA.get(i));
-			Gene parentGeneB = new Gene(chromosomeB.get(i));
-			int a1 = Helper.choose();
-			int b1 = Helper.choose();
-			int a2 = (a1 == 1 ? 0 : 1);
-			int b2 = (b1 == 1 ? 0 : 1);
-			// Create deep clones of the genes for the children.
-			try {
-				Gene childGeneA = adjustWeight(
-								  new Gene(parentGeneA.getAlleles()[a1],
-						                   parentGeneB.getAlleles()[b1]));
-				Gene childGeneB = adjustWeight(
-								  new Gene(parentGeneA.getAlleles()[a2],
-						                   parentGeneB.getAlleles()[b2]));
-				childA.add(childGeneA);
-				childB.add(childGeneB);
-			} catch (IllegalArgumentException ex) {
-				throw ex;
-			}
+		if (children != null && children[0] != null && children[1] != null) {
+			return randomCross(children[0], children[1]);
+		} else {
+			return null;
 		}
-		// If the child Gene pulled a matched pair of empty Alleles, it will
-		// be trimmed when instantiating the new Genotypes.
-		@SuppressWarnings("rawtypes")
-		ArrayList[] children = {childA, childB};
-		
-		return children;
 	}
 	
 	/**
@@ -535,6 +560,22 @@ public class Crossover {
 		alleles[0] = adjustWeight(alleles[0]);
 		alleles[1] = adjustWeight(alleles[1]);
 		return new Gene(alleles);
+	}
+	
+	/**
+	 * Validates the Crossover: compares fitness and similarity of parents and
+	 * offspring, and adjusts Allele weights.
+	 * 
+	 * @param parentA First parent Hopper.
+	 * @param parentB Second parent Hopper.
+	 * @param childA First child Hopper.
+	 * @param childB Second child Hopper.
+	 */
+	public void validateCrossover(Hopper parentA, Hopper parentB,
+			Hopper childA, Hopper childB) {
+		/* ****************************************************************** */
+		/* TODO: Does nothing because fitness simulation still doesn't work.  */
+		/* ****************************************************************** */
 	}
 	
 	/**
@@ -687,8 +728,8 @@ public class Crossover {
 	 * A nested enum representing the strategy of Crossover to use.
 	 */
 	public enum Strategy {
-		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM,
-		RANDOM_CUT_AND_SPLICE;
+		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM, RANDOM_SINGLE_POINT,
+		RANDOM_DOUBLE_POINT, RANDOM_CUT_AND_SPLICE;
 	}
 	
 	/**

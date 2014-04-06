@@ -120,19 +120,16 @@ public class Population extends ArrayList<Hopper> {
 					[random.nextInt(Strategy.values().length)];
 			// Determine which Population the offspring
 			try {
-				Genotype[] offspring = cross.crossover(
-						parentA.getGenotype(), parentB.getGenotype(),
-						strategy);
+				Hopper[] offspring = cross.crossover(
+						parentA, parentB, strategy);
 				if (offspring != null) {
 					for (int j = 0; j < offspring.length; j++) {
-						if (offspring[j] != null) {
-							Hopper child = new Hopper(offspring[j]);
-							if (child != null) {
-								if (j % 2 == 0) {
-									children1.add(child);
-								} else {
-									children2.add(child);
-								}
+						Hopper child = offspring[j];
+						if (child != null) {
+							if (j % 2 == 0) {
+								children1.add(child);
+							} else {
+								children2.add(child);
 							}
 						}
 					}
@@ -201,13 +198,12 @@ public class Population extends ArrayList<Hopper> {
 			Strategy strategy = Strategy.values()
 					[random.nextInt(Strategy.values().length)];
 			try {
-				Genotype[] offspring = crossover.crossover(
-						parentA.getGenotype(), parentB.getGenotype(),
-						strategy);
+				Hopper[] offspring = crossover.crossover(
+						parentA, parentB, strategy);
 				if (offspring != null) {
-					for (Genotype g : offspring) {
-						if (g != null) {
-							children.add(new Hopper(g));
+					for (Hopper h : offspring) {
+						if (h != null) {
+							children.add(h);
 						}
 					}
 				}

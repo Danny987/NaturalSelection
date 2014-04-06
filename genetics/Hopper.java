@@ -134,12 +134,12 @@ public class Hopper implements Comparable<Hopper> {
 			}
 			
 			float change = test2 - test1;
-			// Descending or still - since the bounces are always lower than
-			// the initial jump, we can stop the simulation as soon as the
+			// Descending or stationary - since the bounces are always lower
+			// than the initial jump, we can stop the simulation as soon as the
 			// creature starts to descend. However, if the creature spawns in
 			// the air or its body settles before it starts its initial jump,
-			// we want to let that happen so the jump can occur. One full
-			// second of padding is provided as a safety measure.
+			// we want to let that happen so the jump can occur. Padding is
+			// provided as a safety measure.
 			if (change <= 0 && steps >= 1/Simulator.DEFAULT_TIME_STEP) {
 				done = true;
 			}
