@@ -730,12 +730,12 @@ public class Crossover {
 	public void setWeightPercent(Allele allele, float percent) {
 		if (weightMap.containsKey(allele)) {
 			float old = weightMap.get(allele);
-			if (old * percent > Helper.MAX_WEIGHT) {
+			if (old + (old * percent) > Helper.MAX_WEIGHT) {
 				percent = Helper.MAX_WEIGHT;
-			} else if (old * percent < Helper.MIN_WEIGHT) {
+			} else if (old + (old * percent) < Helper.MIN_WEIGHT) {
 				percent = Helper.MIN_WEIGHT;
 			}
-			weightMap.put(new Allele(allele), percent);
+			weightMap.put(new Allele(allele), old + (old * percent));
 		} else {
 			weightMap.put(allele, allele.getWeight());
 		}

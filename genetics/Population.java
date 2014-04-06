@@ -494,7 +494,6 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public Hopper get(int index) {
-		System.out.println("size = " + size());
 		synchronized (this) {
 			try {
 				return new Hopper(super.get(index));
