@@ -2,6 +2,8 @@ package creature.geeksquad.gui;
 
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
+import creature.geeksquad.library.KeyBinds;
+import creature.geeksquad.library.PlayerControls;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -11,16 +13,16 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -43,6 +45,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private final int WIDTH = 700;
     private final int HEIGHT = 600;
 
+    //Controls
+    private PlayerControls controls = new PlayerControls();
+    private Map<String, Boolean> controlMap = controls.getInputs();
+
     //Colors
     private final Color FONTCOLOR = new Color(205, 205, 205);
     private final Color BACKGROUND_COLOR = new Color(55, 55, 55);
@@ -58,6 +64,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private Renderer renderer;
 
     private Timer timer;
+    private Timer keyTimer;
 
     private Hopper hopper;
 
@@ -112,6 +119,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
     /**
      * Calls JPanel super and initializes the list of name.
+     *
+     * @param tribeList
+     * @param nameList
      */
     public GUI(List<Tribe> tribeList, List<String> nameList) {
         super("Creature Creator");
@@ -127,7 +137,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         try {
             hopper = new Hopper(currentTribe.getHopper(0));
         } catch (GeneticsException | NullPointerException ex) {
-            System.out.println(ex);
+            Log.error(ex.toString());
         }
 
         init();
@@ -142,6 +152,11 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
      */
     @Override
     public void actionPerformed(ActionEvent e) {
+        if (e.getSource().equals(keyTimer)) {
+            rotate();
+            return;
+        }
+
         if (e.getSource().equals(timer)) {
             if (!paused) {
                 time.setText(" Time: " + time());
@@ -211,7 +226,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                     hopper = new Hopper(currentTribe.getHopper(0));
                     renderer.setHopper(hopper);
                 } catch (GeneticsException ex) {
-                    System.err.println(ex);
+                    Log.error(ex.toString());
                 }
                 break;
 
@@ -219,7 +234,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 currentTribe = tribeList.get(tribes.getSelectedIndex());
                 try {
                     hopper = new Hopper(currentTribe.getHopper(0));
-                    slider.setMaximum(currentTribe.getSize());
+                    slider.setMaximum(currentTribe.getSize() - 1);
                     slider.setValue(0);
                     renderer.setHopper(hopper);
                     mainTab.setTitleAt(1, hopper.getName());
@@ -274,8 +289,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             renderer.setHopper(hopper);
 
             mainTab.setTitleAt(1, hopper.getName());
-        } catch (GeneticsException ex) {
-            ex.printStackTrace();
+        } catch (GeneticsException | NullPointerException ex) {
+            Log.error(ex.toString());
         }
     }
 
@@ -322,23 +337,19 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
      * Read Genotype from user selected file
      */
     private void loadGenotype() {
-        try {
-            Log.loadHopper(this, hopper);
-            currentTribe.addHopper(hopper);
+        hopper = Log.loadHopper(this, hopper);
 
-            renderer.setHopper(hopper);
-            mainTab.setTitleAt(1, hopper.getName());
-            graphicsPanel.startAnimator();
-            animate.setText("Animator On");
+        currentTribe.addHopper(hopper);
+        slider.setMaximum(currentTribe.getSize() - 1);
 
-            secondsSinceStart = 0;
-            minutesSinceStart = 0;
-            totalGenerations = 0;
-        } catch (FileNotFoundException ex) {
-            Log.error(ex.toString());
-        } catch (IOException | GeneticsException ex) {
-            Log.error(ex.toString());
-        }
+        renderer.setHopper(hopper);
+        mainTab.setTitleAt(1, hopper.getName());
+        graphicsPanel.startAnimator();
+        animate.setText("Animator On");
+
+        secondsSinceStart = 0;
+        minutesSinceStart = 0;
+        totalGenerations = 0;
     }
 
     /**
@@ -351,6 +362,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         setMinimumSize(new Dimension(WIDTH + 8, HEIGHT + 50));
         setMaximumSize(new Dimension(WIDTH + 8, HEIGHT + 50));
         setPreferredSize(new Dimension(WIDTH + 8, HEIGHT + 50));
+        setResizable(false);
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
 
         // Used to set specification for closing the window
@@ -400,7 +412,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         // labels /////////////////////////////////////////////////////////
         generationsPerSecond = new JLabel("Generations/second: 0");
-
+        generationsPerSecond.setForeground(FONTCOLOR);
+        
         generations = new JLabel("Total Generations: " + totalGenerations);
         generations.setForeground(FONTCOLOR);
 
@@ -417,6 +430,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         pause.setText("Start");
 
         animate = new Button(130, 20, "Animate");
+        animate.setText("Animator On");
         nextGeneration = new Button(130, 20, "Next Generation");
         writeFile = new Button(130, 20, "Write Genome");
         loadFile = new Button(130, 20, "Load Genome");
@@ -520,6 +534,21 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         pack();
 
         timer = new Timer(1000, this);
+        keyTimer = new Timer(1000 / 60, this);
+        
+        graphicsPanel.requestFocus();
+        KeyBinds keyBinds = new KeyBinds((JComponent)getContentPane(), controls);
+        
         timer.start();
+        keyTimer.start();
+    }
+
+    private void rotate() {
+        if (controlMap.get("left") && graphicsPanel.animating()) {
+            renderer.rotateLeft();
+        }
+        else if (controlMap.get("right") && graphicsPanel.animating()) {
+            renderer.rotateRight();
+        }
     }
 }

@@ -24,7 +24,7 @@ public class Renderer implements GLEventListener {
     private Block[] body;
     private final GLU glu = new GLU();
 
-    private float testTheta = 0;
+    private float rotationAngle = 0;
 
     /**
      * Set the current creature to be drawn.
@@ -36,6 +36,7 @@ public class Renderer implements GLEventListener {
         this.genotype = hopper.getGenotype();
         this.phenotype = hopper.getPhenotype();
         this.body = genotype.getBody();
+//        phenotype.reset();
     }
 
     /**
@@ -64,8 +65,7 @@ public class Renderer implements GLEventListener {
         gl.glPushMatrix();
         gl.glTranslatef(0, -30, 0);
         //used to see the creature from different angles
-        gl.glRotatef(testTheta, 0, 1, 0);
-        testTheta++;
+        gl.glRotatef(rotationAngle, 0, 1, 0);
 
         // It's ALIVE!!!
 
@@ -120,7 +120,7 @@ public class Renderer implements GLEventListener {
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
 
-        glu.gluPerspective(45.0, (float) width / height, .1, 1000); // set perspective
+        glu.gluPerspective(45.0, (float) width / height, .1, 780); // set perspective
 
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
@@ -171,7 +171,7 @@ public class Renderer implements GLEventListener {
         gl.glPushMatrix();
 
         // move to the center of the block
-        gl.glTranslatef(center.x, center.y, center.z);
+        gl.glTranslatef(center.x*2, center.y*2, center.z*2);
 
         float[] rotationMatrix = new float[16];
         Vector3.vectorsToRotationMatrix(rotationMatrix, forward, up);
@@ -243,6 +243,20 @@ public class Renderer implements GLEventListener {
         gl.glPopMatrix();
     }
 
+    /**
+     * Rotate everything farther left.
+     */
+    public void rotateLeft(){
+        rotationAngle++;
+    }
+    
+    /**
+     * Rotate everything farther right.
+     */
+    public void rotateRight(){
+        rotationAngle--;
+    }
+    
     private void setColor(GL2 gl, float r, float g, float b) {
         //Set material and shininess!
         gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, new float[]{r, g, b, 1}, 0);

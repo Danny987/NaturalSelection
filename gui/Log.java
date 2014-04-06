@@ -11,7 +11,6 @@ import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -43,7 +42,7 @@ public class Log {
      * @param s the error string
      */
     public synchronized static void error(String s) {
-
+        System.out.println(s);
     }
 
     /**
@@ -96,58 +95,62 @@ public class Log {
      *
      * @param parent
      * @param hopper
-     * @throws java.io.FileNotFoundException
-     * @throws creature.geeksquad.genetics.GeneticsException
      */
-    public static void loadHopper(Component parent, Hopper hopper) throws FileNotFoundException, IOException, GeneticsException {
+    public static Hopper loadHopper(Component parent, Hopper hopper) {
         BufferedReader reader;
         int option = fileChooser.showOpenDialog(parent);
 
         if (option != JFileChooser.CANCEL_OPTION) {
-            File f = fileChooser.getSelectedFile();
-            String[] lineArray;
-            String name;
-            List<Allele> alleles = new ArrayList<>();
-            ArrayList<Gene> genes;
+            try {
+                File f = fileChooser.getSelectedFile();
+                String[] lineArray;
+                String name;
+                List<Allele> alleles = new ArrayList<>();
+                ArrayList<Gene> genes;
 
-            reader = new BufferedReader(new FileReader(f));
+                reader = new BufferedReader(new FileReader(f));
 
-            String line = reader.readLine();
-            reader.readLine();
-            name = reader.readLine();
-            reader.readLine();
-            reader.readLine();
-
-            while (line != null) {
-
-                if (line.startsWith("{")) {
-                    line = line.replace("{", "");
-                }
-                if (line.endsWith("}")) {
-                    line = line.replace("}", "");
-                }
-
-                System.out.println(line.length() + " " + line);
-                
-                line = line.substring(1, line.length() - 1);
-
-                lineArray = line.split("\\)\\(");
-
-                if (lineArray.length < 2) {
-                    break;
-                }
-
-                alleles.add(Allele.stringToAllele(lineArray[0] + ")"));
-                alleles.add(Allele.stringToAllele("(" + lineArray[1]));
+                String line;
+                reader.readLine();
+                reader.readLine();
+                name = reader.readLine();
+                reader.readLine();
+                reader.readLine();
                 line = reader.readLine();
+
+                while (line.length() > 1) {
+
+                    if (line.startsWith("{")) {
+                        line = line.replace("{", "");
+                    }
+                    if (line.endsWith("}")) {
+                        line = line.replace("}", "");
+                    }
+
+                    line = line.substring(1, line.length() - 1);
+
+                    lineArray = line.split("\\)\\(");
+
+                    if (lineArray.length < 2) {
+                        break;
+                    }
+
+                    alleles.add(Allele.stringToAllele(lineArray[0] + ")"));
+                    alleles.add(Allele.stringToAllele("(" + lineArray[1]));
+                    line = reader.readLine();
+                }
+
+                genes = Gene.allelesToGenes(alleles);
+                Genotype genotype = new Genotype(genes);
+
+                hopper = new Hopper(genotype, name);
+                
+            } catch (GeneticsException | IOException | IllegalArgumentException ex) {
+                Log.error(ex.toString());
             }
-
-            genes = Gene.allelesToGenes(alleles);
-            Genotype genotype = new Genotype(genes);
-            hopper = new Hopper(genotype, name);
-
         }
 
+        return hopper;
     }
 
     /**
