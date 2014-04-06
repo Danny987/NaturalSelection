@@ -147,8 +147,8 @@ public abstract class Strategy {
 	 * @param direction - add or subtract from value
 	 * @param stepSize - how much to add or subtract from value
 	 */
-	public void climbFloat(Genotype genotype, Allele allele, int direction, float stepSize)throws GeneticsException,
-	IllegalArgumentException{
+	public void climbFloat(Genotype genotype, Allele allele, int direction, float stepSize, float max)
+			throws GeneticsException, IllegalArgumentException{
 		
 		Genotype clonedGenotype = null;
 		try {
@@ -173,17 +173,25 @@ public abstract class Strategy {
 
 		//get allele value
 		float f = (Float) allele.getValue();
+		
+		//what to change the allele to
+		float newValue = f + (stepSize*direction);
 
-		//add step to allele value
-		allele.setValue(f + (stepSize*direction));
+		//if max is 0 or if newValue less than max
+		if(max == 0 || newValue < max){
+			//add step to allele value
+			allele.setValue(newValue);
+			//System.out.println("New Value: " + newValue + " Max: " + max);
+		}
 		
 		Genotype validGenotype = null;
 		try {
 			validGenotype = new Genotype(genotype);
 		} catch (IllegalArgumentException | GeneticsException e) {
 			// TODO Auto-generated catch block
+			System.err.println("Climb float produced invalid, undo.");
 			genotype = clonedGenotype;
-			throw e;
+			//throw e;
 		}
 
 		/*if(!genotype.validatePhenotype()){
@@ -574,6 +582,58 @@ public abstract class Strategy {
 				blockCount++;
 		}
 		return blockCount;
+	}
+	
+	/** Calculates the maximum float value for a dimension of the box that
+	 * the given allele is in.
+	 * 
+	 * @param genotype
+	 * @param allele
+	 * @param geneIndex
+	 * @return
+	 */
+	public float getFloatMax(Genotype genotype, int geneIndex){
+		float currentVal = 0;
+		float val1 = 0;
+		float val2 = 0;
+		
+		ArrayList<Gene> geneList = genotype.getChromosome();
+		
+		currentVal = (float)geneList.get(geneIndex).getValue();
+		
+		//if allele is not a dimension, return 0
+		if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.JOINT_ORIENTATION)){
+			return 0;
+		}
+		
+		
+		//length, height, width
+		if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.LENGTH)){
+			val1 = (float)geneList.get(geneIndex+1).getValue();
+			val2 = (float)geneList.get(geneIndex+2).getValue();
+		}
+		else if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.HEIGHT)){
+			val1 = (float)geneList.get(geneIndex-1).getValue();
+			val2 = (float)geneList.get(geneIndex+1).getValue();
+			
+		}
+		else if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.WIDTH)){
+			val1 = (float)geneList.get(geneIndex-1).getValue();
+			val2 = (float)geneList.get(geneIndex-2).getValue();
+		}
+		
+		//return the smallest value
+		if(currentVal < val1 && currentVal < val2){
+			return 0;
+		}
+		else if(val1 < currentVal && val1 < val2){
+			return val1*10;
+		}
+		else if(val2 < currentVal && val2 < val1){
+			return val2*10;
+		}
+		
+		return 0;
 	}
 
 	/**

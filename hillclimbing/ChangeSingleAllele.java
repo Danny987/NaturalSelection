@@ -33,8 +33,6 @@ public class ChangeSingleAllele extends Strategy{
 	//a map to store the gene indices and their success probability
 	HashMap<Integer, Integer> geneWeights = new HashMap<Integer, Integer>();
 
-	int geneIndex = 0; //index in gene array list of the gene we're modifying
-
 	public ChangeSingleAllele() {
 		//TODO average number of rules in genotype
 	}
@@ -82,7 +80,7 @@ public class ChangeSingleAllele extends Strategy{
 			System.out.println("Sorry! Can't hill climb this type of allele yet!");
 		}
 		else if(climbType.equals("FLOAT") || climbType.equals("ORIENTATION")){
-			climbFloatAllele(hopperToClimb, genotypeToClimb, allele);
+			climbFloatAllele(hopperToClimb, genotypeToClimb, allele, geneIndex);
 		}
 		else if(climbType.equals("INDEX")){
 			climbIndexAllele(allele);
@@ -133,7 +131,7 @@ public class ChangeSingleAllele extends Strategy{
 	 * @param hopper - Hopper object to climb
 	 * @param allele - specific allele to climb in hopper
 	 */
-	private void climbFloatAllele(Hopper hopper, Genotype genotype, Allele allele)throws GeneticsException,
+	private void climbFloatAllele(Hopper hopper, Genotype genotype, Allele allele, int geneIndex)throws GeneticsException,
 	IllegalArgumentException{
 
 		//variable initialization
@@ -144,11 +142,14 @@ public class ChangeSingleAllele extends Strategy{
 		float stepSize = initialStepSize; //set step size
 
 		boolean hillClimb = true; //flag to turn on and off hill climbing
+		
+		//get the largest possible value for the float
+		float max;
 
 		while(hillClimb){ //while hillclimbing flag is set to true
 			//do 1 step of float hillclimbing
-
-			climbFloat(genotype, allele, direction, stepSize);
+			max = getFloatMax(genotype, geneIndex);
+			climbFloat(genotype, allele, direction, stepSize, max);
 
 			//if improvement
 			if(improved(hopper)){
@@ -157,13 +158,15 @@ public class ChangeSingleAllele extends Strategy{
 			}
 			//if worse
 			else{
-				climbFloat(genotype, allele, direction, -stepSize);
+				max = getFloatMax(genotype, geneIndex);
+				climbFloat(genotype, allele, direction, -stepSize, max);
 				//if last step improved
 				if(stepSize > initialStepSize){
 					//set step size to midpoint
 					stepSize = (3*stepSize) / 4;
 					//try mid point
-					climbFloat(genotype, allele, direction, stepSize); //add step to allele value
+					max = getFloatMax(genotype, geneIndex);
+					climbFloat(genotype, allele, direction, stepSize, max); //add step to allele value
 					//if mid point improves fitness
 					if(improved(hopper)){
 						//stop hillclimbing
@@ -172,7 +175,8 @@ public class ChangeSingleAllele extends Strategy{
 					//if midpoint is worse
 					else{
 						//go back a step
-						climbFloat(genotype, allele, direction, -stepSize);
+						max = getFloatMax(genotype, geneIndex);
+						climbFloat(genotype, allele, direction, -stepSize, max);
 						stepSize = (2*stepSize) / 3;
 						hillClimb = false;
 					}
@@ -180,14 +184,16 @@ public class ChangeSingleAllele extends Strategy{
 				//if first step and changed direction already
 				else if((stepSize == initialStepSize) && (direction != 1)){
 					//undo last step
-					climbFloat(genotype, allele, direction, -stepSize);
+					max = getFloatMax(genotype, geneIndex);
+					climbFloat(genotype, allele, direction, -stepSize, max);
 					//stop hillclimbing
 					hillClimb = false;
 				}
 				//if first step and have not changed direction
 				else if((stepSize == initialStepSize) && (direction == 1)){
 					//undo last step
-					climbFloat(genotype, allele, direction, -stepSize);
+					max = getFloatMax(genotype, geneIndex);
+					climbFloat(genotype, allele, direction, -stepSize, max);
 					//change direction
 					direction = -1;
 				}
@@ -388,7 +394,7 @@ public class ChangeSingleAllele extends Strategy{
 		//if gene map is empty
 		if(geneWeights.isEmpty()){
 			//pick a gene at random
-			geneIndex = (int)(Math.random()*geneList.size());
+			int geneIndex = (int)(Math.random()*geneList.size());
 
 			return geneIndex;
 		}
