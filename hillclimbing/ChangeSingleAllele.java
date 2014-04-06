@@ -28,7 +28,7 @@ import creature.phenotype.Rule;
  */
 public class ChangeSingleAllele extends Strategy{
 
-	final boolean DEBUG = true;
+	final boolean DEBUG = false;
 
 	//a map to store the gene indices and their success probability
 	HashMap<Integer, Integer> geneWeights = new HashMap<Integer, Integer>();
@@ -46,6 +46,19 @@ public class ChangeSingleAllele extends Strategy{
 	}
 
 	public Hopper climb(Hopper hopperToClimb) {
+
+		//clone original hopper
+		Hopper originalHopper = null;
+		try {
+			originalHopper = new Hopper(hopperToClimb);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (GeneticsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 		//get the genotype from the hopper
 		Genotype genotypeToClimb = hopperToClimb.getGenotype();
 
@@ -53,9 +66,9 @@ public class ChangeSingleAllele extends Strategy{
 
 		//pick allele based on weighted probability --------
 		ArrayList<Gene> geneList = genotypeToClimb.getChromosome();
-		
+
 		int geneIndex = pickAllele(genotypeToClimb); //index of the allele
-		
+
 		Allele allele = geneList.get(geneIndex).getDominant(); //the actual allele
 		//----------------------------------------------------
 
@@ -70,7 +83,7 @@ public class ChangeSingleAllele extends Strategy{
 			System.out.println("Sorry! Can't hill climb this type of allele yet!");
 		}
 		else if(climbType.equals("FLOAT") || climbType.equals("ORIENTATION")){
-			climbFloatAllele(hopperToClimb, allele);
+			climbFloatAllele(hopperToClimb, genotypeToClimb, allele);
 		}
 		else if(climbType.equals("INDEX")){
 			climbIndexAllele(allele);
@@ -89,7 +102,7 @@ public class ChangeSingleAllele extends Strategy{
 			int boxIndex = getBoxIndex(geneList, geneIndex);
 			//get rule DoF location
 			int ruleDoF = getRuleDoF(geneList, geneIndex);
-			
+
 			climbRuleAllele(hopperToClimb, allele, climbType, boxIndex, ruleDoF);
 		}
 		else if(climbType.equals("BINARY_1") || climbType.equals("BINARY_3")){
@@ -104,8 +117,14 @@ public class ChangeSingleAllele extends Strategy{
 		if(DEBUG)System.out.println("New Fitness: " + hopperToClimb.getFitness());
 
 		//TODO change weight map
-
-		return hopperToClimb;
+		if(hopperToClimb.getGenotype().validatePhenotype()){
+			
+			return hopperToClimb;
+		}
+		else{
+			System.out.println("INVALID HOPPER CREATED");
+			return originalHopper;
+		}
 	}//end climb method
 
 	/**
@@ -114,7 +133,7 @@ public class ChangeSingleAllele extends Strategy{
 	 * @param hopper - Hopper object to climb
 	 * @param allele - specific allele to climb in hopper
 	 */
-	private void climbFloatAllele(Hopper hopper, Allele allele){
+	private void climbFloatAllele(Hopper hopper, Genotype genotype, Allele allele){
 
 		//variable initialization
 		int initialDirection = 1; //default direction is "add"
@@ -127,7 +146,7 @@ public class ChangeSingleAllele extends Strategy{
 
 		while(hillClimb){ //while hillclimbing flag is set to true
 			//do 1 step of float hillclimbing
-			climbFloat(allele, direction, stepSize);
+			climbFloat(genotype, allele, direction, stepSize);
 
 			//if improvement
 			if(improved(hopper)){
@@ -136,13 +155,13 @@ public class ChangeSingleAllele extends Strategy{
 			}
 			//if worse
 			else{
-				climbFloat(allele, direction, -stepSize);
+				climbFloat(genotype, allele, direction, -stepSize);
 				//if last step improved
 				if(stepSize > initialStepSize){
 					//set step size to midpoint
 					stepSize = (3*stepSize) / 4;
 					//try mid point
-					climbFloat(allele, direction, stepSize); //add step to allele value
+					climbFloat(genotype, allele, direction, stepSize); //add step to allele value
 					//if mid point improves fitness
 					if(improved(hopper)){
 						//stop hillclimbing
@@ -151,7 +170,7 @@ public class ChangeSingleAllele extends Strategy{
 					//if midpoint is worse
 					else{
 						//go back a step
-						climbFloat(allele, direction, -stepSize);
+						climbFloat(genotype, allele, direction, -stepSize);
 						stepSize = (2*stepSize) / 3;
 						hillClimb = false;
 					}
@@ -159,14 +178,14 @@ public class ChangeSingleAllele extends Strategy{
 				//if first step and changed direction already
 				else if((stepSize == initialStepSize) && (direction != 1)){
 					//undo last step
-					climbFloat(allele, direction, -stepSize);
+					climbFloat(genotype, allele, direction, -stepSize);
 					//stop hillclimbing
 					hillClimb = false;
 				}
 				//if first step and have not changed direction
 				else if((stepSize == initialStepSize) && (direction == 1)){
 					//undo last step
-					climbFloat(allele, direction, -stepSize);
+					climbFloat(genotype, allele, direction, -stepSize);
 					//change direction
 					direction = -1;
 				}
@@ -187,14 +206,14 @@ public class ChangeSingleAllele extends Strategy{
 		} catch (GeneticsException e) {
 			e.printStackTrace();
 		}
-		
+
 		genotype.getChromosome();
-		
+
 		//perform the joint change to the genotype
 		clonedValue = climbJointType(clonedValue, allele, geneIndex);
-		
+
 		genotype = clonedValue;
-		
+
 		if(!improved(hopper)){
 			genotype = originalValue;
 		}
@@ -204,6 +223,17 @@ public class ChangeSingleAllele extends Strategy{
 	}
 
 	public void climbJointSiteAllele(Hopper hopper, Genotype genotype, Allele allele){
+		//original genotype clone
+		Genotype clonedGenotype = null;
+		try {
+			clonedGenotype = new Genotype(genotype);
+		} catch (IllegalArgumentException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (GeneticsException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		//original value
 		EnumJointSite originalValue = (EnumJointSite)allele.getValue();
 		//cloned value
@@ -220,10 +250,27 @@ public class ChangeSingleAllele extends Strategy{
 			//change joint site of allele to new one
 			allele.setValue(clonedValue);
 
-			//try creating creature
+			//if the new joint site was valid
+			if(genotype.validatePhenotype()){
+				break; //exit loop
+			}
+			else{
+				//revert to working genotype
+				try {
+					genotype = new Genotype(clonedGenotype);
+				} catch (IllegalArgumentException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (GeneticsException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+
+		if(!improved(hopper)){
 			try {
-				genotype.buildPhenotype();
-				break;
+				genotype = new Genotype(clonedGenotype);
 			} catch (IllegalArgumentException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -231,10 +278,6 @@ public class ChangeSingleAllele extends Strategy{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-		}
-
-		if(!improved(hopper)){
-			allele.setValue(originalValue);
 		}
 
 

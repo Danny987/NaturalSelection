@@ -8,6 +8,7 @@ import java.util.HashMap;
 
 import creature.geeksquad.genetics.Allele;
 import creature.geeksquad.genetics.Gene;
+import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Allele.Trait;
@@ -75,50 +76,64 @@ public abstract class Strategy {
 		// Switch to determine what string to return based on the trait.
 		switch (trait) {
 		case HEIGHT: case WIDTH: case LENGTH:
-			return "FLOAT";
+			return "FLOAT"; //EXCEPTION
+			//return "INDEX";
 
 		case INDEX_TO_PARENT:
 			return "INDEX";
 
 		case JOINT_SITE_ON_CHILD:
-			return "JOINT_CHILD";
+			return "JOINT_CHILD"; //EXCEPTION
+			//return "INDEX";
 
 		case JOINT_SITE_ON_PARENT:
-			return "JOINT_PARENT";
+			return "JOINT_PARENT"; //EXCEPTION
+			//return "INDEX";
 
 		case JOINT_TYPE:
 			EnumJointType j = (EnumJointType) allele.getValue();
 			return "JOINT";
+			//return "INDEX";
 
 		case JOINT_ORIENTATION:
-			return "ORIENTATION";
+			//return "ORIENTATION"; //EXCEPTION
+			return "INDEX";
 
 		case RULE_INPUT_A:
 			return "RULE_A";
+			//return "INDEX";
 
 		case RULE_INPUT_B:
 			return "RULE_B";
+			//return "INDEX";
 
 		case RULE_INPUT_C:
 			return "RULE_C";
+			//return "INDEX";
 
 		case RULE_INPUT_D:
 			return "RULE_D";
+			//return "INDEX";
 
 		case RULE_INPUT_E:
 			return "RULE_E";
+			//return "INDEX";
 
 		case BINARY_OPERATOR_1: 
 			return "BINARY_1";
+			//return "INDEX";
 
 		case BINARY_OPERATOR_3:
 			return "BINARY_3";
+			//return "INDEX";
 
 		case UNARY_OPERATOR_2:
 			return "UNARY_2";
+			//return "INDEX";
 
 		case UNARY_OPERATOR_4:
 			return "UNARY_4";
+			//return "INDEX";
 
 		default:
 			return null;
@@ -132,12 +147,38 @@ public abstract class Strategy {
 	 * @param direction - add or subtract from value
 	 * @param stepSize - how much to add or subtract from value
 	 */
-	public void climbFloat(Allele allele, int direction, float stepSize){
+	public void climbFloat(Genotype genotype, Allele allele, int direction, float stepSize){
+		//create a clone of the starting genotype
+		/*Genotype clonedGenotype = null;
+		try {
+			clonedGenotype = new Genotype(genotype);
+		} catch (IllegalArgumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (GeneticsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
+
 		//get allele value
 		float f = (Float) allele.getValue();
 
 		//add step to allele value
 		allele.setValue(f + (stepSize*direction));
+
+		//if the change created an invalid genotype
+		/*if(!genotype.validatePhenotype()){
+			//revert to the clone
+			try {
+				genotype = new Genotype(clonedGenotype);
+			} catch (IllegalArgumentException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (GeneticsException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}*/
 	}
 
 	/**
@@ -159,14 +200,18 @@ public abstract class Strategy {
 		}
 
 		//check what neuron input was obtained from the maps and return it
-		if(newRuleValue.equals(EnumNeuronInputType.TIME))
+		if(newRuleValue.equals(EnumNeuronInputType.TIME)){
 			return new NeuronInput(newRuleValue); //return new neuron
-		else if(newRuleValue.equals(EnumNeuronInputType.HEIGHT) || newRuleValue.equals(EnumNeuronInputType.TOUCH))
+		}
+		else if(newRuleValue.equals(EnumNeuronInputType.HEIGHT) || newRuleValue.equals(EnumNeuronInputType.TOUCH)){
 			return new NeuronInput(newRuleValue, boxIndex);
-		else if(newRuleValue.equals(EnumNeuronInputType.CONSTANT))
-			System.out.println("Can't climb rule CONSTANT yet!");
-		else if(newRuleValue.equals(EnumNeuronInputType.JOINT))
+		}
+		else if(newRuleValue.equals(EnumNeuronInputType.CONSTANT)){
+			//System.out.println("Can't climb rule CONSTANT yet!");
+		}
+		else if(newRuleValue.equals(EnumNeuronInputType.JOINT)){
 			return new NeuronInput(newRuleValue, boxIndex, neuron.getDOF());
+		}
 
 		//return starting neuron if no change occurs
 		return neuron;
@@ -324,7 +369,6 @@ public abstract class Strategy {
 				}
 			}
 		}
-		System.out.println(genotype.toString());
 		return genotype;
 	}
 
@@ -343,15 +387,13 @@ public abstract class Strategy {
 	 */
 	public boolean improved(Hopper hopper){
 		//check if the genotype is valid
-		if(hopper.getGenotype().validatePhenotype()){
-			//run simulation to get new fitness
-			float newFitness = getNewFitness(hopper);
-			//if the fitness from the sim is greater than the current fitness
-			if(newFitness > hopper.getFitness()){
-				//update hopper current fitness
-				hopper.setFitness(newFitness);
-				return true;
-			}
+		//run simulation to get new fitness
+		float newFitness = getNewFitness(hopper);
+		//if the fitness from the sim is greater than the current fitness
+		if(newFitness > hopper.getFitness()){
+			//update hopper current fitness
+			hopper.setFitness(newFitness);
+			return true;
 		}
 		return false;
 	}
