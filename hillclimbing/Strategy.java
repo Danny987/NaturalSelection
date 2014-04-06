@@ -154,22 +154,9 @@ public abstract class Strategy {
 		try {
 			clonedGenotype = new Genotype(genotype);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO Auto-generated catch block
-			System.err.println("climbFloat");
-			throw e;
+			//invalid creature came into climbFloat
+			return;
 		}
-		
-		//create a clone of the starting genotype
-		/*Genotype clonedGenotype = null;
-		try {``
-			clonedGenotype = new Genotype(genotype);
-		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (GeneticsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
 
 		//get allele value
 		float f = (Float) allele.getValue();
@@ -181,37 +168,15 @@ public abstract class Strategy {
 		if(max == 0 || newValue < max){
 			//add step to allele value
 			allele.setValue(newValue);
-			//System.out.println("New Value: " + newValue + " Max: " + max);
 		}
 		
 		Genotype validGenotype = null;
 		try {
 			validGenotype = new Genotype(genotype);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO Auto-generated catch block
-			System.err.println("Climb float produced invalid, undo.");
+			//the float climb invalidated the creature, undo
 			genotype = clonedGenotype;
-			//throw e;
 		}
-
-		/*if(!genotype.validatePhenotype()){
-			System.err.println("invalid creature from climb float");
-			genotype = clonedGenotype;
-		}*/
-		
-		//if the change created an invalid genotype
-		/*if(!genotype.validatePhenotype()){
-			//revert to the clone
-			try {
-				genotype = new Genotype(clonedGenotype);
-			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (GeneticsException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}*/
 	}
 
 	/**

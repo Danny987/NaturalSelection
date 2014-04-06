@@ -51,7 +51,6 @@ public class ChangeSingleAllele extends Strategy{
 		try {
 			hopperToClimb = new Hopper(originalHopper);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO Auto-generated catch block
 			System.err.println("climb");
 			throw e;
 		}
@@ -118,8 +117,6 @@ public class ChangeSingleAllele extends Strategy{
 		try {
 			testHopper = new Hopper(hopperToClimb);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO Auto-generated catch block
-			System.err.println("climb1");
 			return originalHopper;
 		}
 		return hopperToClimb;
