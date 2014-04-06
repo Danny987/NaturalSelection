@@ -46,8 +46,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private final int HEIGHT = 600;
 
     //Controls
-    private PlayerControls controls = new PlayerControls();
-    private Map<String, Boolean> controlMap = controls.getInputs();
+    private final PlayerControls controls = new PlayerControls();
+    private final Map<String, Boolean> controlMap = controls.getInputs();
 
     //Colors
     private final Color FONTCOLOR = new Color(205, 205, 205);
@@ -66,7 +66,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private Timer timer;
     private Timer keyTimer;
 
-    private Hopper hopper;
+    private Hopper hopper = null;
 
     //Maintab
     private JTabbedPane mainTab;
@@ -115,7 +115,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
     // Disable or enable all searching threads
     private boolean paused = true;
-    private int numberofcores;
 
     /**
      * Calls JPanel super and initializes the list of name.
@@ -130,16 +129,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         this.nameList = nameList;
 
         currentTribe = tribeList.get(0);
-        while (currentTribe.getSize() == -1) {
-            currentTribe = tribeList.get(0);
-        }
-
-        try {
-            hopper = new Hopper(currentTribe.getHopper(0));
-        } catch (GeneticsException | NullPointerException ex) {
-            Log.error(ex.toString());
-        }
-
         init();
 
         setVisible(true);
@@ -154,17 +143,20 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(keyTimer)) {
             rotate();
+            zoom();
             return;
         }
 
         if (e.getSource().equals(timer)) {
             if (!paused) {
                 time.setText(" Time: " + time());
-                totalGenerations = currentTribe.getGenerations();
+                if (currentTribe.isRunning()) {
+                    totalGenerations = currentTribe.getGenerations();
+                }
                 generations.setText("Total Generations: " + totalGenerations);
 
                 if (secondsSinceStart != 0) {
-                    generationsPerSecond.setText("Generations/second: " + totalGenerations / secondsSinceStart);
+                    generationsPerSecond.setText("Generations/second: " + (float)totalGenerations / secondsSinceStart);
                 }
             }
 
@@ -205,7 +197,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
             // Write the currently selected genome to use selected file.
             case "Write Genome":
-                Log.hopper(this, hopper, currentTribe.getName());
+                if (currentTribe.isRunning()) {
+                    Log.hopper(this, hopper, currentTribe.getName());
+                }
                 break;
 
             // Read user selected Genome
@@ -219,8 +213,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                     t.nextGeneration();
                 }
 
+                slider.setMaximum(currentTribe.getSize() - 1);
                 currentTribe = tribeList.get(tribes.getSelectedIndex());
-                slider.setMaximum(currentTribe.getSize());
 
                 try {
                     hopper = new Hopper(currentTribe.getHopper(0));
@@ -232,14 +226,16 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
             case "Change Tribe":
                 currentTribe = tribeList.get(tribes.getSelectedIndex());
-                try {
-                    hopper = new Hopper(currentTribe.getHopper(0));
-                    slider.setMaximum(currentTribe.getSize() - 1);
-                    slider.setValue(0);
-                    renderer.setHopper(hopper);
-                    mainTab.setTitleAt(1, hopper.getName());
-                } catch (GeneticsException ex) {
-                    ex.printStackTrace();
+                if (hopper != null) {
+                    try {
+                        hopper = new Hopper(currentTribe.getHopper(0));
+                        slider.setMaximum(currentTribe.getSize() - 1);
+                        slider.setValue(0);
+                        renderer.setHopper(hopper);
+                        mainTab.setTitleAt(1, hopper.getName());
+                    } catch (GeneticsException ex) {
+                        Log.error(ex.toString());
+                    }
                 }
                 break;
         }
@@ -284,11 +280,13 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
 
         try {
-            System.out.println(slider.getValue());
+            slider.setMaximum(currentTribe.getSize() - 1);
             hopper = new Hopper(currentTribe.getHopper(slider.getValue()));
             renderer.setHopper(hopper);
 
-            mainTab.setTitleAt(1, hopper.getName());
+            if (hopper != null) {
+                mainTab.setTitleAt(1, hopper.getName());
+            }
         } catch (GeneticsException | NullPointerException ex) {
             Log.error(ex.toString());
         }
@@ -339,17 +337,19 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private void loadGenotype() {
         hopper = Log.loadHopper(this, hopper);
 
-        currentTribe.addHopper(hopper);
-        slider.setMaximum(currentTribe.getSize() - 1);
+        if (hopper != null) {
+            currentTribe.addHopper(hopper);
+            slider.setMaximum(currentTribe.getSize() - 1);
 
-        renderer.setHopper(hopper);
-        mainTab.setTitleAt(1, hopper.getName());
-        graphicsPanel.startAnimator();
-        animate.setText("Animator On");
+            renderer.setHopper(hopper);
+            mainTab.setTitleAt(1, hopper.getName());
+            graphicsPanel.startAnimator();
+            animate.setText("Animator On");
 
-        secondsSinceStart = 0;
-        minutesSinceStart = 0;
-        totalGenerations = 0;
+            secondsSinceStart = 0;
+            minutesSinceStart = 0;
+            totalGenerations = 0;
+        }
     }
 
     /**
@@ -413,7 +413,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         // labels /////////////////////////////////////////////////////////
         generationsPerSecond = new JLabel("Generations/second: 0");
         generationsPerSecond.setForeground(FONTCOLOR);
-        
+
         generations = new JLabel("Total Generations: " + totalGenerations);
         generations.setForeground(FONTCOLOR);
 
@@ -446,7 +446,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 0, currentTribe.getSize() - 1, 0);
+        slider = new Slider("Creature", 0, 0, 0);
+        if (currentTribe.isRunning()) {
+            slider.setMaximum(currentTribe.getSize() - 1);
+        }
         slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 
@@ -522,7 +525,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         // add the main panel to "this"
         mainTab.addMouseListener(this);
         mainTab.addTab("Main", mainPanel);
-        mainTab.addTab(hopper.getName(), scroll);
+        mainTab.addTab("", scroll);
+        if(hopper != null){
+            mainTab.setTitleAt(1, hopper.getName());
+        }
 
         add(mainTab, BorderLayout.CENTER);
         add(bottomPanel);
@@ -535,10 +541,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         timer = new Timer(1000, this);
         keyTimer = new Timer(1000 / 60, this);
-        
+
         graphicsPanel.requestFocus();
-        KeyBinds keyBinds = new KeyBinds((JComponent)getContentPane(), controls);
-        
+        KeyBinds keyBinds = new KeyBinds((JComponent) getContentPane(), controls);
+
         timer.start();
         keyTimer.start();
     }
@@ -549,6 +555,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
         else if (controlMap.get("right") && graphicsPanel.animating()) {
             renderer.rotateRight();
+        }
+    }
+    
+    private void zoom(){
+        if(controlMap.get("up")){
+            renderer.zoomIn();
+        }
+        if(controlMap.get("down")){
+            renderer.zoomOut();
         }
     }
 }

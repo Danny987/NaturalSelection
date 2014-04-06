@@ -7,6 +7,8 @@ package creature.geeksquad.gui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
 
 /**
@@ -37,7 +39,7 @@ public class Creatures {
                 for (Tribe t : tribeList) {
                     t.start();
                 }
-                
+
                 gui = new GUI(tribeList, nameList);
             }
         });

@@ -9,13 +9,12 @@ import creature.geeksquad.genetics.Population;
  */
 public class Tribe extends Thread {
 
-    public static final int POPULATION_SIZE = 2;
+    public static final int POPULATION_SIZE = 1000;
     private Population population;
 
     private boolean paused = true;
     private boolean running = false;
-    private final Object lock = new Object();
-    
+
     public Tribe(String name) {
         this.setName(name);
     }
@@ -29,8 +28,12 @@ public class Tribe extends Thread {
 
     @Override
     public void run() {
-        population = new Population(POPULATION_SIZE);
-        running = true;
+        
+        synchronized (this) {
+            population = new Population(POPULATION_SIZE);
+            running = true;
+        }
+
         while (running) {
             synchronized (this) {
 
@@ -45,12 +48,14 @@ public class Tribe extends Thread {
                 }
             }
         }
-        System.out.println("i died");
     }
 
+    public boolean isRunning(){
+            return running;
+    }
+    
     public int getGenerations() {
-        if(running) return population.getGenerations();
-        else return 0;
+        return population.getGenerations();
     }
 
     /**
@@ -61,19 +66,15 @@ public class Tribe extends Thread {
      * @return hopper at index
      */
     public Hopper getHopper(int index) {
-        if(running) return population.get(index);
-        else return null;
+        return population.get(index);
     }
 
     public void addHopper(Hopper h) {
-        if(running) population.add(h);
+        population.add(h);
     }
 
-    
-    
     public int getSize() {
-        if(running) return population.size();
-        else return -1;
+        return population.size();
     }
 
     /**

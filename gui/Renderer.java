@@ -25,6 +25,7 @@ public class Renderer implements GLEventListener {
     private final GLU glu = new GLU();
 
     private float rotationAngle = 0;
+    private float zoomAmount = -100;
 
     /**
      * Set the current creature to be drawn.
@@ -32,11 +33,13 @@ public class Renderer implements GLEventListener {
      * @param hopper
      */
     public void setHopper(Hopper hopper) {
-        this.hopper = hopper;
-        this.genotype = hopper.getGenotype();
-        this.phenotype = hopper.getPhenotype();
-        this.body = genotype.getBody();
+        if (hopper != null) {
+            this.hopper = hopper;
+            this.genotype = hopper.getGenotype();
+            this.phenotype = hopper.getPhenotype();
+            this.body = genotype.getBody();
 //        phenotype.reset();
+        }
     }
 
     /**
@@ -59,7 +62,7 @@ public class Renderer implements GLEventListener {
         gl.glLoadIdentity();
 
         // Move the hopper away from the camera
-        gl.glTranslatef(0, 0, -100);
+        gl.glTranslatef(0, 0, zoomAmount);
 
         // Drawing stuff ////////////////////////////////////////////////////
         gl.glPushMatrix();
@@ -68,7 +71,6 @@ public class Renderer implements GLEventListener {
         gl.glRotatef(rotationAngle, 0, 1, 0);
 
         // It's ALIVE!!!
-
         // Draw the body block by block.
         if (hopper != null) {
             phenotype.advanceSimulation();
@@ -92,13 +94,13 @@ public class Renderer implements GLEventListener {
 
     @Override
     public void display(GLAutoDrawable drawable) {
-        
+
         render(drawable);
     }
 
     @Override
     public void dispose(GLAutoDrawable glad) {
-        
+
     }
 
     @Override
@@ -120,7 +122,7 @@ public class Renderer implements GLEventListener {
         gl.glMatrixMode(GL2.GL_PROJECTION);
         gl.glLoadIdentity();
 
-        glu.gluPerspective(45.0, (float) width / height, .1, 780); // set perspective
+        glu.gluPerspective(45.0, (float) width / height, .1, 900); // set perspective
 
         gl.glMatrixMode(GL2.GL_MODELVIEW);
         gl.glLoadIdentity();
@@ -171,14 +173,14 @@ public class Renderer implements GLEventListener {
         gl.glPushMatrix();
 
         // move to the center of the block
-        gl.glTranslatef(center.x*2, center.y*2, center.z*2);
+        gl.glTranslatef(center.x, center.y, center.z);
 
         float[] rotationMatrix = new float[16];
         Vector3.vectorsToRotationMatrix(rotationMatrix, forward, up);
         gl.glMultMatrixf(rotationMatrix, 0);
 
         // scale to the size of the given block
-        gl.glScalef(length, height, width);
+        gl.glScalef(length / 2, height / 2, width / 2);
 
 //        System.out.println("Up Vector = " + up + "Forward Vector = " + forward);
         setColor(gl, length / 10, height / 10, width / 10);
@@ -246,22 +248,30 @@ public class Renderer implements GLEventListener {
     /**
      * Rotate everything farther left.
      */
-    public void rotateLeft(){
+    public void rotateLeft() {
         rotationAngle++;
     }
-    
+
     /**
      * Rotate everything farther right.
      */
-    public void rotateRight(){
+    public void rotateRight() {
         rotationAngle--;
     }
     
+    public void zoomIn(){
+        zoomAmount++;
+    }
+    
+    public void zoomOut(){
+        zoomAmount--;
+    }
+
     private void setColor(GL2 gl, float r, float g, float b) {
         //Set material and shininess!
-        gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_AMBIENT, new float[]{r, g, b, 1}, 0);
-        gl.glMaterialfv(GL.GL_FRONT_AND_BACK, GL2.GL_SPECULAR, new float[]{r, g, b, 1}, 0);
-        gl.glMaterialf(GL.GL_FRONT_AND_BACK, GL2.GL_SHININESS, .5f);
+        gl.glMaterialfv(GL.GL_FRONT, GL2.GL_AMBIENT, new float[]{r, g, b, 1}, 0);
+        gl.glMaterialfv(GL.GL_FRONT, GL2.GL_SPECULAR, new float[]{r, g, b, 1}, 0);
+        gl.glMaterialf(GL.GL_FRONT, GL2.GL_SHININESS, .5f);
 
     }
 
