@@ -100,6 +100,7 @@ public class ChangeSingleAllele extends Strategy{
 			int ruleDoF = getRuleDoF(geneList, geneIndex);
 
 			climbRuleAllele(hopperToClimb, allele, climbType, boxIndex, ruleDoF);
+			
 		}
 		else if(climbType.equals("BINARY_1") || climbType.equals("BINARY_3")){
 			climbBinaryAllele(hopperToClimb, allele, climbType);
@@ -112,7 +113,7 @@ public class ChangeSingleAllele extends Strategy{
 
 		if(DEBUG)System.out.println("New Fitness: " + hopperToClimb.getFitness());
 
-		//TODO change weight map
+		//TODO change strategy weight map
 		Hopper testHopper = null;
 		try {
 			testHopper = new Hopper(hopperToClimb);
@@ -139,7 +140,7 @@ public class ChangeSingleAllele extends Strategy{
 		float stepSize = initialStepSize; //set step size
 
 		boolean hillClimb = true; //flag to turn on and off hill climbing
-		
+
 		//get the largest possible value for the float
 		float max;
 
@@ -231,11 +232,12 @@ public class ChangeSingleAllele extends Strategy{
 	public void climbJointSiteAllele(Hopper hopper, Genotype genotype, Allele allele) throws GeneticsException, 
 	IllegalArgumentException{
 		//original genotype clone
+		Genotype originalGenotype = null;
 		Genotype clonedGenotype = null;
 		try {
+			originalGenotype = new Genotype(genotype);
 			clonedGenotype = new Genotype(genotype);
 		}	catch (IllegalArgumentException | GeneticsException e) {
-			// TODO Auto-generated catch block
 			System.err.println("climbJointSiteAllele");
 			throw e;
 		}
@@ -253,30 +255,16 @@ public class ChangeSingleAllele extends Strategy{
 			//change joint site of allele to new one
 			allele.setValue(clonedValue);
 
-			//if the new joint site was valid
-			if(genotype.validatePhenotype()){
-				break; //exit loop
-			}
-			else{
-				//revert to working genotype
-				try {
-					genotype = new Genotype(clonedGenotype);
-				}catch (IllegalArgumentException | GeneticsException e) {
-					// TODO Auto-generated catch block
-					System.err.println("climbJointSiteAllele1");
-					throw e;
-				}
+			try{
+				genotype = new Genotype(genotype);
+				break;
+			}catch (IllegalArgumentException | GeneticsException e) {
+				genotype = new Genotype(originalGenotype);
 			}
 		}
 
 		if(!improved(hopper)){
-			try {
-				genotype = new Genotype(clonedGenotype);
-			}catch (IllegalArgumentException | GeneticsException e) {
-				// TODO Auto-generated catch block
-				System.err.println("climbJointSiteAllele2");
-				throw e;
-			}
+			genotype = originalGenotype;
 		}
 
 
@@ -311,13 +299,13 @@ public class ChangeSingleAllele extends Strategy{
 		//if improved, replace neuron
 		if(improved(hopper)){
 			allele.setValue(clonedValue);
-			//TODO change weight map
+			updateRuleMap(clonedValue, ruleDoF, 1);
 		}
 		//if it doesn't improve
 		else{
 			//undo change
 			allele.setValue(originalValue);
-			//TODO change weight map
+			updateRuleMap(clonedValue, ruleDoF, 1);
 		}
 
 	}
@@ -328,25 +316,29 @@ public class ChangeSingleAllele extends Strategy{
 		//cloned operator
 		EnumOperatorBinary clonedValue = (EnumOperatorBinary) allele.getValue();
 
+		char opType = '1';
+
 		if(climbType.equals("BINARY_1")){
-			clonedValue = pickBinaryValue('1');
+			opType = '1';
 		}
 		else if(climbType.equals("BINARY_3")){
-			clonedValue = pickBinaryValue('3');
+			opType = '3';
 		}
+
+		clonedValue = pickBinaryValue(opType);
 
 		allele.setValue(clonedValue);
 
 		//if improved, replace neuron
 		if(improved(hopper)){
 			allele.setValue(clonedValue);
-			//TODO change weight map
+			updateBinaryMap(clonedValue, opType, 1);
 		}
 		//if it doesn't improve
 		else{
 			//undo change
 			allele.setValue(originalValue);
-			//TODO change weight map
+			updateBinaryMap(clonedValue, opType, -1);
 		}
 	}
 
@@ -356,25 +348,29 @@ public class ChangeSingleAllele extends Strategy{
 		//cloned operator
 		EnumOperatorUnary clonedValue = (EnumOperatorUnary) allele.getValue();
 
+		char opType = '2';
+
 		if(climbType.equals("UNARY_2")){
-			clonedValue = pickUnaryValue('2');
+			opType = '2';
 		}
 		else if(climbType.equals("UNARY_4")){
-			clonedValue = pickUnaryValue('4');
+			opType = '4';
 		}
+
+		clonedValue = pickUnaryValue(opType);
 
 		allele.setValue(clonedValue);
 
 		//if improved, replace neuron
 		if(improved(hopper)){
 			allele.setValue(clonedValue);
-			//TODO change weight map
+			updateUnaryMap(clonedValue, opType, 1);
 		}
 		//if it doesn't improve
 		else{
 			//undo change
 			allele.setValue(originalValue);
-			//TODO change weight map
+			updateUnaryMap(clonedValue, opType, 1);
 		}
 	}
 

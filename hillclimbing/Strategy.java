@@ -149,7 +149,7 @@ public abstract class Strategy {
 	 */
 	public void climbFloat(Genotype genotype, Allele allele, int direction, float stepSize, float max)
 			throws GeneticsException, IllegalArgumentException{
-		
+
 		Genotype clonedGenotype = null;
 		try {
 			clonedGenotype = new Genotype(genotype);
@@ -160,7 +160,7 @@ public abstract class Strategy {
 
 		//get allele value
 		float f = (Float) allele.getValue();
-		
+
 		//what to change the allele to
 		float newValue = f + (stepSize*direction);
 
@@ -169,7 +169,7 @@ public abstract class Strategy {
 			//add step to allele value
 			allele.setValue(newValue);
 		}
-		
+
 		Genotype validGenotype = null;
 		try {
 			validGenotype = new Genotype(genotype);
@@ -384,7 +384,6 @@ public abstract class Strategy {
 	 * @return True if fitness has improved. False if it has not improved.
 	 */
 	public boolean improved(Hopper hopper){
-		//check if the genotype is valid
 		//run simulation to get new fitness
 		float newFitness = getNewFitness(hopper);
 		//if the fitness from the sim is greater than the current fitness
@@ -405,7 +404,7 @@ public abstract class Strategy {
 	 * @throws IllegalArgumentException 
 	 */
 	public abstract Hopper climb(Hopper startingHopper) throws 
-			IllegalArgumentException, GeneticsException;
+	IllegalArgumentException, GeneticsException;
 
 	/**
 	 * Runs the simulation on a hopper.
@@ -548,7 +547,7 @@ public abstract class Strategy {
 		}
 		return blockCount;
 	}
-	
+
 	/** Calculates the maximum float value for a dimension of the box that
 	 * the given allele is in.
 	 * 
@@ -561,17 +560,17 @@ public abstract class Strategy {
 		float currentVal = 0;
 		float val1 = 0;
 		float val2 = 0;
-		
+
 		ArrayList<Gene> geneList = genotype.getChromosome();
-		
+
 		currentVal = (float)geneList.get(geneIndex).getValue();
-		
+
 		//if allele is not a dimension, return 0
 		if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.JOINT_ORIENTATION)){
 			return 0;
 		}
-		
-		
+
+
 		//length, height, width
 		if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.LENGTH)){
 			val1 = (float)geneList.get(geneIndex+1).getValue();
@@ -580,13 +579,13 @@ public abstract class Strategy {
 		else if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.HEIGHT)){
 			val1 = (float)geneList.get(geneIndex-1).getValue();
 			val2 = (float)geneList.get(geneIndex+1).getValue();
-			
+
 		}
 		else if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.WIDTH)){
 			val1 = (float)geneList.get(geneIndex-1).getValue();
 			val2 = (float)geneList.get(geneIndex-2).getValue();
 		}
-		
+
 		//return the smallest value
 		if(currentVal < val1 && currentVal < val2){
 			return 0;
@@ -597,7 +596,7 @@ public abstract class Strategy {
 		else if(val2 < currentVal && val2 < val1){
 			return val2*10;
 		}
-		
+
 		return 0;
 	}
 
@@ -779,6 +778,18 @@ public abstract class Strategy {
 
 		//if we got here, it's broken
 		return null;
+	}
+
+	public void updateRuleMap(NeuronInput neuron, int ruleDoF, int value){
+
+	}
+
+	public void updateBinaryMap(EnumOperatorBinary operator, char opType, int value){
+
+	}
+
+	public void updateUnaryMap(EnumOperatorUnary operator, char opType, int value){
+
 	}
 
 }
