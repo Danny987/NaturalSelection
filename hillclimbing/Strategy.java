@@ -389,6 +389,7 @@ public abstract class Strategy {
 		//if the fitness from the sim is greater than the current fitness
 		if(newFitness > hopper.getFitness()){
 			//update hopper current fitness
+			System.err.println("SUCCESS: " + hopper.getFitness() + " --> " + newFitness);
 			hopper.setFitness(newFitness);
 			return true;
 		}
@@ -419,17 +420,17 @@ public abstract class Strategy {
 
 		//initialize fitness
 		float highestFitness = 0;
-		float fitness = 0;
+		//float fitness = 0;
 
 		//run the simulation
-		for (int i = 0; i < 20; i++) {
+		/*for (int i = 0; i < 20; i++) {
 			fitness = phenotype.advanceSimulation();
 			if(fitness > highestFitness){
 				highestFitness = fitness;
 			}
-		}
+		}*/
 		//return highestFitness;
-		return 0.5f;
+		return hopper.evalFitness();
 	}
 
 	//initialize the the weight maps
