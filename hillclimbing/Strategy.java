@@ -194,7 +194,7 @@ public abstract class Strategy {
 		allele.setValue(jointType);
 
 		ArrayList<Gene> geneList = genotype.getChromosome();
-		
+
 		int boxIndex = getBoxIndex(geneList, geneIndex);
 
 		if(jointType.getDoF() == 0){
@@ -231,7 +231,7 @@ public abstract class Strategy {
 			int rulesLength = 0; //number of rule sets to add per DoF
 			int n = jointType.getDoF() - startingJointType.getDoF(); //how many DoFs need rules
 			int i = geneIndex;
-			
+
 			//move the index to where we need to add the rules
 			while(i < geneList.size() && 
 					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
@@ -246,14 +246,14 @@ public abstract class Strategy {
 			}
 
 			for(int j = 0; j < n; j++){
-				
+
 				if(j != 0){ //if adding a second DoF
 					//add a dof marker
 					Allele allele1 = new Allele(Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f);
 					geneList.add(i, new Gene(allele1));
 					i++;
 				}
-				
+
 				rulesLength = Helper.RANDOM.nextInt(Helper.SEED_MAX_CONSTANT+1);
 				for(int k = 0; k < rulesLength; k++){
 					Allele allele1;
@@ -342,13 +342,16 @@ public abstract class Strategy {
 	 * @return True if fitness has improved. False if it has not improved.
 	 */
 	public boolean improved(Hopper hopper){
-		//run simulation to get new fitness
-		float newFitness = getNewFitness(hopper);
-		//if the fitness from the sim is greater than the current fitness
-		if(newFitness > hopper.getFitness()){
-			//update hopper current fitness
-			hopper.setFitness(newFitness);
-			return true;
+		//check if the genotype is valid
+		if(hopper.getGenotype().validatePhenotype()){
+			//run simulation to get new fitness
+			float newFitness = getNewFitness(hopper);
+			//if the fitness from the sim is greater than the current fitness
+			if(newFitness > hopper.getFitness()){
+				//update hopper current fitness
+				hopper.setFitness(newFitness);
+				return true;
+			}
 		}
 		return false;
 	}
