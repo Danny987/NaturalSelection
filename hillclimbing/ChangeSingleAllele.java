@@ -45,20 +45,19 @@ public class ChangeSingleAllele extends Strategy{
 	public static void main(String[] args) {
 	}
 
-	public Hopper climb(Hopper hopperToClimb) {
+	public Hopper climb(Hopper originalHopper) throws IllegalArgumentException,
+	GeneticsException {
 
 		//clone original hopper
-		Hopper originalHopper = null;
+		Hopper hopperToClimb = null;
 		try {
-			originalHopper = new Hopper(hopperToClimb);
-		} catch (IllegalArgumentException e) {
+			hopperToClimb = new Hopper(originalHopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (GeneticsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("climb");
+			throw e;
 		}
-		
+
 		//get the genotype from the hopper
 		Genotype genotypeToClimb = hopperToClimb.getGenotype();
 
@@ -117,14 +116,15 @@ public class ChangeSingleAllele extends Strategy{
 		if(DEBUG)System.out.println("New Fitness: " + hopperToClimb.getFitness());
 
 		//TODO change weight map
-		if(hopperToClimb.getGenotype().validatePhenotype()){
-			
-			return hopperToClimb;
-		}
-		else{
-			System.out.println("INVALID HOPPER CREATED");
+		Hopper testHopper = null;
+		try {
+			testHopper = new Hopper(hopperToClimb);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			// TODO Auto-generated catch block
+			System.err.println("climb1");
 			return originalHopper;
 		}
+		return hopperToClimb;
 	}//end climb method
 
 	/**
@@ -133,7 +133,8 @@ public class ChangeSingleAllele extends Strategy{
 	 * @param hopper - Hopper object to climb
 	 * @param allele - specific allele to climb in hopper
 	 */
-	private void climbFloatAllele(Hopper hopper, Genotype genotype, Allele allele){
+	private void climbFloatAllele(Hopper hopper, Genotype genotype, Allele allele)throws GeneticsException,
+	IllegalArgumentException{
 
 		//variable initialization
 		int initialDirection = 1; //default direction is "add"
@@ -146,6 +147,7 @@ public class ChangeSingleAllele extends Strategy{
 
 		while(hillClimb){ //while hillclimbing flag is set to true
 			//do 1 step of float hillclimbing
+
 			climbFloat(genotype, allele, direction, stepSize);
 
 			//if improvement
@@ -194,17 +196,18 @@ public class ChangeSingleAllele extends Strategy{
 	}
 
 	//change the type of joint at this allele
-	public void climbJointTypeAllele(Hopper hopper, Genotype genotype, Allele allele, int geneIndex){
+	public void climbJointTypeAllele(Hopper hopper, Genotype genotype, Allele allele, int geneIndex) throws GeneticsException,
+	IllegalArgumentException{
 		//clone genotype
 		Genotype originalValue = null;
 		Genotype clonedValue = null;
 		try {
 			originalValue = new Genotype(genotype);
 			clonedValue = new Genotype(genotype);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-		} catch (GeneticsException e) {
-			e.printStackTrace();
+		}	catch (IllegalArgumentException | GeneticsException e) {
+			// TODO Auto-generated catch block
+			System.err.println("climbJointTypeAllele");
+			throw e;
 		}
 
 		genotype.getChromosome();
@@ -222,17 +225,16 @@ public class ChangeSingleAllele extends Strategy{
 	public void climbIndexAllele(Allele allele){
 	}
 
-	public void climbJointSiteAllele(Hopper hopper, Genotype genotype, Allele allele){
+	public void climbJointSiteAllele(Hopper hopper, Genotype genotype, Allele allele) throws GeneticsException, 
+	IllegalArgumentException{
 		//original genotype clone
 		Genotype clonedGenotype = null;
 		try {
 			clonedGenotype = new Genotype(genotype);
-		} catch (IllegalArgumentException e1) {
+		}	catch (IllegalArgumentException | GeneticsException e) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (GeneticsException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			System.err.println("climbJointSiteAllele");
+			throw e;
 		}
 		//original value
 		EnumJointSite originalValue = (EnumJointSite)allele.getValue();
@@ -245,8 +247,6 @@ public class ChangeSingleAllele extends Strategy{
 			//get the new joint site
 			clonedValue = climbJointSite(clonedValue);
 
-			System.out.println("Trying " + clonedValue);
-
 			//change joint site of allele to new one
 			allele.setValue(clonedValue);
 
@@ -258,12 +258,10 @@ public class ChangeSingleAllele extends Strategy{
 				//revert to working genotype
 				try {
 					genotype = new Genotype(clonedGenotype);
-				} catch (IllegalArgumentException e) {
+				}catch (IllegalArgumentException | GeneticsException e) {
 					// TODO Auto-generated catch block
-					e.printStackTrace();
-				} catch (GeneticsException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+					System.err.println("climbJointSiteAllele1");
+					throw e;
 				}
 			}
 		}
@@ -271,12 +269,10 @@ public class ChangeSingleAllele extends Strategy{
 		if(!improved(hopper)){
 			try {
 				genotype = new Genotype(clonedGenotype);
-			} catch (IllegalArgumentException e) {
+			}catch (IllegalArgumentException | GeneticsException e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (GeneticsException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				System.err.println("climbJointSiteAllele2");
+				throw e;
 			}
 		}
 

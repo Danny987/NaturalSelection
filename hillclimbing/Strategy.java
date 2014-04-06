@@ -147,10 +147,21 @@ public abstract class Strategy {
 	 * @param direction - add or subtract from value
 	 * @param stepSize - how much to add or subtract from value
 	 */
-	public void climbFloat(Genotype genotype, Allele allele, int direction, float stepSize){
+	public void climbFloat(Genotype genotype, Allele allele, int direction, float stepSize)throws GeneticsException,
+	IllegalArgumentException{
+		
+		Genotype clonedGenotype = null;
+		try {
+			clonedGenotype = new Genotype(genotype);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			// TODO Auto-generated catch block
+			System.err.println("climbFloat");
+			throw e;
+		}
+		
 		//create a clone of the starting genotype
 		/*Genotype clonedGenotype = null;
-		try {
+		try {``
 			clonedGenotype = new Genotype(genotype);
 		} catch (IllegalArgumentException e) {
 			// TODO Auto-generated catch block
@@ -165,7 +176,21 @@ public abstract class Strategy {
 
 		//add step to allele value
 		allele.setValue(f + (stepSize*direction));
+		
+		Genotype validGenotype = null;
+		try {
+			validGenotype = new Genotype(genotype);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			// TODO Auto-generated catch block
+			genotype = clonedGenotype;
+			throw e;
+		}
 
+		/*if(!genotype.validatePhenotype()){
+			System.err.println("invalid creature from climb float");
+			genotype = clonedGenotype;
+		}*/
+		
 		//if the change created an invalid genotype
 		/*if(!genotype.validatePhenotype()){
 			//revert to the clone
@@ -403,8 +428,11 @@ public abstract class Strategy {
 	 * 
 	 * @param startingHopper - Starting/Non-hill climbed hopper.
 	 * @return Improved, hill climbed hopper.
+	 * @throws GeneticsException 
+	 * @throws IllegalArgumentException 
 	 */
-	public abstract Hopper climb(Hopper startingHopper);
+	public abstract Hopper climb(Hopper startingHopper) throws 
+			IllegalArgumentException, GeneticsException;
 
 	/**
 	 * Runs the simulation on a hopper.

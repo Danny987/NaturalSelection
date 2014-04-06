@@ -165,7 +165,12 @@ public class BrainTester {
 		
 		//send hopper to hill climbing
 		//returns a hill climbed hopper
-		hopper = brain.performHillClimbing(hopper);
+		try {
+			hopper = brain.performHillClimbing(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
 	}
 }

@@ -5,7 +5,6 @@ import java.util.HashMap;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
-
 import creature.geeksquad.library.*;
 
 /**
@@ -53,23 +52,29 @@ public class TribeBrain {
 	 *  
 	 * @param hopper - Hopper object that will get hill climbed
 	 * @return Hill climbed hopper
+	 * @throws IllegalArgumentException, GeneticsException  
 	 */
-	public Hopper performHillClimbing(Hopper hopper){
+	public Hopper performHillClimbing(Hopper hopper)
+			throws IllegalArgumentException, GeneticsException {
 		//set the strategy to perform
 		strategy = newStrategy();
 		//clone hopper
 		Hopper clone = null;
 		try {
 			clone = new Hopper(hopper);
-		} catch (IllegalArgumentException e) {
+		} catch (IllegalArgumentException | GeneticsException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (GeneticsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println("Clone Hopper Exception1");
+			throw e;
 		}
 		//perform the hill climbing on the clone
-		return strategy.climb(clone);
+		int failedAttemps = 0;
+		try {
+			return strategy.climb(clone);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			System.err.println("Climb Hopper Exception2");
+			return hopper;
+		}
 	}
 
 	/*
