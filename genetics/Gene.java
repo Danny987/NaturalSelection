@@ -126,10 +126,8 @@ public class Gene {
 	 * Instantiate a Gene with provided Allele array. The traits of the two
 	 * Alleles should match.
 	 * 
-	 * @param Allele
-	 *            allele1 First allele - trait must match second allele.
-	 * @param Allele
-	 *            allele2 Second allele - trait must match first allele.
+	 * @param Allele allele1 First allele - trait must match second allele.
+	 * @param Allele allele2 Second allele - trait must match first allele.
 	 */
 	public Gene(Allele[] alleles) {
 		this(alleles[0], alleles[1]);

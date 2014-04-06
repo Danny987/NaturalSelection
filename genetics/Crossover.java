@@ -577,6 +577,16 @@ public class Crossover {
 		/* TODO: Waiting on Joel's code.                                      */
 		/* Does nothing because fitness simulation still doesn't work.        */
 		/* ****************************************************************** */
+		float fitnessParentA = parentA.getFitness();
+		float fitnessParentB = parentB.getFitness();
+		float fitnessChildA = childA.getFitness();
+		float fitnessChildB = childB.getFitness();
+		
+		if (fitnessChildA > fitnessParentA) {
+			
+		}
+		
+		
 	}
 	
 	/**

@@ -22,19 +22,19 @@ import creature.phenotype.*;
 public class Allele {
 	/*
 	 * 16 gene types (from project specs):
-	 *   L (length)
-	 *   H (height)
-	 *   W (width)
-	 *   I (index to parent)
-	 *   T (joint Type)
-	 *   O (joint orientation)
-	 *   P (joint site on Parent)
-	 *   C (joint site on Child)
-	 *   a, b, c, d, e (the five inputs to a rule)
-	 *   1 (binary operator in the 1st neuron of a rule)
-	 *   2 (unary operator in the 1st neuron of a rule)
-	 *   3 (binary operator in the 2nd neuron of a rule)
-	 *   4 (unary operator in the 2nd neuron of a rule)
+	 *   L (length)    float
+	 *   H (height)    float
+	 *   W (width)    float
+	 *   I (index to parent)    int
+	 *   T (joint Type)    enum
+	 *   O (joint orientation)    float
+	 *   P (joint site on Parent)    enum
+	 *   C (joint site on Child)    enum
+	 *   a, b, c, d, e (the five inputs to a rule)    NeuronInput
+	 *   1 (binary operator in the 1st neuron of a rule)    enum
+	 *   2 (unary operator in the 1st neuron of a rule)    enum
+	 *   3 (binary operator in the 2nd neuron of a rule)    enum
+	 *   4 (unary operator in the 2nd neuron of a rule)    enum
 	 *   ...etc.
 	 */
 	private Trait trait;
@@ -157,7 +157,7 @@ public class Allele {
 	 *               smaller = more recessive; larger = more dominant.
 	 */
 	public Allele(Trait trait, NeuronInput value, float weight) {
-		this(trait, (Object) copyNeuron(value), weight);
+		this(trait, (Object) (new NeuronInput(value)), weight);
 	}
 	
 	/**
@@ -174,9 +174,10 @@ public class Allele {
 	 */
 	private Allele(Trait trait, Object value, float weight) throws
 					IllegalArgumentException {
+		this.trait = trait;
 		// Check for valid input.
 		switch (trait) {
-			case LENGTH: case WIDTH: case HEIGHT:
+			case LENGTH: case HEIGHT: case WIDTH:
 				if ((Float) value < 1.0f) {
 					throw new IllegalArgumentException(
 							"Length, width, and height must be >= 1.0.");
@@ -188,6 +189,9 @@ public class Allele {
 							"Index to parent must be >= -1.");
 				}
 				break;
+			case JOINT_ORIENTATION:
+				this.value = new Float((Float) value);
+				break;
 			case DOF_MARKER:
 				int dof = (Integer) value;
 				if (dof < EnumJointType.DOF_1 || dof > EnumJointType.DOF_2) {
@@ -195,9 +199,12 @@ public class Allele {
 							"Degree of freedom outside acceptible range; " +
 							"must be 0 or 1.");
 				}
+				break;
 			default:
 				// Fall through.
 		}
+		
+		this.value = value;
 		
 		// Constrain weight.
 		if (weight > Helper.MAX_WEIGHT) {
@@ -206,13 +213,11 @@ public class Allele {
 			weight = Helper.MIN_WEIGHT;
 		}
 		
-		this.trait = trait;
-		this.value = value;
 		this.weight = weight;
 	}
 	
 	/**
-	 * A helper method for the constructor, which clones the passed NeuronInput.
+	 * A helper method that clones the passed NeuronInput.
 	 * 
 	 * @param original NeuronInput to clone.
 	 */

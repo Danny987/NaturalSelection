@@ -31,6 +31,7 @@ public class Hopper implements Comparable<Hopper> {
 	private int timesBred;
 	private int children;
 	private float fitness;
+	private int fitnessEvaluations;
 
 	/**
 	 * Instantiate a new Hopper with random Genotype and name.
@@ -56,7 +57,7 @@ public class Hopper implements Comparable<Hopper> {
 			throws IllegalArgumentException, GeneticsException {
 		try {
 			this.genotype = new Genotype(genotype);
-			this.phenotype = genotype.getPhenotype();
+			this.phenotype = this.genotype.getPhenotype();
 		} catch (IllegalArgumentException ex) {
 			this.genotype = null;
 			this.phenotype = null;
@@ -75,7 +76,8 @@ public class Hopper implements Comparable<Hopper> {
 		timesHillClimbed = 0;
 		timesBred = 0;
 		children = 0;
-		fitness = evalFitness();
+		fitness = 0;
+		fitnessEvaluations = 0;
 	}
 
 	/**
@@ -116,13 +118,22 @@ public class Hopper implements Comparable<Hopper> {
 	}
 	
 	/**
+	 * Check the number of times this Hopper's fitness has been evaluated.
+	 * 
+	 * @return Number of times the fitness has been evaluated.
+	 */
+	public int getFitnessEvals() {
+		return fitnessEvaluations;
+	}
+	
+	/**
 	 * Evaluate the Hopper's fitness using the physics simulator.
 	 * 
 	 * @return float Hopper's highest fitness achieved during the simulation.
 	 */
 	public float evalFitness() {
 		int steps = 0;
-		float peak = -1.0f;
+		float peak = 0.0f;
 		boolean done = false;
 		
 		while (!done) {			
@@ -139,12 +150,15 @@ public class Hopper implements Comparable<Hopper> {
 			// creature starts to descend. However, if the creature spawns in
 			// the air or its body settles before it starts its initial jump,
 			// we want to let that happen so the jump can occur. Padding is
-			// provided as a safety measure.
+			// provided as a safety measure for creatures that have to fall or
+			// settle when they first spawn in.
 			if (change <= 0 && steps >= 1/Simulator.DEFAULT_TIME_STEP) {
 				done = true;
 			}
 			steps++;
 		}
+		
+		fitnessEvaluations++;
 		
 		return peak;
 	}
@@ -166,7 +180,11 @@ public class Hopper implements Comparable<Hopper> {
 	 * @return Hopper's fitness as a float.
 	 */
 	public float getFitness() {
-		return fitness;
+		if (fitnessEvaluations > 0) {
+			return fitness;
+		} else {
+			return evalFitness();
+		}
 	}
 	
 	/**

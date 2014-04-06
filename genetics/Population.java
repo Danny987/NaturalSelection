@@ -62,8 +62,9 @@ public class Population extends ArrayList<Hopper> {
 				unsynchronizedAdd(new Hopper());
 				i++;
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				System.out.println("Creature[" + i + "] " + ex
-								   + " Rebuilding.");
+				// TODO: log
+//				System.out.println("Creature[" + i + "] " + ex
+//								   + " Rebuilding.");
 			}
 		}
 	}
@@ -137,8 +138,9 @@ public class Population extends ArrayList<Hopper> {
 					}
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				System.out.println(
-						"Interbreed produced offspring invalid. Continuing.");
+				// TODO: log
+//				System.out.println(
+//						"Interbreed produced offspring invalid. Continuing.");
 			}
 		}
 		
@@ -210,8 +212,9 @@ public class Population extends ArrayList<Hopper> {
 					}
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				System.out.println(
-						"Breed offspring invalid. Continuing.");
+				// TODO: log
+//				System.out.println(
+//						"Breed offspring invalid. Continuing.");
 			} finally {
 				parentA.increaseBreedCount();
 				parentB.increaseBreedCount();
@@ -243,8 +246,9 @@ public class Population extends ArrayList<Hopper> {
 					unsynchronizedAdd(newHotness);
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				System.out.println(
-					"HillClimbing produced an illegal creature. Skipping.");
+				// TODO: log
+//				System.out.println(
+//					"HillClimbing produced an illegal creature. Skipping.");
 			}
 		}
 	}
@@ -325,7 +329,8 @@ public class Population extends ArrayList<Hopper> {
 		// Should never fail since it's cloning a Hopper that's already
 		// valid.
 		} catch (IllegalArgumentException | GeneticsException e) {
-			System.out.println("Cloning Hopper for getOverachiever failed.");
+			// TODO: log
+//			System.out.println("Cloning Hopper for getOverachiever failed.");
 		}
 		return newGuy;
 	}
@@ -440,7 +445,8 @@ public class Population extends ArrayList<Hopper> {
 			}
 		} catch (IllegalArgumentException | GeneticsException e) {
 			failedAdds++;
-			System.out.println("Adding Hopper to Population failed.");
+			// TODO: log
+//			System.out.println("Adding Hopper to Population failed.");
 		}
 	}
 	
