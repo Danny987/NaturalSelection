@@ -59,7 +59,7 @@ public class Population extends ArrayList<Hopper> {
 		int i = 0;
 		while (i < num) {
 			try {
-				add(new Hopper());
+				unsynchronizedAdd(new Hopper());
 				i++;
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				System.out.println("Creature[" + i + "] " + ex
@@ -230,18 +230,19 @@ public class Population extends ArrayList<Hopper> {
 	 * Perform hill-climbing on all members of the Population.
 	 */
 	private void hillClimb() {
+		List<Hopper> climbers = new ArrayList<Hopper>();
+		synchronized (this) {
+			climbers.addAll(this);
+		}
 		int size = size();
 		for (int i = 0; i < size; i++) {
-			Hopper original;
-			synchronized (this) {
-				original = super.get(i);
-			}
+			Hopper original = climbers.get(i);
 			try {
 				Hopper newHotness = brain.performHillClimbing(original);
 				newHotness.hillClimbed();
 				synchronized (this) {
 					remove(original);
-					add(newHotness);
+					unsynchronizedAdd(newHotness);
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				System.out.println(
@@ -368,8 +369,9 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
-	 * Override of add - adds a copy of the requested Hopper. Since this always
-	 * adds the Hopper to the end of the list, it doesn't need to be
+	 * Override of add - adds a copy of the requested Hopper only if that
+	 * Hopper is valid (has a valid Genotype, phenotype, and body). Since this
+	 * always adds the Hopper to the end of the list, it doesn't need to be
 	 * synchronized.
 	 * 
 	 * @param hopper Hopper to add to the Population.
@@ -393,7 +395,8 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
-	 * Override of add by index - adds a copy of the requested Hopper. Since
+	 * Override of add by index - adds a copy of the requested Hopper only if
+	 * that Hopper is valid (has a valid Genotype, phenotype, and body). Since
 	 * this always inserts the Hopper into the middle of the collection, it
 	 * does need to be synchronized.
 	 * 
@@ -416,6 +419,56 @@ public class Population extends ArrayList<Hopper> {
 			failedAdds++;
 			System.out.println("Adding Hopper to Population failed.");
 		}
+	}
+	
+	/**
+	 * Adds a copy of the requested Hopper only if that Hopper is valid (has a
+	 * valid Genotype, phenotype, and body). This is a special, private version
+	 * of add that is unsynchronized.
+	 * 
+	 * @param hopper Hopper to add to the Population.
+	 */
+	private void unsynchronizedAdd(Hopper hopper) {
+		if (hopper.getGenotype() == null || hopper.getPhenotype() == null
+				|| hopper.getBody() == null) {
+			failedAdds++;
+			return;
+		}
+		
+		try {
+			super.add(new Hopper(hopper));
+		} catch (IllegalArgumentException | GeneticsException e) {
+			failedAdds++;
+		}
+	}
+	
+	/**
+	 * Override of addAll - individually adds all requested Hoppers to the
+	 * Population only if their Genotypes, phenotypes and bodies are valid.
+	 * 
+	 * @param collection Collection of Hoppers to add.
+	 * @return True if at least one creature was added, false if not.
+	 */
+	@SuppressWarnings("rawtypes")
+	@Override
+	public boolean addAll(Collection collection) {
+		List<Hopper> hoppers = new ArrayList<Hopper>();
+		// If an object in the collection is a Hopper, add it to the list.
+		for (Object o : collection) {
+			if (o != null && o instanceof Hopper) {
+				Hopper h = (Hopper) o;
+				if (h.getGenotype() != null && h.getPhenotype() != null
+						&& h.getBody() != null) {
+					hoppers.add(h);
+				} else {
+					failedAdds++;
+				}
+			} else {
+				failedAdds++;
+			}
+		}
+		
+		return super.addAll(hoppers);
 	}
 	
 	/**
