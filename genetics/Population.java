@@ -217,11 +217,9 @@ public class Population extends ArrayList<Hopper> {
 				parentB.increaseBreedCount();
 			}
 		}
-		// flushBreeders is already synchronized.
+		// flushBreeders and addAll are already synchronized.
 		flushBreeders();
-		synchronized (this) {
-			addAll(children);
-		}
+		addAll(children);
 		
 		return children.size();
 	}
@@ -244,7 +242,7 @@ public class Population extends ArrayList<Hopper> {
 					remove(original);
 					unsynchronizedAdd(newHotness);
 				}
-			} catch (IllegalArgumentException ex) {
+			} catch (IllegalArgumentException | GeneticsException ex) {
 				System.out.println(
 					"HillClimbing produced an illegal creature. Skipping.");
 			}
@@ -296,6 +294,10 @@ public class Population extends ArrayList<Hopper> {
 	 * @param n Number of individuals to kill off.
 	 */
 	private void cull(int n) {
+		if (n - failedAdds <= 0) {
+			return;
+		}
+		
 		sort();
 		if (n - failedAdds < super.size()) {
 			synchronized (this) {
@@ -310,7 +312,7 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
-	 * Getter a clone of the Hopper with the highest fitness.
+	 * Get a clone of the Hopper with the highest fitness.
 	 * 
 	 * @return Deep clone of Hopper with the highest fitness.
 	 */
@@ -369,6 +371,27 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
+	 * Adds a copy of the requested Hopper only if that Hopper is valid (has a
+	 * valid Genotype, phenotype, and body). This is a special, private version
+	 * of add that is unsynchronized.
+	 * 
+	 * @param hopper Hopper to add to the Population.
+	 */
+	private void unsynchronizedAdd(Hopper hopper) {
+		if (hopper.getGenotype() == null || hopper.getPhenotype() == null
+				|| hopper.getBody() == null) {
+			failedAdds++;
+			return;
+		}
+		
+		try {
+			super.add(new Hopper(hopper));
+		} catch (IllegalArgumentException | GeneticsException e) {
+			failedAdds++;
+		}
+	}
+	
+	/**
 	 * Override of add - adds a copy of the requested Hopper only if that
 	 * Hopper is valid (has a valid Genotype, phenotype, and body). Since this
 	 * always adds the Hopper to the end of the list, it doesn't need to be
@@ -422,27 +445,6 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
-	 * Adds a copy of the requested Hopper only if that Hopper is valid (has a
-	 * valid Genotype, phenotype, and body). This is a special, private version
-	 * of add that is unsynchronized.
-	 * 
-	 * @param hopper Hopper to add to the Population.
-	 */
-	private void unsynchronizedAdd(Hopper hopper) {
-		if (hopper.getGenotype() == null || hopper.getPhenotype() == null
-				|| hopper.getBody() == null) {
-			failedAdds++;
-			return;
-		}
-		
-		try {
-			super.add(new Hopper(hopper));
-		} catch (IllegalArgumentException | GeneticsException e) {
-			failedAdds++;
-		}
-	}
-	
-	/**
 	 * Override of addAll - individually adds all requested Hoppers to the
 	 * Population only if their Genotypes, phenotypes and bodies are valid.
 	 * 
@@ -468,7 +470,9 @@ public class Population extends ArrayList<Hopper> {
 			}
 		}
 		
-		return super.addAll(hoppers);
+		synchronized (this) {
+			return super.addAll(hoppers);
+		}
 	}
 	
 	/**
@@ -479,14 +483,14 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public Hopper get(int index) {
-		try {
-			synchronized (this) {
+		synchronized (this) {
+			try {
 				return new Hopper(super.get(index));
+			} catch (IllegalArgumentException | GeneticsException ex) {
+				return null;
+			} catch (IndexOutOfBoundsException ex) {
+				throw ex;
 			}
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			return null;
-		} catch (IndexOutOfBoundsException ex) {
-			throw ex;
 		}
 	}
 	
@@ -496,10 +500,8 @@ public class Population extends ArrayList<Hopper> {
 	 * @return Size of the population.
 	 */
 	@Override
-	public int size() {
-		synchronized (this) {
-			return super.size();
-		}
+	public synchronized int size() {
+		return super.size();
 	}
 	
 	/**
