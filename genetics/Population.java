@@ -241,7 +241,7 @@ public class Population extends ArrayList<Hopper> {
 					remove(original);
 					super.add(newHotness);
 				}
-			} catch (IllegalArgumentException | GeneticsException ex) {
+			} catch (IllegalArgumentException ex) {
 				System.out.println(
 					"HillClimbing produced an illegal creature. Skipping.");
 			}
@@ -413,8 +413,10 @@ public class Population extends ArrayList<Hopper> {
 			synchronized (this) {
 				return new Hopper(super.get(index));
 			}
-		} catch (IllegalArgumentException | GeneticsException e) {
+		} catch (IllegalArgumentException | GeneticsException ex) {
 			return null;
+		} catch (IndexOutOfBoundsException ex) {
+			throw ex;
 		}
 	}
 	
