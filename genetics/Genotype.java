@@ -650,10 +650,10 @@ public class Genotype {
 	public boolean validatePhenotype() {
 		try {
 			phenotype = buildPhenotype();
-			return true;
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			return false;
 		}
+		return true;
 	}
 
 	/**
