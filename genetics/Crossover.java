@@ -736,6 +736,8 @@ public class Crossover {
 				percent = Helper.MIN_WEIGHT;
 			}
 			weightMap.put(new Allele(allele), percent);
+		} else {
+			weightMap.put(allele, allele.getWeight());
 		}
 	}
 	
