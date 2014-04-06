@@ -138,15 +138,27 @@ public class Hopper implements Comparable<Hopper> {
 		float peak = 0.0f;
 		boolean done = false;
 		
-		while (!done) {			
-			float test1 = phenotype.advanceSimulation();
-			float test2 = phenotype.advanceSimulation();
-			float currentMax = (test1 > test2 ? test1 : test2);
-			if (currentMax > peak) {
-				peak = currentMax;
+		while (!done) {
+			float test1 = 0;
+			float test2 = 0;
+			float change = 0;
+			
+			try {
+				test1 = phenotype.advanceSimulation();
+				test2 = phenotype.advanceSimulation();
+				float currentMax = (test1 > test2 ? test1 : test2);
+				if (currentMax > peak) {
+					peak = currentMax;
+				}
+				
+				change = test2 - test1;
+			} catch (IllegalArgumentException ex) {
+				ex.printStackTrace();
+				System.out.println("advanceSimulation on this Creature:");
+				System.out.println(phenotype);
+				throw ex;
 			}
 			
-			float change = test2 - test1;
 			// Descending or stationary - since the bounces are always lower
 			// than the initial jump, we can stop the simulation as soon as the
 			// creature starts to descend. However, if the creature spawns in

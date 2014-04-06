@@ -36,6 +36,14 @@ public class Population extends ArrayList<Hopper> {
 	private TribeBrain brain = new TribeBrain();
 	// A pointer to the Hopper with the highest fitness.
 	private Hopper overachiever = null;
+	// Statistics.
+	private long lifetimeOffspring;
+	private long lifetimeHillClimbs;
+	private long currentFailedBreeds;
+	private long currentFailedHillClimbs;
+	private long lifetimeFailedChildren;
+	private long lifetimeFailedHillClimbs;
+	private long failedRandomHoppers;
 	
 	/**
 	 * The default constructor creates an empty Population.
@@ -47,6 +55,13 @@ public class Population extends ArrayList<Hopper> {
 		breeders = new ArrayList<Hopper>();
 		crossover = new Crossover();
 		sort();
+		lifetimeOffspring = 0l;
+		lifetimeHillClimbs = 0l;
+		currentFailedBreeds = 0l;
+		currentFailedHillClimbs = 0l;
+		lifetimeFailedChildren = 0l;
+		lifetimeFailedHillClimbs = 0l;
+		failedRandomHoppers = 0l;
 	}
 	
 	/**
@@ -62,7 +77,7 @@ public class Population extends ArrayList<Hopper> {
 				unsynchronizedAdd(new Hopper());
 				i++;
 			} catch (IllegalArgumentException | GeneticsException ex) {
-				// TODO: log
+				failedRandomHoppers++;
 //				System.out.println("Creature[" + i + "] " + ex
 //								   + " Rebuilding.");
 			}
@@ -381,6 +396,78 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
+	 * Getter for lifetimeOffspring.
+	 * 
+	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @return Lifetime offspring.
+	 */
+	public synchronized long getLifetimeOffspring(boolean...writeNotRead) {
+		return lifetimeOffspring;
+	}
+	
+	/**
+	 * Getter for lifetimeHillClimbs.
+	 * 
+	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @return Lifetime hill climbs.
+	 */
+	public synchronized long getLifetimeHillClimbs(boolean...writeNotRead) {
+		return lifetimeHillClimbs;
+	}
+	
+	/**
+	 * Getter for currentFailedBreeds.
+	 * 
+	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @return Lifetime failed breeds.
+	 */
+	public synchronized long getCurrentFailedBreeds(boolean...writeNotRead) {
+		return currentFailedBreeds;
+	}
+	
+	/**
+	 * Getter for currentFailedHillClimbs.
+	 * 
+	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @return Failed hill climbs this generation.
+	 */
+	public synchronized long getCurrentFailedHillClimbs(
+			boolean...writeNotRead) {
+		return currentFailedHillClimbs;
+	}
+	
+	/**
+	 * Getter for lifetimeFailedChildren.
+	 * 
+	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @return Lifetime failed breeds.
+	 */
+	public synchronized long getLifetimeDeadChildren(boolean...writeNotRead) {
+		return lifetimeFailedChildren;
+	}
+	
+	/**
+	 * Getter for lifetimeFailedHillClimbs.
+	 * 
+	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @return Lifetime failed hill climbs.
+	 */
+	public synchronized long getLifetimeFailedHillClimbs(
+			boolean...writeNotRead) {
+		return lifetimeFailedHillClimbs;
+	}
+	
+	/**
+	 * Getter for failedRandomHoppers.
+	 * 
+	 * @param writeNotRead Optional boolean that turns this into a setter.
+	 * @return Number of failed random hopper creations during initialization.
+	 */
+	public synchronized long getFailedRandomHoppers(boolean...writeNotRead) {
+		return failedRandomHoppers;
+	}
+	
+	/**
 	 * Adds a copy of the requested Hopper only if that Hopper is valid (has a
 	 * valid Genotype, phenotype, and body). This is a special, private version
 	 * of add that is unsynchronized.
@@ -388,8 +475,9 @@ public class Population extends ArrayList<Hopper> {
 	 * @param hopper Hopper to add to the Population.
 	 */
 	private void unsynchronizedAdd(Hopper hopper) {
-		if (hopper.getGenotype() == null || hopper.getPhenotype() == null
-				|| hopper.getBody() == null) {
+		// Short-circuits if hopper is null.
+		if (hopper == null || hopper.getGenotype() == null
+				|| hopper.getPhenotype() == null || hopper.getBody() == null) {
 			failedAdds++;
 			return;
 		}
@@ -412,16 +500,17 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public boolean add(Hopper hopper) {
-		if (hopper.getGenotype() == null || hopper.getPhenotype() == null
-				|| hopper.getBody() == null) {
-			failedAdds++;
+		// Short-circuits if hopper is null.
+		if (hopper == null || hopper.getGenotype() == null
+				|| hopper.getPhenotype() == null || hopper.getBody() == null) {
 			return false;
 		}
 		
 		try {
-			add(new Hopper(hopper));
+			super.add(new Hopper(hopper));
 		} catch (IllegalArgumentException | GeneticsException e) {
-			failedAdds++;
+			// TODO: log
+//			System.out.println("Adding Hopper to Population failed.");
 			return false;
 		}
 		return true;
@@ -438,18 +527,17 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	@Override
 	public void add(int index, Hopper hopper) {
-		if (hopper.getGenotype() == null || hopper.getPhenotype() == null
-				|| hopper.getBody() == null) {
-			failedAdds++;
+		// Short-circuits if hopper is null.
+		if (hopper == null || hopper.getGenotype() == null
+				|| hopper.getPhenotype() == null || hopper.getBody() == null) {
 			return;
 		}
 		
 		try {
 			synchronized (this) {
-				add(index, new Hopper(hopper));
+				super.add(index, new Hopper(hopper));
 			}
 		} catch (IllegalArgumentException | GeneticsException e) {
-			failedAdds++;
 			// TODO: log
 //			System.out.println("Adding Hopper to Population failed.");
 		}
