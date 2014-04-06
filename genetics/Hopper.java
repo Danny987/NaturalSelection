@@ -55,7 +55,7 @@ public class Hopper implements Comparable<Hopper> {
 	public Hopper(Genotype genotype, String name)
 			throws IllegalArgumentException, GeneticsException {
 		try {
-			this.genotype = genotype;
+			this.genotype = new Genotype(genotype);
 			this.phenotype = genotype.getPhenotype();
 		} catch (IllegalArgumentException ex) {
 			this.genotype = null;
