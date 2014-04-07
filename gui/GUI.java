@@ -7,7 +7,6 @@ import creature.geeksquad.library.PlayerControls;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -24,7 +23,6 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -154,6 +152,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 }
             }
             Log.updateProgress(numbRunning);
+            try {
+                Thread.sleep(5);
+            } catch (InterruptedException ex) {
+            }
         }
 
         setVisible(true);
@@ -243,7 +245,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             case "Load Population":
                 break;
             case "Overachiever":
-                Hopper overachiever = currentTribe.getOverachiever();
+                hopper = currentTribe.getOverachiever();
+                renderer.setHopper(hopper);
+                mainTab.setTitleAt(1, hopper.getName());
                 break;
 
             // Step Next Generation
