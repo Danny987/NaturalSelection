@@ -2,9 +2,9 @@ package creature.geeksquad.genetics;
 
 import creature.phenotype.*;
 
-public class JoelTest {
+public class TestCreatures {
 	public static Genotype getGenotype() {
-		Block[] body = getTest();
+		Block[] body = getJoel1();
 		try {
 			return new Genotype(body);
 		} catch (IllegalArgumentException | GeneticsException e) {
@@ -13,7 +13,7 @@ public class JoelTest {
 		}
 	}
 	
-	public static Block[] getTest() {
+	public static Block[] getJoel1() {
 		Vector3.setDisplayDecimalPlaces(3);
 		Vector3.test();
 
@@ -148,6 +148,91 @@ public class JoelTest {
 		return body;
 
 //		Creature mycritter = new Creature(body, rootForward, rootUp);
+	}
+	
+	public static Block[] getJoel2() {
+		Vector3.setDisplayDecimalPlaces(3);
+	    Vector3.test();
+	  
+	    Vector3 rootForward = Vector3.FORWARD;
+	    Vector3 rootUp = Vector3.UP;
+	    
+	    Block[] body = new Block[8];
+	    
+
+	    body[0] = new Block(Block.PARENT_INDEX_NONE, null, 3, 1, 4); 
+	    EnumJointSite childsite  =EnumJointSite.FACE_WEST;  //EnumJointSite.FACE_NORTH;
+	    
+	    //                 Joint(type,                    siteOnParent,                         siteOnChild,                 orientation)    //                 Joint(type,                    siteOnParent,                         siteOnChild,                 orientation)
+	    Joint joint1 = new Joint(EnumJointType.TWIST, EnumJointSite.FACE_BACK, childsite, 0);
+	    Joint joint2 = new Joint(EnumJointType.TWIST, EnumJointSite.FACE_EAST, childsite, 0);
+	    Joint joint3 = new Joint(EnumJointType.TWIST, EnumJointSite.FACE_FRONT, childsite,0);
+	    Joint joint4 = new Joint(EnumJointType.TWIST, EnumJointSite.FACE_NORTH, childsite,0);
+	    Joint joint5 = new Joint(EnumJointType.TWIST, EnumJointSite.FACE_SOUTH, childsite, 0);
+	    Joint joint6 = new Joint(EnumJointType.TWIST, EnumJointSite.FACE_WEST, childsite, 0);
+	    
+	    Joint joint7 = new Joint(EnumJointType.SPHERICAL, EnumJointSite.FACE_WEST, childsite, 0);
+	    
+	    
+	    body[1] = new Block(0, joint1, 1, 1, 1); 
+	    body[2] = new Block(0, joint2, 1, 1, 1); 
+	    body[3] = new Block(0, joint3, 1, 1, 1); 
+	    body[4] = new Block(0, joint4, 1, 1, 1); 
+	    body[5] = new Block(0, joint5, 1, 1, 1); 
+	    body[6] = new Block(0, joint6, 1, 1, 1); 
+	    
+	    body[7] = new Block(5, joint7, 1, 1, 1); 
+	   
+	    
+	    Rule rule1 = new Rule();
+	    NeuronInput neuron1A = new NeuronInput(EnumNeuronInputType.CONSTANT, 100f);
+	    NeuronInput neuron1B = new NeuronInput(EnumNeuronInputType.CONSTANT, 100f);
+	    NeuronInput neuron1C = new NeuronInput(EnumNeuronInputType.CONSTANT, 100f);
+	    NeuronInput neuron1D = new NeuronInput(EnumNeuronInputType.CONSTANT, 100f);
+	    NeuronInput neuron1E = new NeuronInput(EnumNeuronInputType.CONSTANT, 100f);
+	    
+	    rule1.setInput(neuron1A, NeuronInput.A);
+	    rule1.setInput(neuron1B, NeuronInput.B);
+	    rule1.setInput(neuron1C, NeuronInput.C);
+	    rule1.setInput(neuron1D, NeuronInput.D);
+	    rule1.setInput(neuron1E, NeuronInput.E);
+	    
+	    rule1.setOp1(EnumOperatorBinary.ADD);
+	    rule1.setOp2(EnumOperatorUnary.IDENTITY);
+	    rule1.setOp3(EnumOperatorBinary.ADD);
+	    rule1.setOp4(EnumOperatorUnary.IDENTITY);
+
+
+	    Rule rule2 = new Rule();
+	    NeuronInput neuron2A = new NeuronInput(EnumNeuronInputType.TIME);
+	    NeuronInput neuron2B = new NeuronInput(EnumNeuronInputType.CONSTANT, 100f);
+	    NeuronInput neuron2C = new NeuronInput(EnumNeuronInputType.CONSTANT, 0f);
+	    NeuronInput neuron2D = new NeuronInput(EnumNeuronInputType.CONSTANT, 100f);
+	    NeuronInput neuron2E = new NeuronInput(EnumNeuronInputType.CONSTANT, 0f);
+	    
+	    rule2.setInput(neuron2A, NeuronInput.A);
+	    rule2.setInput(neuron2B, NeuronInput.B);
+	    rule2.setInput(neuron2C, NeuronInput.C);
+	    rule2.setInput(neuron2D, NeuronInput.D);
+	    rule2.setInput(neuron2E, NeuronInput.E);
+	    
+	    rule2.setOp1(EnumOperatorBinary.MULTIPLY);
+	    rule2.setOp2(EnumOperatorUnary.SIN);
+	    rule2.setOp3(EnumOperatorBinary.ADD);
+	    rule2.setOp4(EnumOperatorUnary.IDENTITY);
+
+
+	    joint1.addRule(rule1, 0);
+	    joint2.addRule(rule1, 0);
+	    joint3.addRule(rule1, 0);
+	    joint4.addRule(rule1, 0);
+	    joint5.addRule(rule1, 0);
+	    joint6.addRule(rule1, 0);
+	    
+	    joint7.addRule(rule1, 0);
+	    joint7.addRule(rule2, 1);
+
+	    return body;
 	}
 	
 	public static void main(String[] args) {

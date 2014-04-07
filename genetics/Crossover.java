@@ -80,6 +80,24 @@ public class Crossover {
 	}
 	
 	/**
+	 * Perform crossover on two parents based on a random strategy.
+	 * 
+	 * @param Hopper hopperA First parent.
+	 * @param Hopper hopperB Second parent.
+	 * @return Two-element array of Hoppers containing the children. If there
+	 *         were problems creating any of the genes (e.g. alleles didn't
+	 *         trait match properly), or either parent was null, returns null.
+	 * @throws IllegalArgumentException from Genotype instantiation.
+	 * @throws GeneticsException from Genotype instantiation.
+	 */
+	public Hopper[] crossover(Hopper hopperA, Hopper hopperB)
+			throws IllegalArgumentException, GeneticsException {
+		Strategy strategy = Strategy.values()
+				[Helper.RANDOM.nextInt(Strategy.values().length)];
+		return crossover(hopperA, hopperB, strategy);
+	}
+	
+	/**
 	 * Perform crossover on two parents based on a provided strategy. Since the
 	 * positions of blocks don't matter and we need the key genes to line up,
 	 * first align the strands and shift the root block to the beginning.
@@ -813,8 +831,21 @@ public class Crossover {
 	 * @param String[] args Command-line arguments.
 	 */
 	public static void main(String[] args) {
-		Crossover cross = new Crossover();
-		System.out.println(cross);
+		try {
+			Crossover cross = new Crossover();
+			Hopper parent1 = new Hopper(TestCreatures.getGenotype());
+			Hopper parent2 = new Hopper();
+			System.out.println("---Parent 1---");
+			System.out.println(parent1);
+			System.out.println("---Parent 2---");
+			System.out.println(parent2);
+			Hopper[] children = cross.crossover(parent1, parent2,
+					Strategy.RANDOM);
+			System.out.println(children);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }

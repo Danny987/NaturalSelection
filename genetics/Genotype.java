@@ -307,21 +307,18 @@ public class Genotype {
 		ArrayList<Rule> ruleList1 = new ArrayList<Rule>();
 		ArrayList<Rule> ruleList2 = new ArrayList<Rule>();
 		int maxDoF = joint.getType().getDoF();
-		
 		for (int dof = 0; dof < maxDoF; dof++) {
-			int i = 0;
 			// Since Joint has no way to get the size of the array, we have to
 			// use this annoying hack to index until we go out of bounds.
-			try {
+			ArrayList<Rule> ruleList = joint.getRuleList(dof);
+			int listSize = ruleList.size();
+			for (int i = 0; i < listSize; i++) {
 				Rule rule = joint.getRule(dof, i);
 				if (dof == 0) {
 					ruleList1.add(rule);
 				} else {
 					ruleList2.add(rule);
 				}
-				i++;
-			} catch (IllegalArgumentException ex) {
-				continue;
 			}
 		}
 		
@@ -400,7 +397,7 @@ public class Genotype {
 				Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
 						r.getOp3(), 0.0f);
 				binaryOperator3.setWeight(helper.weight(binaryOperator3));
-				Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
+				Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_4,
 						r.getOp2(), 0.0f);
 				unaryOperator4.setWeight(helper.weight(unaryOperator4));
 				
@@ -1067,13 +1064,13 @@ public class Genotype {
 		// Generate random rules for any available degrees of freedom.
 		int dof = jointBuilder.getNumDoFs();
 		for (int i = 0; i < dof; i++) {
-			int numRules = random.nextInt(10) + 1;
+			int numRules = random.nextInt(Helper.SEED_MAX_RULES - 5) + 5;
 			int j = 0;
 			int error = 0;
 			while (j < numRules) {
-				RuleBuilder ruleBuilder = makeRandomRule(index, dof);
+				RuleBuilder ruleBuilder = makeRandomRule(index, i);
 				if (ruleBuilder.toRule() != null) {
-					jointBuilder.setRule(ruleBuilder.toRule(), dof - 1);
+					jointBuilder.setRule(ruleBuilder.toRule(), i);
 					j++;
 				} else {
 					error++;

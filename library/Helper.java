@@ -36,6 +36,7 @@ public class Helper {
 	public static final int SEED_MAX_BLOCKS = 12;
 	public static final int SEED_MAX_SIZE = 10;
 	public static final int SEED_MAX_CONSTANT = 10;
+	public static final int SEED_MAX_RULES = 10;
 	// Allele weight constants.
 	public static final float MIN_WEIGHT = 0.0f;
 	public static final float MEDIAN_WEIGHT = 0.5f;

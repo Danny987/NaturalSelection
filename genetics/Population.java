@@ -12,7 +12,6 @@ package creature.geeksquad.genetics;
 import java.util.*;
 
 import creature.geeksquad.library.Helper;
-import creature.geeksquad.genetics.Crossover.Strategy;
 import creature.geeksquad.gui.Log;
 import creature.geeksquad.hillclimbing.TribeBrain;
 
@@ -25,7 +24,6 @@ import creature.geeksquad.hillclimbing.TribeBrain;
  */
 @SuppressWarnings("serial")
 public class Population extends ArrayList<Hopper> {
-	private static Random random = Helper.RANDOM;
 	private int generations;
 	private int failedAdds;
 	// Sub-collections allow the Population to separate the Hoppers that need
@@ -134,13 +132,11 @@ public class Population extends ArrayList<Hopper> {
 		for (int i = 0; i < size; i++) {
 			Hopper parentA = breeders1.get(i);
 			Hopper parentB = breeders2.get(i);
-			// Pick a random Crossover strategy.
-			Strategy strategy = Strategy.values()
-					[random.nextInt(Strategy.values().length)];
+
 			// Determine which Population the offspring
 			try {
 				Hopper[] offspring = cross.crossover(
-						parentA, parentB, strategy);
+						parentA, parentB);
 				if (offspring != null) {
 					for (int j = 0; j < offspring.length; j++) {
 						Hopper child = offspring[j];
@@ -234,12 +230,9 @@ public class Population extends ArrayList<Hopper> {
 				}
 			}
 			Hopper parentB = breeders.get(++i);
-			// Pick a random Crossover strategy.
-			Strategy strategy = Strategy.values()
-					[random.nextInt(Strategy.values().length)];
 			try {
 				Hopper[] offspring = crossover.crossover(
-						parentA, parentB, strategy);
+						parentA, parentB);
 				if (offspring != null) {
 					for (Hopper h : offspring) {
 						// Short-circuits if h is null.
@@ -319,15 +312,19 @@ public class Population extends ArrayList<Hopper> {
 	
 	/**
 	 * Move a percentage of the highest-fitness Hoppers into the breeders
-	 * list.
+	 * list. A second optional argument sets a number of random, suboptimal
+	 * Hoppers to be moved as well.
 	 * 
-	 * @param f Percentage of the highest-fitness Hoppers to move, as a float.
+	 * @param over Percentage float of the highest-fitness Hoppers to move.
+	 * @param under Optional float percent of how many random other Hoppers
+	 *            should be moved. If not provided, moveBreeders moves half
+	 *            of over.
 	 */
-	private void moveBreeders(float f) {
+	private void moveBreeders(float over, float...under) {
 		sort();
 		synchronized (this) {
 			int size = size();
-			int stop = (int) (size - (f * size));
+			int stop = (int) (size - (over * size));
 			if (stop >= size) {
 				breeders.addAll(this);
 				clear();
@@ -335,6 +332,16 @@ public class Population extends ArrayList<Hopper> {
 				for (int i = size - 1; i >= stop; i--) {
 					breeders.add(remove(i));
 				}
+			}
+			int count = 0;
+			if (under.length > 0) {
+				count = (int) (size * under[0]);
+			} else {
+				count = (int) (size * (over / 2));
+			}
+			for (int i = 0; i < count; i++) {
+				int index = Helper.RANDOM.nextInt(size());
+				breeders.add(remove(index));
 			}
 		}
 	}
@@ -379,6 +386,7 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	public Hopper getOverachiever() {
 		Hopper newGuy = null;
+		sort();
 		try {
 			synchronized (this) {
 				newGuy = new Hopper(get(size() - 1));

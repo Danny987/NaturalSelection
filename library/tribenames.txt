@@ -55,7 +55,7 @@ Poly Sci Majors
 Paranoid Androids
 Jump Mii
 Recursive Backtracking
-Santa Fe Rainy Day Project
+Rainy Day Project
 Wizard Needs Food Badly
 Press X to Win
 Don't-Die Button
@@ -122,3 +122,6 @@ Beliebers
 Jehovah's Witnesses
 Obamacare
 WoW Addicts Anonymous
+Teenagers at a Dance Party
+Danny Does Disney
+It's a Music Visualization
