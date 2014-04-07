@@ -29,7 +29,7 @@ public class TribeBrain {
 	HashMap<Integer,Integer> strategyWeights = new HashMap<Integer,Integer>();
 
 	//number of strategies
-	int numberOfStrategies = 1;
+	int numberOfStrategies = 2;
 	//starting strategy weight
 	int startingWeight = 1;
 
@@ -67,12 +67,26 @@ public class TribeBrain {
 			System.err.println("Clone Hopper Exception1");
 			throw e;
 		}
+		
 		//perform the hill climbing on the clone
-		int failedAttemps = 0;
-		try {
-			return strategy.climb(clone);
-		} catch (IllegalArgumentException | GeneticsException e) {
-			System.err.println("Climb Hopper Exception2");
+		clone = strategy.climb(clone);
+		
+		
+		//TODO update maps only on improved fitness
+		
+		//check if hill climbed hopper is valid
+		Hopper testHopper = null;
+		try{
+			testHopper = new Hopper(clone);
+			//update strategy map
+			updateStrategyMap(1);
+			//return climbed hopper
+			return clone;
+
+		}catch (IllegalArgumentException | GeneticsException e) {
+			//update strategy map
+			updateStrategyMap(-1);
+			//return original hopper
 			return hopper;
 		}
 	}
@@ -123,6 +137,7 @@ public class TribeBrain {
 		}
 		else if(strat == 1){ //strategy 1
 			currentStrat = 1;
+			return new AddBlock();
 		} 
 		else if(strat == 2){ //strategy 2
 			currentStrat = 2;
@@ -138,5 +153,10 @@ public class TribeBrain {
 			return null;
 		}
 		return null;
+	}
+	
+	public void updateStrategyMap(int value){
+		value += strategyWeights.get(currentStrat);
+		if(value >= 1 && value <= 100)strategyWeights.put(currentStrat, value);
 	}
 }

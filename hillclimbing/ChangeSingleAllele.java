@@ -46,12 +46,14 @@ public class ChangeSingleAllele extends Strategy{
 	public Hopper climb(Hopper originalHopper) throws IllegalArgumentException,
 	GeneticsException {
 
+		float startingFitness = originalHopper.getFitness();
+
 		//clone original hopper
 		Hopper hopperToClimb = null;
 		try {
 			hopperToClimb = new Hopper(originalHopper);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			System.err.println("climb");
+			System.err.println("change single allele");
 			throw e;
 		}
 
@@ -100,7 +102,7 @@ public class ChangeSingleAllele extends Strategy{
 			int ruleDoF = getRuleDoF(geneList, geneIndex);
 
 			climbRuleAllele(hopperToClimb, allele, climbType, boxIndex, ruleDoF);
-			
+
 		}
 		else if(climbType.equals("BINARY_1") || climbType.equals("BINARY_3")){
 			climbBinaryAllele(hopperToClimb, allele, climbType);
@@ -108,6 +110,8 @@ public class ChangeSingleAllele extends Strategy{
 		else if(climbType.equals("UNARY_2") || climbType.equals("UNARY_4")){
 			climbUnaryAllele(hopperToClimb, allele, climbType);
 		}
+
+		float newFitness = hopperToClimb.getFitness();
 
 		if(DEBUG)System.out.println("Allele after climb: " + allele);
 
@@ -120,6 +124,7 @@ public class ChangeSingleAllele extends Strategy{
 		} catch (IllegalArgumentException | GeneticsException e) {
 			return originalHopper;
 		}
+
 		return hopperToClimb;
 	}//end climb method
 
@@ -275,7 +280,7 @@ public class ChangeSingleAllele extends Strategy{
 		NeuronInput originalValue = (NeuronInput)allele.getValue();
 		//clone of starting neuron
 		NeuronInput clonedValue = Allele.copyNeuron(originalValue);
-		
+
 		char ruleType = 'A';
 
 		//figure out what type of rule the allele contains
