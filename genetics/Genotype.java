@@ -359,7 +359,7 @@ public class Genotype {
 			Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
 					   					   r.getOp3(), 0.0f);
 			binaryOperator3.setWeight(helper.weight(binaryOperator3));
-			Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
+			Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_4,
 					   					   r.getOp2(), 0.0f);
 			unaryOperator4.setWeight(helper.weight(unaryOperator4));
 			

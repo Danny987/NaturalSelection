@@ -152,7 +152,12 @@ public class JoelTest {
 	
 	public static void main(String[] args) {
 		Genotype genotype = getGenotype();
-		System.out.print(genotype);
+		Creature phenotype = genotype.getPhenotype();
+		System.out.println(genotype);
+		System.out.println(phenotype);
+		for (int i = 0; i < 20; i++) {
+			System.out.println(phenotype.advanceSimulation());
+		}
 	}
 	
 }

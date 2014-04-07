@@ -219,7 +219,6 @@ public class RuleBuilder implements Builder {
 			  rule.setOp2(op2);
 			  rule.setOp3(op3);
 			  rule.setOp4(op4);
-			  
 			  return rule;
 		  }
 	  }
