@@ -32,6 +32,9 @@ public class Creatures {
                 
                 for (int i = 0; i < numberofcores; i++) {
                     String name = i + ": " + Names.getTribeName();
+                    
+                    while(nameList.contains(name)) name = i + ": " + Names.getTribeName();
+                    
                     tribeList.add(new Tribe(name));
                     nameList.add(name);
                 }

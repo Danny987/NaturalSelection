@@ -25,7 +25,7 @@ public class Renderer implements GLEventListener {
     private final GLU glu = new GLU();
 
     private float rotationAngle = 0;
-    private float zoomAmount = -100;
+    private float zoomAmount = 1;
 
     /**
      * Set the current creature to be drawn.
@@ -62,7 +62,7 @@ public class Renderer implements GLEventListener {
         gl.glLoadIdentity();
 
         // Move the hopper away from the camera
-        gl.glTranslatef(0, 0, zoomAmount);
+        gl.glTranslatef(0, 0, -100);
 
         // Drawing stuff ////////////////////////////////////////////////////
         gl.glPushMatrix();
@@ -73,7 +73,6 @@ public class Renderer implements GLEventListener {
         // It's ALIVE!!!
         // Draw the body block by block.
         if (hopper != null) {
-            phenotype.advanceSimulation();
             for (int i = 0; i < body.length; i++) {
                 length = body[i].getLength();
                 height = body[i].getHeight();
@@ -173,14 +172,14 @@ public class Renderer implements GLEventListener {
         gl.glPushMatrix();
 
         // move to the center of the block
-        gl.glTranslatef(center.x, center.y, center.z);
+        gl.glTranslatef(zoomAmount*center.x, zoomAmount*center.y, zoomAmount*center.z);
 
         float[] rotationMatrix = new float[16];
         Vector3.vectorsToRotationMatrix(rotationMatrix, forward, up);
         gl.glMultMatrixf(rotationMatrix, 0);
 
         // scale to the size of the given block
-        gl.glScalef(length / 2, height / 2, width / 2);
+        gl.glScalef(zoomAmount*length, zoomAmount*height, zoomAmount*width);
 
 //        System.out.println("Up Vector = " + up + "Forward Vector = " + forward);
         setColor(gl, length / 10, height / 10, width / 10);
@@ -189,58 +188,58 @@ public class Renderer implements GLEventListener {
         gl.glBegin(GL.GL_TRIANGLES);
 
         //Front
-        gl.glNormal3f(0, 0, 1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(-1, 1, -1);
-        gl.glVertex3f(-1, -1, -1);
-        gl.glVertex3f(-1, -1, -1);
-        gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(1, 1, -1);
+        gl.glNormal3f(0, 0, .5f);
+        gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glVertex3f(-.5f, .5f, -.5f);
+        gl.glVertex3f(-.5f, -.5f, -.5f);
+        gl.glVertex3f(-.5f, -.5f, -.5f);
+        gl.glVertex3f(.5f, -.5f, -.5f);
+        gl.glVertex3f(.5f, .5f, -.5f);
 
         //Back
-        gl.glNormal3f(0, 0, -1);
-        gl.glVertex3f(1, 1, 1);
-        gl.glVertex3f(-1, 1, 1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(1, -1, 1);
-        gl.glVertex3f(1, 1, 1);
+        gl.glNormal3f(0, 0, -.5f);
+        gl.glVertex3f(.5f, .5f, .5f);
+        gl.glVertex3f(-.5f, .5f, .5f);
+        gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glVertex3f(.5f, -.5f, .5f);
+        gl.glVertex3f(.5f, .5f, .5f);
 
         //Left
-        gl.glNormal3f(1, 0, 0);
-        gl.glVertex3f(-1, -1, -1);
-        gl.glVertex3f(-1, 1, -1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(-1, 1, -1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(-1, 1, 1);
+        gl.glNormal3f(.5f, 0, 0);
+        gl.glVertex3f(-.5f, -.5f, -.5f);
+        gl.glVertex3f(-.5f, .5f, -.5f);
+        gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glVertex3f(-.5f, .5f, -.5f);
+        gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glVertex3f(-.5f, .5f, .5f);
 
         //Right
-        gl.glNormal3f(-1, 0, 0);
-        gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(1, -1, 1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(1, -1, 1);
-        gl.glVertex3f(1, 1, 1);
+        gl.glNormal3f(-.5f, 0, 0);
+        gl.glVertex3f(.5f, -.5f, -.5f);
+        gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glVertex3f(.5f, -.5f, .5f);
+        gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glVertex3f(.5f, -.5f, .5f);
+        gl.glVertex3f(.5f, .5f, .5f);
 
         //Top
-        gl.glNormal3f(0, - 1, 0);
-        gl.glVertex3f(-1, 1, 1);
-        gl.glVertex3f(1, 1, 1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(-1, 1, 1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(-1, 1, -1);
+        gl.glNormal3f(0, - .5f, 0);
+        gl.glVertex3f(-.5f, .5f, .5f);
+        gl.glVertex3f(.5f, .5f, .5f);
+        gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glVertex3f(-.5f, .5f, .5f);
+        gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glVertex3f(-.5f, .5f, -.5f);
 
         //Bottom
-        gl.glNormal3f(0, 1, 0);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(1, -1, 1);
-        gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(-1, -1, -1);
+        gl.glNormal3f(0, .5f, 0);
+        gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glVertex3f(.5f, -.5f, .5f);
+        gl.glVertex3f(.5f, -.5f, -.5f);
+        gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glVertex3f(.5f, -.5f, -.5f);
+        gl.glVertex3f(-.5f, -.5f, -.5f);
         gl.glEnd();
         gl.glPopMatrix();
     }
@@ -260,11 +259,12 @@ public class Renderer implements GLEventListener {
     }
     
     public void zoomIn(){
-        zoomAmount++;
+        zoomAmount+= .1;
     }
     
     public void zoomOut(){
-        zoomAmount--;
+        if(zoomAmount > .1)
+        zoomAmount-=.1;
     }
 
     private void setColor(GL2 gl, float r, float g, float b) {

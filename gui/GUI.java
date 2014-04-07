@@ -7,6 +7,7 @@ import creature.geeksquad.library.PlayerControls;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -23,6 +24,7 @@ import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
@@ -73,7 +75,17 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
     //Mainpanel contains upper panel and lower panel
     private Panel mainPanel;
+    private JScrollPane scroll;
 
+    // Statistics stuff/////////////////////////////////
+    private JLabel currentFitness;
+    private Panel statsPanel;
+    private JLabel totalHillclimbs;
+    private JLabel totalBreed;
+    private Hopper bestHopper;
+    private JLabel bestFitness;
+
+    /////////////////////////////////////////////////////
     // contains all buttons, sliders, and JComboBox
     private Panel buttonsPanel;
 
@@ -81,8 +93,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private Panel bottomPanel;
 
     // Display the statistics
-    private JScrollPane scroll;
-    private Panel stats;
     private JLabel time;
     private JLabel generations;
     private JLabel generationsPerSecond;
@@ -134,6 +144,18 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         currentTribe = tribeList.get(0);
         init();
 
+        Log.loadingScreen();
+        int numbRunning = 0;
+        while (numbRunning < 8) {
+            numbRunning = 0;
+            for (Tribe t : tribeList) {
+                if (t.isRunning()) {
+                    numbRunning++;
+                }
+            }
+            Log.updateProgress(numbRunning);
+        }
+
         setVisible(true);
     }
 
@@ -145,6 +167,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(keyTimer)) {
+            if (hopper != null) {
+                currentFitness.setText("Current Fitness: " + hopper.getPhenotype().advanceSimulation());
+            }
+
             rotate();
             zoom();
             return;
@@ -208,6 +234,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             // Read user selected Genome
             case "Load Genome":
                 loadGenotype();
+
                 break;
 
             case "Write Population":
@@ -216,26 +243,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             case "Load Population":
                 break;
             case "Overachiever":
-                Hopper overachiever = null;
-                float fitness = 0;
-                for (Tribe t : tribeList) {
-                    if (overachiever == null) {
-                        overachiever = t.getOverachiever();
-                        fitness = overachiever.getFitness();
-                    }
-                    else {
-                        Hopper compitition = t.getOverachiever();
-                        float fitness2 = compitition.getFitness();
-                        if (fitness2 > fitness) {
-                            overachiever = compitition;
-                            fitness = fitness2;
-                        }
-                    }
-                }
-                
-                hopper = overachiever;
-                renderer.setHopper(hopper);
-                mainTab.setTitleAt(1, hopper.getName());
+                Hopper overachiever = currentTribe.getOverachiever();
                 break;
 
             // Step Next Generation
@@ -314,6 +322,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             slider.setMaximum(currentTribe.getSize() - 1);
             hopper = new Hopper(currentTribe.getHopper(slider.getValue()));
             renderer.setHopper(hopper);
+            currentFitness.setText("Current Fitness: " + hopper.getFitness());
 
             if (hopper != null) {
                 mainTab.setTitleAt(1, hopper.getName());
@@ -432,19 +441,31 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         mainPanel = new Panel(WIDTH, HEIGHT);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
 
+        // Stats contains number of sucessful breads/hill climbs, over achiever for population, heighest fitness
+        statsPanel = new Panel(WIDTH, HEIGHT);
+        statsPanel.setBackground(BACKGROUND_COLOR);
+        statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
+
+        totalHillclimbs = new JLabel("Total Hill Climb Generations: 0");
+        totalHillclimbs.setForeground(FONTCOLOR);
+        totalBreed = new JLabel("Total Breed Generations: 0");
+        totalBreed.setForeground(FONTCOLOR);
+        bestFitness = new JLabel("Best Fitness: 0");
+        bestFitness.setForeground(FONTCOLOR);
+
+        statsPanel.add(totalHillclimbs);
+        statsPanel.add(totalBreed);
+        statsPanel.add(bestFitness);
+
+        ///////////////////////////////////////////////////////////////////////////////////////////////////////
         buttonsPanel = new Panel(WIDTH - graphicsPanel.getWidth(), HEIGHT);
         buttonsPanel.setBackground(BACKGROUND_COLOR);
 
         bottomPanel = new Panel(WIDTH, 20);
         bottomPanel.setBackground(BACKGROUND_COLOR);
 
-        // Stats contains number of sucessful breads/hill climbs, over achiever for population, heighest fitness
-        stats = new Panel(140, 140);
         time = new JLabel(" Time: 0:00");
         time.setForeground(FONTCOLOR);
-
-        stats.setForeground(FONTCOLOR);
-        stats.setBackground(BACKGROUND_COLOR);
 
         // labels /////////////////////////////////////////////////////////
         generationsPerSecond = new JLabel("Generations/second: 0");
@@ -474,6 +495,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         loadPopulation = new Button(130, 20, "Load Population");
         getBest = new Button(130, 20, "Overachiever");
         //////////////////////////////////////////////////////////
+
+        statsPanel.add(getBest);
 
         // Initialize tribes JComboBox/////////////////////////////
         tribes = new JComboBox(nameList.toArray());
@@ -547,6 +570,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         tribes.addActionListener(this);
         ///////////////////////////////////////////////
 
+        currentFitness = new JLabel("Creature Fitness: 0");
+        currentFitness.setForeground(FONTCOLOR);
+
         // Add things to the buttons panel
         buttonsPanel.add(tribes);
         buttonsPanel.add(pause);
@@ -559,6 +585,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         buttonsPanel.add(writePopulation);
         buttonsPanel.add(loadPopulation);
         buttonsPanel.add(getBest);
+        buttonsPanel.add(currentFitness);
         //////////////////////////////////////////////
 
         // Setup the upper panel
@@ -570,6 +597,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         mainTab.addMouseListener(this);
         mainTab.addTab("Main", mainPanel);
         mainTab.addTab("", scroll);
+        mainTab.addTab("Stats", statsPanel);
+
         if (hopper != null) {
             mainTab.setTitleAt(1, hopper.getName());
         }

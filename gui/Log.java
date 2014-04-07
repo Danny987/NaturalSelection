@@ -8,6 +8,7 @@ import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Population;
 import creature.geeksquad.library.Helper;
+import java.awt.Color;
 import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -16,10 +17,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 
 /**
  *
@@ -29,6 +34,8 @@ public class Log {
 
     private static BufferedWriter writer;
     private static BufferedReader reader;
+    private static JProgressBar progress;
+    private static JFrame progressFrame;
 
     private static final JFileChooser fileChooser = new JFileChooser();
 
@@ -128,15 +135,21 @@ public class Log {
 
                 reader = new BufferedReader(new FileReader(f));
                 return parseHopper(reader, hopper);
-            }catch(FileNotFoundException ex){
+            }catch(GeneticsException | 
+                   FileNotFoundException | 
+                   IllegalArgumentException ex){
                 Log.error(ex.toString());
+                popup(parent, "Loading Hopper Failed");
+            } catch (IOException ex) {
+                Log.error(ex.toString());
+                popup(parent, "Loading Hopper Failed");
             }
         }
             
         return hopper;
     }
 
-    private static Hopper parseHopper(BufferedReader reader, Hopper hopper) {
+    private static Hopper parseHopper(BufferedReader reader, Hopper hopper) throws GeneticsException, IllegalArgumentException, IOException {
         String line;
         String name;
         List<Allele> alleles = new ArrayList<>();
@@ -179,10 +192,9 @@ public class Log {
 
             hopper = new Hopper(genotype, name);
 
-        } catch (GeneticsException | IOException | IllegalArgumentException ex) {
-            Log.error(ex.toString());
+        } catch (GeneticsException | IllegalArgumentException| IOException ex) {
+            throw(ex);
         }
-
         return hopper;
     }
 
@@ -242,10 +254,40 @@ public class Log {
                 Genotype genotype = new Genotype(genes);
                 hopper = new Hopper(genotype, hopperName);
 
-            } catch (GeneticsException | IOException | IllegalArgumentException ex) {
+            } catch (GeneticsException | FileNotFoundException ex) {
                 Log.error(ex.toString());
+            } catch (IOException ex) {
             }
         }
-
     }
+    
+    public static void popup(Component parent, String message){
+        JOptionPane.showMessageDialog(parent, 
+                                      message, 
+                                      "Evolving Virtual Creatures", 
+                                      JOptionPane.INFORMATION_MESSAGE);
+        
+    }
+    
+    public static void loadingScreen(){
+        progressFrame = new JFrame("Loading");
+        progressFrame.setSize(200, 200);
+        progressFrame.setVisible(true);
+        progressFrame.setResizable(false);
+        progressFrame.setBackground(new Color(55, 55, 55));
+        progressFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        
+        progress = new JProgressBar(JProgressBar.HORIZONTAL, 0, 8);
+        
+        progressFrame.add(new JLabel("Loading Please Wait"));
+        progressFrame.add(progress);
+    }
+    
+    public static void updateProgress(int i){
+        progress.setValue(i);
+        if(i == 8){
+            progressFrame.dispose();
+        }
+    }
+    
 }
