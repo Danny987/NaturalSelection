@@ -35,8 +35,6 @@ public class Population extends ArrayList<Hopper> {
 	private Crossover crossover;
 	// The hill-climbing Tribe brain for this Population.
 	private TribeBrain brain = new TribeBrain();
-	// A pointer to the Hopper with the highest fitness.
-	private Hopper overachiever = null;
 	// Statistics.
 	private long lifetimeOffspring;
 	private long lifetimeHillClimbs;
@@ -53,9 +51,6 @@ public class Population extends ArrayList<Hopper> {
 		super();
 		generations = 0;
 		failedAdds = 0;
-		breeders = new ArrayList<Hopper>();
-		crossover = new Crossover();
-		sort();
 		lifetimeOffspring = 0l;
 		lifetimeHillClimbs = 0l;
 		currentFailedBreeds = 0l;
@@ -63,6 +58,8 @@ public class Population extends ArrayList<Hopper> {
 		lifetimeFailedBreeds = 0l;
 		lifetimeFailedHillClimbs = 0l;
 		failedRandomHoppers = 0l;
+		breeders = new ArrayList<Hopper>();
+		crossover = new Crossover();
 	}
 	
 	/**
@@ -83,6 +80,7 @@ public class Population extends ArrayList<Hopper> {
 //								   + " Rebuilding.");
 			}
 		}
+		sort();
 	}
 	
 	/**
@@ -189,9 +187,6 @@ public class Population extends ArrayList<Hopper> {
 		// Like above, breeding will change the creatures in the collection,
 		// but cull will sort them again first.
 		cull(count);
-		if (size() > 0) {
-			overachiever = get(size() - 1);
-		}
 	}
 	
 	/**
@@ -350,7 +345,8 @@ public class Population extends ArrayList<Hopper> {
 		Hopper newGuy = null;
 		try {
 			synchronized (this) {
-				newGuy = new Hopper(overachiever);
+				newGuy = new Hopper(get(size() - 1));
+				System.out.println("Success!");
 			}
 		// Should never fail since it's cloning a Hopper that's already
 		// valid.

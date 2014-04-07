@@ -635,26 +635,6 @@ public class Genotype {
 		
 		return i;
 	}
-	
-	/**
-	 * Build and validate the Hopper's phenotype. Used by hill climbing to
-	 * validate changes.
-	 * 
-	 * Note: this method should only ever be called on clones and never on
-	 * actual members of the Population, as it invalidates the Genotype if it
-	 * fails.
-	 * 
-	 * @return True if there were no problems creating the phenotype, false if
-	 *             phenotype creation threw an exception.
-	 */
-	public boolean validatePhenotype() {
-		try {
-			phenotype = buildPhenotype();
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			return false;
-		}
-		return true;
-	}
 
 	/**
 	 * Evaluates the Genotype to create the Creature (phenotype) with default
@@ -738,7 +718,6 @@ public class Genotype {
 		ArrayList<Block> body = new ArrayList<Block>();
 		ArrayList<Rule> dof1 = new ArrayList<Rule>();
 		ArrayList<Rule> dof2 = new ArrayList<Rule>();
-		int numBlocks = 0;
 		int dof = EnumJointType.DOF_1;
 		boolean rootFound = false;
 		BlockBuilder block = new BlockBuilder();
@@ -770,7 +749,6 @@ public class Genotype {
 				case LENGTH:
 					block = new BlockBuilder();
 					block.setLength((Float) value);
-					numBlocks++;
 					break;
 				// Width and height.
 				case HEIGHT:
