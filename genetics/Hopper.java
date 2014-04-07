@@ -352,26 +352,26 @@ public class Hopper implements Comparable<Hopper> {
 	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
-		try {
-			Hopper hopper1 = new Hopper();
-			System.out.println("---Hopper 1---");
-			System.out.println(hopper1);
-			System.out.println("---Phenotype 1---");
-			System.out.println(hopper1.getPhenotype());
-			System.out.println("---Fitness 1---");
-			System.out.println(hopper1.getFitness());
-			float fitness = 0;
-			for (int i = 0; i < 1000; i++) {
-				float current = hopper1.getPhenotype().advanceSimulation();
-				if (current > fitness) {
-					fitness = current;
-				}
-				System.out.println("Fitness: " + current);
-			}
-			System.out.println("Peak Fitness: " + fitness);
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			ex.printStackTrace();
+		Hopper hopper1 = null;
+		while (hopper1 == null) {
+			try {
+				hopper1 = new Hopper();
+			} catch (IllegalArgumentException | GeneticsException ex) {}
 		}
+		System.out.println("---Hopper 1---");
+		System.out.println(hopper1);
+		System.out.println("---Phenotype 1---");
+		System.out.println(hopper1.getPhenotype());
+		System.out.println("---Fitness 1---");
+//		System.out.println("Peak Fitness: " + hopper1.getFitness());
+		float peakFitness = 0;
+		for (int i = 0; i < 10000; i++) {
+			float fitness = hopper1.getPhenotype().advanceSimulation();
+			if (fitness > peakFitness) {
+				peakFitness = fitness;
+			}
+		}
+		System.out.println("Peak Fitness: " + peakFitness);
 	}
 
 }

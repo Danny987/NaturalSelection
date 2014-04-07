@@ -193,6 +193,64 @@ public class Genotype {
 	}
 	
 	/**
+	 * Instantiate a new Genotype by parsing a passed Block array.
+	 * 
+	 * @param body Block array to parse and convert to a Genotype.
+	 * @throws GeneticsException if instantiation failed.
+	 * @throws IllegalArgumentException if buildBody tried to pass an invalid
+	 * 		       argument to one of the Builders' setters.
+	 */
+	public Genotype(Block[] body) throws IllegalArgumentException,
+			GeneticsException {
+		this(genotypeFromBody(body));
+	}
+	
+	/**
+	 * Builds a chromosome from a passed array of Blocks.
+	 * 
+	 * @param body Block array to parse and convert to a Genotype.
+	 * @return ArrayList<Gene> containing the result of the parsing.
+	 */
+	public static Genotype genotypeFromBody(Block[] body) {
+		if (body == null || body.length < 1) {
+			return null;
+		}
+		ArrayList<Gene> starter = new ArrayList<Gene>();
+		
+		// Root block.
+		Block root = body[0];
+		Allele length = new Allele(Trait.LENGTH, root.getLength(), 0.0f);
+		// length.setWeight(helper.weight(...));
+		Allele height = new Allele(Trait.HEIGHT, root.getHeight(), 0.0f);
+		Allele width = new Allele(Trait.WIDTH, root.getWidth(), 0.0f);
+		Allele indexToParent = new Allele(
+				Trait.INDEX_TO_PARENT, root.getIndexOfParent(), 0.0f);
+		starter.add(new Gene(length));
+		starter.add(new Gene(height));
+		starter.add(new Gene(width));
+		starter.add(new Gene(indexToParent));
+		
+		Genotype genotype = null;
+		
+		try {
+			genotype = new Genotype(starter);
+		} catch (IllegalArgumentException | GeneticsException e1) {
+			return null;
+		}
+		
+		// Non-root blocks.
+		for (int i = 1; i < body.length; i++) {
+			try {
+				genotype.addBlock(body[i]);
+			} catch (IllegalArgumentException | GeneticsException e) {
+				return null;
+			}
+		}
+		
+		return genotype;
+	}
+	
+	/**
 	 * Adds a new Block with associated Joint to the end of the Genotype. It
 	 * adds all necessary Genes for a Block, including the Block structure,
 	 * index to parent, Joint specifications, and Joint rule table. When
