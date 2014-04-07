@@ -53,6 +53,9 @@ public abstract class Strategy {
 	//unary enum maps
 	HashMap<EnumOperatorUnary, Integer> unaryTwoWeights = new HashMap<EnumOperatorUnary, Integer>();
 	HashMap<EnumOperatorUnary, Integer> unaryFourWeights = new HashMap<EnumOperatorUnary, Integer>();
+	
+	//remove block maps
+	HashMap<Integer, Integer> removeBlockWeights = new HashMap<Integer, Integer>();
 
 
 	public Strategy(){
@@ -530,6 +533,11 @@ public abstract class Strategy {
 		unaryFourWeights.put(EnumOperatorUnary.NEGATIVE, 1);
 		unaryFourWeights.put(EnumOperatorUnary.LOG, 1);
 		unaryFourWeights.put(EnumOperatorUnary.EXP, 1);
+		
+		//remove block maps
+		for(int i = 0; i < 50; i++){
+			removeBlockWeights.put(i, 1);
+		}
 
 	}
 
@@ -867,5 +875,9 @@ public abstract class Strategy {
 			if(value >= 1 && value <= 100)unaryFourWeights.put(operator, value);
 		}
 	}
-
+	
+	public void updateRemoveBlockMap(int blockIndex, int value){
+		value += removeBlockWeights.get(blockIndex);
+		if(value >= 1 && value <= 100)removeBlockWeights.put(blockIndex, value);
+	}
 }

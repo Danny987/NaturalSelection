@@ -317,7 +317,7 @@ public class ChangeSingleAllele extends Strategy{
 		else{
 			//undo change
 			allele.setValue(originalValue);
-			updateRuleMap(clonedValue, ruleType, ruleDoF, 1);
+			updateRuleMap(clonedValue, ruleType, ruleDoF, -1);
 		}
 
 	}
@@ -382,7 +382,7 @@ public class ChangeSingleAllele extends Strategy{
 		else{
 			//undo change
 			allele.setValue(originalValue);
-			updateUnaryMap(clonedValue, opType, 1);
+			updateUnaryMap(clonedValue, opType, -1);
 		}
 	}
 
