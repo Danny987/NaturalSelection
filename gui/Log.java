@@ -7,13 +7,16 @@ import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Population;
+import creature.geeksquad.library.Helper;
 import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFileChooser;
@@ -23,6 +26,9 @@ import javax.swing.JFileChooser;
  * @author Marcos
  */
 public class Log {
+
+    private static BufferedWriter writer;
+    private static BufferedReader reader;
 
     private static final JFileChooser fileChooser = new JFileChooser();
 
@@ -61,8 +67,20 @@ public class Log {
      * @param p
      * @param tribeName
      */
-    public synchronized static void population(Population p, String tribeName) {
+    public synchronized static void population(Component parent, Population population, String tribeName) {
+        int option = fileChooser.showSaveDialog(parent);
 
+        if (option != JFileChooser.CANCEL_OPTION) {
+            File f = fileChooser.getSelectedFile();
+
+            try {
+                writer = new BufferedWriter(new FileWriter(f));
+                writer.write(tribeName + Helper.NEWLINE + population.toString());
+                writer.close();
+            } catch (IOException ex) {
+                Log.error(ex.toString());
+            }
+        }
     }
 
     /**
@@ -74,7 +92,6 @@ public class Log {
      * @param tribeName
      */
     public synchronized static void hopper(Component parent, Hopper hopper, String tribeName) {
-        BufferedWriter writer;
         int option = fileChooser.showSaveDialog(parent);
 
         if (option != JFileChooser.CANCEL_OPTION) {
@@ -95,9 +112,10 @@ public class Log {
      *
      * @param parent
      * @param hopper
+     *
+     * @return new hopper
      */
     public static Hopper loadHopper(Component parent, Hopper hopper) {
-        BufferedReader reader;
         int option = fileChooser.showOpenDialog(parent);
 
         if (option != JFileChooser.CANCEL_OPTION) {
@@ -109,11 +127,91 @@ public class Log {
                 ArrayList<Gene> genes;
 
                 reader = new BufferedReader(new FileReader(f));
+                return parseHopper(reader, hopper);
+            }catch(FileNotFoundException ex){
+                Log.error(ex.toString());
+            }
+        }
+            
+        return hopper;
+    }
+
+    private static Hopper parseHopper(BufferedReader reader, Hopper hopper) {
+        String line;
+        String name;
+        List<Allele> alleles = new ArrayList<>();
+        ArrayList<Gene> genes;
+        String[] lineArray;
+
+        try {
+
+            reader.readLine();
+            reader.readLine();
+            name = reader.readLine();
+            reader.readLine();
+            reader.readLine();
+
+            line = reader.readLine();
+            System.out.println(line);
+            
+            while (!line.contains("/genotype") && line.length() > 2) {
+
+                System.out.println(line);
+                
+                if (line.startsWith("{")) {
+                    line = line.replace("{", "");
+                }
+                if (line.endsWith("}")) {
+                    line = line.replace("}", "");
+                }
+
+                line = line.substring(1, line.length() - 1);
+
+                lineArray = line.split("\\)\\(");
+
+                alleles.add(Allele.stringToAllele(lineArray[0] + ")"));
+                alleles.add(Allele.stringToAllele("(" + lineArray[1]));
+                line = reader.readLine();
+            }
+
+            genes = Gene.allelesToGenes(alleles);
+            Genotype genotype = new Genotype(genes);
+
+            hopper = new Hopper(genotype, name);
+
+        } catch (GeneticsException | IOException | IllegalArgumentException ex) {
+            Log.error(ex.toString());
+        }
+
+        return hopper;
+    }
+
+    /**
+     * Load user selected population
+     *
+     * @param parent
+     * @param population
+     */
+    public static void loadPopulation(Component parent, Population population) {
+        int option = fileChooser.showOpenDialog(parent);
+        Population p = new Population();
+
+        if (option != JFileChooser.CANCEL_OPTION) {
+            try {
+                File f = fileChooser.getSelectedFile();
+                String[] lineArray;
+                String tribeName = "";
+                String hopperName = "";
+                Hopper hopper;
+                List<Allele> alleles = new ArrayList<>();
+                ArrayList<Gene> genes;
+
+                reader = new BufferedReader(new FileReader(f));
 
                 String line;
+                tribeName = reader.readLine();
                 reader.readLine();
                 reader.readLine();
-                name = reader.readLine();
                 reader.readLine();
                 reader.readLine();
                 line = reader.readLine();
@@ -142,24 +240,12 @@ public class Log {
 
                 genes = Gene.allelesToGenes(alleles);
                 Genotype genotype = new Genotype(genes);
+                hopper = new Hopper(genotype, hopperName);
 
-                hopper = new Hopper(genotype, name);
-                
             } catch (GeneticsException | IOException | IllegalArgumentException ex) {
                 Log.error(ex.toString());
             }
         }
-
-        return hopper;
-    }
-
-    /**
-     * Load user selected population
-     *
-     * @param parent
-     * @param population
-     */
-    public static void loadPopulation(Component parent, Population population) {
 
     }
 }

@@ -69,6 +69,12 @@ public class Tribe extends Thread {
         return population.get(index);
     }
 
+    public Population getPopulation(){
+        synchronized(this){
+            return population;
+        }
+    }
+    
     public void addHopper(Hopper h) {
         population.add(h);
     }
@@ -77,6 +83,9 @@ public class Tribe extends Thread {
         return population.size();
     }
 
+    public Hopper getOverachiever(){
+        return population.getOverachiever();
+    }
     /**
      * Kills the thread.
      */

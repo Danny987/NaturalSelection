@@ -103,6 +103,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private Button nextGeneration;
     private Button writeFile;
     private Button loadFile;
+    private Button writePopulation;
+    private Button loadPopulation;
+    private Button getBest;
 
     // Label...
     private JLabel currentCreature;
@@ -156,7 +159,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 generations.setText("Total Generations: " + totalGenerations);
 
                 if (secondsSinceStart != 0) {
-                    generationsPerSecond.setText("Generations/second: " + (float)totalGenerations / secondsSinceStart);
+                    generationsPerSecond.setText("Generations/second: " + (float) totalGenerations / secondsSinceStart);
                 }
             }
 
@@ -207,6 +210,34 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 loadGenotype();
                 break;
 
+            case "Write Population":
+                Log.population(this, currentTribe.getPopulation(), currentTribe.getName());
+                break;
+            case "Load Population":
+                break;
+            case "Overachiever":
+                Hopper overachiever = null;
+                float fitness = 0;
+                for (Tribe t : tribeList) {
+                    if (overachiever == null) {
+                        overachiever = t.getOverachiever();
+                        fitness = overachiever.getFitness();
+                    }
+                    else {
+                        Hopper compitition = t.getOverachiever();
+                        float fitness2 = compitition.getFitness();
+                        if (fitness2 > fitness) {
+                            overachiever = compitition;
+                            fitness = fitness2;
+                        }
+                    }
+                }
+                
+                hopper = overachiever;
+                renderer.setHopper(hopper);
+                mainTab.setTitleAt(1, hopper.getName());
+                break;
+
             // Step Next Generation
             case "Next Generation":
                 for (Tribe t : tribeList) {
@@ -244,7 +275,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         nextGeneration.setEnabled(paused);
     }
 
-    public String time() {
+    private String time() {
         int seconds;
         secondsSinceStart++;
         if (secondsSinceStart == 60) {
@@ -352,6 +383,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
     }
 
+    private void loadPopulation() {
+
+    }
+
     /**
      * Initializes and setup the GUI
      */
@@ -403,6 +438,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         bottomPanel = new Panel(WIDTH, 20);
         bottomPanel.setBackground(BACKGROUND_COLOR);
 
+        // Stats contains number of sucessful breads/hill climbs, over achiever for population, heighest fitness
         stats = new Panel(140, 140);
         time = new JLabel(" Time: 0:00");
         time.setForeground(FONTCOLOR);
@@ -434,6 +470,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         nextGeneration = new Button(130, 20, "Next Generation");
         writeFile = new Button(130, 20, "Write Genome");
         loadFile = new Button(130, 20, "Load Genome");
+        writePopulation = new Button(130, 20, "Write Population");
+        loadPopulation = new Button(130, 20, "Load Population");
+        getBest = new Button(130, 20, "Overachiever");
         //////////////////////////////////////////////////////////
 
         // Initialize tribes JComboBox/////////////////////////////
@@ -502,6 +541,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         nextGeneration.addActionListener(this);
         writeFile.addActionListener(this);
         loadFile.addActionListener(this);
+        writePopulation.addActionListener(this);
+        loadPopulation.addActionListener(this);
+        getBest.addActionListener(this);
         tribes.addActionListener(this);
         ///////////////////////////////////////////////
 
@@ -514,7 +556,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         buttonsPanel.add(slider);
         buttonsPanel.add(writeFile);
         buttonsPanel.add(loadFile);
-        buttonsPanel.add(stats);
+        buttonsPanel.add(writePopulation);
+        buttonsPanel.add(loadPopulation);
+        buttonsPanel.add(getBest);
         //////////////////////////////////////////////
 
         // Setup the upper panel
@@ -526,7 +570,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         mainTab.addMouseListener(this);
         mainTab.addTab("Main", mainPanel);
         mainTab.addTab("", scroll);
-        if(hopper != null){
+        if (hopper != null) {
             mainTab.setTitleAt(1, hopper.getName());
         }
 
@@ -557,12 +601,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             renderer.rotateRight();
         }
     }
-    
-    private void zoom(){
-        if(controlMap.get("up")){
+
+    private void zoom() {
+        if (controlMap.get("up")) {
             renderer.zoomIn();
         }
-        if(controlMap.get("down")){
+        if (controlMap.get("down")) {
             renderer.zoomOut();
         }
     }
