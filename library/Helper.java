@@ -12,6 +12,8 @@ package creature.geeksquad.library;
 
 import java.util.Random;
 
+import creature.geeksquad.gui.Tribe;
+
 /**
  * An Allele class for the Genotype.
  * 
@@ -22,15 +24,16 @@ import java.util.Random;
 public class Helper {
 	public static final Random RANDOM = new Random();
 	public static final String NEWLINE = System.getProperty("line.separator");
+	public static final int POPULATION_SIZE = Tribe.POPULATION_SIZE;
 	public static final int MAX_BLOCKS = 50;
 	// Use the top 20% of the Population for breeding each generation. This
 	// mirrors the portion used in the original Karl Sims experiment.
 	public static final float BREED_PERCENTAGE = 0.2f; 
 	// Allow up to 50 errors to accrue during random Genotype generation before
 	// giving up.
-	public static final int FAULT_TOLERENCE = 100;
+	public static final int FAULT_TOLERENCE = 50;
 	// Seed constants.
-	public static final int SEED_MAX_BLOCKS = 10;
+	public static final int SEED_MAX_BLOCKS = 12;
 	public static final int SEED_MAX_SIZE = 10;
 	public static final int SEED_MAX_CONSTANT = 10;
 	// Allele weight constants.
@@ -38,7 +41,9 @@ public class Helper {
 	public static final float MEDIAN_WEIGHT = 0.5f;
 	public static final float MAX_WEIGHT = 1.0f;
 	// Percentage by which to increase/decrease Allele weights.
-	public static final float WEIGHT_STEP = 0.05f;
+	public static final float WEIGHT_STEP = 0.025f;
+	// How many generations between seeding of new random Hoppers.
+	public static final int SEED_NEW_RANDOMS_GAP = 100;
 	
 	/**
 	 * Sets the random number generator's seed.

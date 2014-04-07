@@ -11,6 +11,8 @@ package creature.geeksquad.genetics;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import creature.geeksquad.genetics.Allele.Trait;
@@ -59,7 +61,7 @@ public class Genotype {
 	 */
 	public Genotype() throws IllegalArgumentException, GeneticsException {
 		chromosome = new ArrayList<Gene>();
-		int numBlocks = random.nextInt(Helper.SEED_MAX_BLOCKS - 4) + 4;
+		int numBlocks = random.nextInt(Helper.SEED_MAX_BLOCKS - 5) + 5;
 		
 		// Root block.
 		float length = random.nextInt(Helper.SEED_MAX_SIZE - 1)
@@ -198,47 +200,52 @@ public class Genotype {
 	 * identical Alleles with their weights initialized to the current
 	 * population weights for Alleles of that type.
 	 * 
-	 * Since the Blocks can be listed in any order, the position is optional.
-	 * If not provided, it just adds the Block to the end of the Chromosome.
+	 * Since the Blocks can be listed in any order, addBlock just inserts them
+	 * at the end of the list.
 	 * 
 	 * @param block Block to add.
-	 * @param position Optional position at which to add the Block. Arguments
-	 *             past the first are ignored.
+	 * @param crossover Optional crossover module from which to pull Allele
+	 * 	          weights.
 	 * @return True if add successful; false if not (e.g. if position is
 	 *             invalid).
 	 * @throws IllegalArgumentException if one of the Builders' setters was
 	 * 		       passed an invalid argument.
 	 * @throws GeneticsException if buildBody detected an error.
 	 */
-	public boolean addBlock(Block block, int...position) throws 
+	public boolean addBlock(Block block, Crossover...crossover) throws 
 			IllegalArgumentException, GeneticsException {
-		int index;
-		if (position.length > 0) {
-			index = findBlock(position[0]);
-			if (index < 0 || index >= size()) {
-				return false;
-			}
+		WeightHelper helper;
+		// Short-circuits if crossover.length is 0.
+		if (crossover.length > 0 && crossover[0] != null) {
+			helper = new WeightHelper(crossover[0]);
 		} else {
-			index = chromosome.size();
+			helper = new WeightHelper();
 		}
 		
 		Allele length = new Allele(Trait.LENGTH, new Float(block.getLength()),
-					random.nextFloat());
+					0.0f);
+		length.setWeight(helper.weight(length));
 		Allele height = new Allele(Trait.HEIGHT, new Float(block.getHeight()),
-				random.nextFloat());
-		Allele width = new Allele(Trait.WIDTH, block.getWidth(),
-				random.nextFloat());
+				0.0f);
+		height.setWeight(helper.weight(height));
+		Allele width = new Allele(Trait.WIDTH, block.getWidth(), 0.0f);
+		width.setWeight(helper.weight(width));
 		Allele indexToParent = new Allele(Trait.INDEX_TO_PARENT,
-				block.getIndexOfParent(), random.nextFloat());
+				block.getIndexOfParent(), 0.0f);
+		indexToParent.setWeight(helper.weight(indexToParent));
 		Joint joint = block.getJointToParent();
 		Allele jointType = new Allele(Trait.JOINT_TYPE, joint.getType(),
-				random.nextFloat());
+				0.0f);
+		jointType.setWeight(helper.weight(jointType));
 		Allele jointOrientation = new Allele(Trait.JOINT_ORIENTATION,
-				joint.getOrientation(), random.nextFloat());
+				joint.getOrientation(), 0.0f);
+		jointOrientation.setWeight(helper.weight(jointOrientation));
 		Allele jointSiteOnParent = new Allele(Trait.JOINT_SITE_ON_PARENT,
-				joint.getSiteOnParent(), random.nextFloat());
+				joint.getSiteOnParent(), 0.0f);
+		jointSiteOnParent.setWeight(helper.weight(jointSiteOnParent));
 		Allele jointSiteOnChild = new Allele(Trait.JOINT_SITE_ON_CHILD,
-				joint.getSiteOnChild(), random.nextFloat());
+				joint.getSiteOnChild(), 0.0f);
+		jointSiteOnChild.setWeight(helper.weight(jointSiteOnChild));
 		ArrayList<Rule> ruleList1 = new ArrayList<Rule>();
 		ArrayList<Rule> ruleList2 = new ArrayList<Rule>();
 		int maxDoF = joint.getType().getDoF();
@@ -260,78 +267,94 @@ public class Genotype {
 			}
 		}
 		
-		// We could insert these in reverse order to avoid having to change
-		// index, but we'll need it to be updated for the later adds anyway.
-		chromosome.add(index, new Gene(length));
-		chromosome.add(++index, new Gene(height));
-		chromosome.add(++index, new Gene(width));
-		chromosome.add(++index, new Gene(indexToParent));
-		chromosome.add(++index, new Gene(jointType));
-		chromosome.add(++index, new Gene(jointOrientation));
-		chromosome.add(++index, new Gene(jointSiteOnParent));
-		chromosome.add(++index, new Gene(jointSiteOnChild));
+		chromosome.add(new Gene(length));
+		chromosome.add(new Gene(height));
+		chromosome.add(new Gene(width));
+		chromosome.add(new Gene(indexToParent));
+		chromosome.add(new Gene(jointType));
+		chromosome.add(new Gene(jointOrientation));
+		chromosome.add(new Gene(jointSiteOnParent));
+		chromosome.add(new Gene(jointSiteOnChild));
 		
 		for (Rule r : ruleList1) {
 			Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, r.getInput(0),
-										   random.nextFloat());
+										   0.0f);
+			ruleInputA.setWeight(helper.weight(ruleInputA));
 			Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, r.getInput(1),
-										   random.nextFloat());
+										   0.0f);
+			ruleInputB.setWeight(helper.weight(ruleInputB));
 			Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, r.getInput(2),
-										   random.nextFloat());
+										   0.0f);
+			ruleInputC.setWeight(helper.weight(ruleInputC));
 			Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, r.getInput(3),
-										   random.nextFloat());
+										   0.0f);
+			ruleInputD.setWeight(helper.weight(ruleInputD));
 			Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, r.getInput(4),
-										   random.nextFloat());
+										   0.0f);
+			ruleInputE.setWeight(helper.weight(ruleInputE));
 			Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-										   r.getOp1(), random.nextFloat());
+										   r.getOp1(), 0.0f);
+			binaryOperator1.setWeight(helper.weight(binaryOperator1));
 			Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-					   					   r.getOp2(), random.nextFloat());
+					   					   r.getOp2(), 0.0f);
+			unaryOperator2.setWeight(helper.weight(unaryOperator2));
 			Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-					   					   r.getOp3(), random.nextFloat());
+					   					   r.getOp3(), 0.0f);
+			binaryOperator3.setWeight(helper.weight(binaryOperator3));
 			Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
-					   					   r.getOp2(), random.nextFloat());
+					   					   r.getOp2(), 0.0f);
+			unaryOperator4.setWeight(helper.weight(unaryOperator4));
 			
-			chromosome.add(++index, new Gene(ruleInputA));
-			chromosome.add(++index, new Gene(ruleInputB));
-			chromosome.add(++index, new Gene(ruleInputC));
-			chromosome.add(++index, new Gene(ruleInputD));
-			chromosome.add(++index, new Gene(ruleInputE));
-			chromosome.add(++index, new Gene(binaryOperator1));
-			chromosome.add(++index, new Gene(unaryOperator2));
-			chromosome.add(++index, new Gene(binaryOperator3));
-			chromosome.add(++index, new Gene(unaryOperator4));
+			chromosome.add(new Gene(ruleInputA));
+			chromosome.add(new Gene(ruleInputB));
+			chromosome.add(new Gene(ruleInputC));
+			chromosome.add(new Gene(ruleInputD));
+			chromosome.add(new Gene(ruleInputE));
+			chromosome.add(new Gene(binaryOperator1));
+			chromosome.add(new Gene(unaryOperator2));
+			chromosome.add(new Gene(binaryOperator3));
+			chromosome.add(new Gene(unaryOperator4));
 		}
 		
 		if (maxDoF > 1) {
 			for (Rule r : ruleList2) {
 				Allele ruleInputA = new Allele(Trait.RULE_INPUT_A,
-						r.getInput(0), random.nextFloat());
+						r.getInput(0), 0.0f);
+				ruleInputA.setWeight(helper.weight(ruleInputA));
 				Allele ruleInputB = new Allele(Trait.RULE_INPUT_B,
-						r.getInput(1), random.nextFloat());
+						r.getInput(1), 0.0f);
+				ruleInputB.setWeight(helper.weight(ruleInputB));
 				Allele ruleInputC = new Allele(Trait.RULE_INPUT_C,
-						r.getInput(2), random.nextFloat());
+						r.getInput(2), 0.0f);
+				ruleInputC.setWeight(helper.weight(ruleInputC));
 				Allele ruleInputD = new Allele(Trait.RULE_INPUT_D,
-						r.getInput(3), random.nextFloat());
+						r.getInput(3), 0.0f);
+				ruleInputD.setWeight(helper.weight(ruleInputD));
 				Allele ruleInputE = new Allele(Trait.RULE_INPUT_E,
-						r.getInput(4), random.nextFloat());
+						r.getInput(4), 0.0f);
+				ruleInputE.setWeight(helper.weight(ruleInputE));
 				Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-											   r.getOp1(), random.nextFloat());
+						r.getOp1(), 0.0f);
+				binaryOperator1.setWeight(helper.weight(binaryOperator1));
 				Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-						   					   r.getOp2(), random.nextFloat());
+						r.getOp2(), 0.0f);
+				unaryOperator2.setWeight(helper.weight(unaryOperator2));
 				Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-						   					   r.getOp3(), random.nextFloat());
+						r.getOp3(), 0.0f);
+				binaryOperator3.setWeight(helper.weight(binaryOperator3));
 				Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_2,
-						   					   r.getOp2(), random.nextFloat());
+						r.getOp2(), 0.0f);
+				unaryOperator4.setWeight(helper.weight(unaryOperator4));
 				
-				chromosome.add(++index, new Gene(ruleInputA));
-				chromosome.add(++index, new Gene(ruleInputB));
-				chromosome.add(++index, new Gene(ruleInputC));
-				chromosome.add(++index, new Gene(ruleInputD));
-				chromosome.add(++index, new Gene(ruleInputE));
-				chromosome.add(++index, new Gene(binaryOperator1));
-				chromosome.add(++index, new Gene(unaryOperator2));
-				chromosome.add(++index, new Gene(binaryOperator3));
-				chromosome.add(++index, new Gene(unaryOperator4));
+				chromosome.add(new Gene(ruleInputA));
+				chromosome.add(new Gene(ruleInputB));
+				chromosome.add(new Gene(ruleInputC));
+				chromosome.add(new Gene(ruleInputD));
+				chromosome.add(new Gene(ruleInputE));
+				chromosome.add(new Gene(binaryOperator1));
+				chromosome.add(new Gene(unaryOperator2));
+				chromosome.add(new Gene(binaryOperator3));
+				chromosome.add(new Gene(unaryOperator4));
 			}
 		}
 		// Update the body array.
@@ -367,14 +390,24 @@ public class Genotype {
 	 * @param dof Degree of freedom to which to add the rule (assuming more
 	 *            than one.
 	 * @param index Position in the DoF rule list at which to add the rule.
+	 * @param crossover Optional Crossover from which to get Allele weights.
 	 * @return boolean True if add succeeded; false if unsuccessful (such as
 	 *                if adding to joint type that doesn't support rules).
 	 * @throws IllegalArgumentException if one of the Builders' setters
 	 * 		   was passed an invalid argument.
 	 * @throws GeneticsException if buildBody detected an error.
 	 */
-	public boolean addRule(Rule rule, int block, int dof, int index) throws
-			IllegalArgumentException, GeneticsException {
+	public boolean addRule(Rule rule, int block, int dof, int index,
+			Crossover...crossover) throws IllegalArgumentException,
+			GeneticsException {
+		WeightHelper helper;
+		// Short-circuits if crossover.length is 0.
+		if (crossover.length > 0 && crossover[0] != null) {
+			helper = new WeightHelper(crossover[0]);
+		} else {
+			helper = new WeightHelper();
+		}
+		
 		if (rule == null || block >= size()) {
 			return false;
 		}
@@ -409,14 +442,15 @@ public class Genotype {
 					chromosome.get(i).getTrait() != Trait.LENGTH) {
 				i++;
 			}
+			// Add a DoF marker if needed.
+			if (chromosome.get(i).getTrait() == Trait.LENGTH) {
+				chromosome.add(--i, new Gene(
+						new Allele(Trait.DOF_MARKER, 2, Helper.MAX_WEIGHT)));
+			}
+			// Advance past the DoF.
+			i++;
 		}
 		
-		// Add a DoF marker if needed.
-		if (chromosome.get(i).getTrait() == Trait.LENGTH) {
-			chromosome.add(--i, new Gene(
-					new Allele(Trait.DOF_MARKER, 2, random.nextFloat())));
-		}
-		i++;
 		
 		// Increase i over rule list until index.
 		for (int current = 0; current < index; ) {
@@ -434,23 +468,32 @@ public class Genotype {
 		}
 		
 		Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, rule.getInput(0),
-						   random.nextFloat());
+						   0.0f);
+		ruleInputA.setWeight(helper.weight(ruleInputA));
 		Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, rule.getInput(1),
-						   random.nextFloat());
+						   0.0f);
+		ruleInputB.setWeight(helper.weight(ruleInputB));
 		Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, rule.getInput(2),
-						   random.nextFloat());
+						   0.0f);
+		ruleInputC.setWeight(helper.weight(ruleInputC));
 		Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, rule.getInput(3),
-						   random.nextFloat());
+						   0.0f);
+		ruleInputD.setWeight(helper.weight(ruleInputD));
 		Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, rule.getInput(4),
-						   random.nextFloat());
+						   0.0f);
+		ruleInputE.setWeight(helper.weight(ruleInputE));
 		Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-						   rule.getOp1(), random.nextFloat());
+						   rule.getOp1(), 0.0f);
+		binaryOperator1.setWeight(helper.weight(binaryOperator1));
 		Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-						   rule.getOp2(), random.nextFloat());
+						   rule.getOp2(), 0.0f);
+		unaryOperator2.setWeight(helper.weight(unaryOperator2));
 		Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-						   rule.getOp3(), random.nextFloat());
+						   rule.getOp3(), 0.0f);
+		binaryOperator3.setWeight(helper.weight(binaryOperator3));
 		Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_4,
-						   rule.getOp2(), random.nextFloat());
+						   rule.getOp2(), 0.0f);
+		unaryOperator2.setWeight(helper.weight(unaryOperator2));
 		
 		chromosome.add(i, new Gene(ruleInputA));
 		chromosome.add(++i, new Gene(ruleInputB));
@@ -1151,6 +1194,71 @@ public class Genotype {
 		gString.append('}');
 
 		return gString.toString();
+	}
+	
+	/**
+	 * A simple nested helper class for addBlock to get weights for the new
+	 * Alleles. If passed a Crossover object on instantiation, it clones
+	 * that Crossover's weight table and uses it for the weights; otherwise,
+	 * it generates random weights.
+	 * 
+	 * @author Ramon A. Lovato
+	 */
+	private class WeightHelper {
+		private boolean random;
+		private Map<Allele, Float> weightMap = new HashMap<Allele, Float>();
+		
+		/**
+		 * Default constructor makes the weight methods always return a random
+		 * float.
+		 */
+		public WeightHelper() {
+			random = true;
+		}
+		
+		/**
+		 * The constructor that takes a Crossover object makes weight(Allele)
+		 * return a weight based on that Allele in the weight table.
+		 * 
+		 * @param cross Crossover from which to clone the weight table.
+		 */
+		public WeightHelper(Crossover cross) {
+			random = false;
+			// Deep clone the map.
+			for (Map.Entry<Allele, Float> e : cross.getMap().entrySet()) {
+				weightMap.put(new Allele(e.getKey()), new Float(e.getValue()));
+			}
+		}
+		
+		/**
+		 * Get a random weight.
+		 * 
+		 * @return Random float between 0 (inclusive) and 1 (exclusive).
+		 */
+		public float weight() {
+			return Helper.RANDOM.nextFloat();
+		}
+		
+		/**
+		 * Get a weight from the weight table based on the passed Allele. If
+		 * the table wasn't set (default constructor used, random = false),
+		 * return a random float.
+		 * 
+		 * @param allele Allele to look up in the weight table.
+		 * @return The float assigned to allele in the weight table. If the
+		 *             weight table wasn't set, returns a random float. If the
+		 *             weight table was set but the allele isn't in the weight
+		 *             table, returns Helper.MEDIAN_WEIGHT (5.0f).
+		 */
+		public float weight(Allele allele) {
+			if (random) {
+				return weight();
+			} else if (weightMap.containsKey(allele)) {
+				return weightMap.get(allele);
+			} else {
+				return Helper.MEDIAN_WEIGHT;
+			}
+		}
 	}
 	
 	/**

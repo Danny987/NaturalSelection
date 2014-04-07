@@ -93,6 +93,7 @@ public class Crossover {
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
+	@SuppressWarnings("finally")
 	public Hopper[] crossover(Hopper hopperA, Hopper hopperB,
 			Strategy strategy) throws IllegalArgumentException,
 			GeneticsException {
@@ -163,22 +164,15 @@ public class Crossover {
 		try {
 			genome1 = new Genotype(children[0]);
 			childA = new Hopper(genome1);
-			
-		} catch (IllegalArgumentException | GeneticsException ex) {
-			throw ex;
-		}
-		try {
 			genome2 = new Genotype(children[1]);
 			childB = new Hopper(genome2);
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			throw ex;
-		}
-
-		validateCrossover(hopperA, hopperB, childA, childB);
-		
-		Hopper[] offspring = {childA, childB};
-		
-		return offspring;
+		} finally {
+			validateCrossover(hopperA, hopperB, childA, childB);
+			Hopper[] offspring = {childA, childB};
+			return offspring;
+		}		
 	}
 	
 	/**
@@ -205,7 +199,7 @@ public class Crossover {
 		// Randomly choose the transition point.
 		int transition = rand.nextInt(size);
 		
-		// Iterate over the lists and pick a random allele from each parent.
+		// Iterate over the lists.
 		for (int i = 0; i < size; i++) {
 			Gene parentGeneA = new Gene(chromosomeA.get(i));
 			Gene parentGeneB = new Gene(chromosomeB.get(i));
@@ -319,20 +313,25 @@ public class Crossover {
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
 		
-		// Align the key genes.
-		ArrayList<Gene>[] newChromosomes = align(chromosomeA, chromosomeB);
-		
-		// Randomly choose the starting parent.
-		if (Helper.choose() > 0) {
-			chromosomeA = newChromosomes[0];
-			chromosomeB = newChromosomes[1];			
-		} else {
-			chromosomeA = newChromosomes[1];
-			chromosomeB = newChromosomes[0];
+		// Number of splits. Min 5, max 20.
+		int numSplits = rand.nextInt(16) + 5;
+		int[] splitPoints = new int[numSplits];
+		int tally = 0;
+		for (int i = 0; i < numSplits; i++) {
+			splitPoints[i] = rand.nextInt(size - tally) + tally;
+			tally += splitPoints[i];
 		}
 		
-		// Iterate over the lists and pick a random allele from each parent.
+		int j = 0;
+		// Iterate over the lists.
 		for (int i = 0; i < size; i++) {
+			// Change segments. Short-circuits if j >= splitPoints.length.
+			if (j < splitPoints.length && i == splitPoints[j]) {
+				ArrayList<Gene> swap = chromosomeA;
+				chromosomeB = chromosomeA;
+				chromosomeA = swap;
+				j++;
+			}
 			Gene parentGeneA = new Gene(chromosomeA.get(i));
 			Gene parentGeneB = new Gene(chromosomeB.get(i));
 			Gene childGeneA;
@@ -574,8 +573,8 @@ public class Crossover {
 	private void validateCrossover(Hopper parentA, Hopper parentB,
 			Hopper childA, Hopper childB) {
 		/* ****************************************************************** */
-		/* TODO: Waiting on Joel's code.                                      */
-		/* Does nothing because fitness simulation still doesn't work.        */
+		/* Waiting on Joel's code.                                            */
+		/* May do nothing if fitness simulation still doesn't work.           */
 		/* ****************************************************************** */
 		
 		validateHelper(parentA, childA);
@@ -592,6 +591,11 @@ public class Crossover {
 	 * @param child Child Hopper to compare.
 	 */
 	private void validateHelper(Hopper parentHopper, Hopper childHopper) {
+		// Return immediately if either input is null.
+		if (parentHopper == null || childHopper == null) {
+			return;
+		}
+		
 		ArrayList<Gene> parent = parentHopper.getChromosome();
 		ArrayList<Gene> child = childHopper.getChromosome();
 		float parentFitness = parentHopper.getFitness();
@@ -764,11 +768,12 @@ public class Crossover {
 	}
 	
 	/**
-	 * A nested enum representing the strategy of Crossover to use.
+	 * Getter for weightMap.
+	 * 
+	 * @return Map<Allele, Float> containing the weight table.
 	 */
-	public enum Strategy {
-		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM, RANDOM_SINGLE_POINT,
-		RANDOM_DOUBLE_POINT, RANDOM_CUT_AND_SPLICE;
+	public Map<Allele, Float> getMap() {
+		return weightMap;
 	}
 	
 	/**
@@ -792,6 +797,14 @@ public class Crossover {
 		builder.append('}');
 		
 		return builder.toString();
+	}
+	
+	/**
+	 * A nested enum representing the strategy of Crossover to use.
+	 */
+	public enum Strategy {
+		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM, RANDOM_SINGLE_POINT,
+		RANDOM_DOUBLE_POINT, RANDOM_CUT_AND_SPLICE;
 	}
 	
 	/**

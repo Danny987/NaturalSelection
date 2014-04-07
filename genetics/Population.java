@@ -43,6 +43,7 @@ public class Population extends ArrayList<Hopper> {
 	private long lifetimeFailedBreeds;
 	private long lifetimeFailedHillClimbs;
 	private long failedRandomHoppers;
+	private float highestFitness;
 	
 	/**
 	 * The default constructor creates an empty Population.
@@ -58,6 +59,7 @@ public class Population extends ArrayList<Hopper> {
 		lifetimeFailedBreeds = 0l;
 		lifetimeFailedHillClimbs = 0l;
 		failedRandomHoppers = 0l;
+		highestFitness = 0.0f;
 		breeders = new ArrayList<Hopper>();
 		crossover = new Crossover();
 	}
@@ -142,7 +144,13 @@ public class Population extends ArrayList<Hopper> {
 				if (offspring != null) {
 					for (int j = 0; j < offspring.length; j++) {
 						Hopper child = offspring[j];
-						if (child != null) {
+						// Short-circuits if child is null.
+						if (child == null || child.getGenotype() == null
+								|| child.getPhenotype() == null
+								|| child.getBody() == null) {
+							throw new GeneticsException("Child returned from "
+									+ "interpopulation breeding was invalid.");
+						} else {
 							if (j % 2 == 0) {
 								children1.add(child);
 							} else {
@@ -185,8 +193,17 @@ public class Population extends ArrayList<Hopper> {
 		moveBreeders();
 		int count = breed();
 		// Like above, breeding will change the creatures in the collection,
-		// but cull will sort them again first.
+		// but cull will sort them again.
 		cull(count);
+		// Every 100 generations, reseed the Population with 20% new, random
+		// Hoppers to provide new Alleles.
+		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
+			seedNewRandoms();
+		}
+		
+		if (size() > 0) {
+			highestFitness = get(size() - 1).getFitness();
+		}
 	}
 	
 	/**
@@ -225,7 +242,13 @@ public class Population extends ArrayList<Hopper> {
 						parentA, parentB, strategy);
 				if (offspring != null) {
 					for (Hopper h : offspring) {
-						if (h != null) {
+						// Short-circuits if h is null.
+						if (h == null || h.getGenotype() == null
+								|| h.getPhenotype() == null
+								|| h.getBody() == null) {
+							throw new GeneticsException("Child returned "
+									+ "from breeding was invalid.");
+						} else {
 							children.add(h);
 						}
 					}
@@ -272,6 +295,19 @@ public class Population extends ArrayList<Hopper> {
 //					"HillClimbing produced an illegal creature. Skipping.");
 			}
 		}
+	}
+	
+	/**
+	 * Seed the Population with new, random Hoppers to provide fresh Alleles.
+	 * Removes Hoppers from the bottom of the Population and reseeds with newly
+	 * created Hoppers.
+	 */
+	public void seedNewRandoms() {
+		int newHopperCount = (int) (size() * Helper.BREED_PERCENTAGE);
+		Population newBlood = new Population(newHopperCount);
+		cull(newHopperCount);
+		addAll(newBlood);
+		sort();
 	}
 	
 	/**
@@ -346,7 +382,6 @@ public class Population extends ArrayList<Hopper> {
 		try {
 			synchronized (this) {
 				newGuy = new Hopper(get(size() - 1));
-				System.out.println("Success!");
 			}
 		// Should never fail since it's cloning a Hopper that's already
 		// valid.
@@ -355,6 +390,15 @@ public class Population extends ArrayList<Hopper> {
 //			System.out.println("Cloning Hopper for getOverachiever failed.");
 		}
 		return newGuy;
+	}
+	
+	/**
+	 * Getter for highestFitness.
+	 * 
+	 * @return The highest fitness of the Population as a float.
+	 */
+	public float getHighestFitness() {
+		return highestFitness;
 	}
 	
 	/**
