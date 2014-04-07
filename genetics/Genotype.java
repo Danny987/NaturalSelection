@@ -46,7 +46,6 @@ public class Genotype {
 	
 	private ArrayList<Gene> chromosome;
 	private Block[] body;
-	private int size;
 	private Creature phenotype;
 	private Random random = Helper.RANDOM;
 	
@@ -216,7 +215,7 @@ public class Genotype {
 		int index;
 		if (position.length > 0) {
 			index = findBlock(position[0]);
-			if (index < 0 || index >= size) {
+			if (index < 0 || index >= size()) {
 				return false;
 			}
 		} else {
@@ -376,7 +375,7 @@ public class Genotype {
 	 */
 	public boolean addRule(Rule rule, int block, int dof, int index) throws
 			IllegalArgumentException, GeneticsException {
-		if (rule == null || block >= size) {
+		if (rule == null || block >= size()) {
 			return false;
 		}
 		
@@ -571,7 +570,7 @@ public class Genotype {
 	 *                    index is invalid.
 	 */
 	public int findBlock(int block) {
-		if (block >= size) {
+		if (block >= size()) {
 			return -1;
 		} else {
 			int index = 0;
@@ -930,7 +929,6 @@ public class Genotype {
 		if (!rootFound) {
 			throw new GeneticsException("Didn't find root Block.");
 		} else {
-			size = numBlocks;
 			return Arrays.copyOf(body.toArray(), body.size(), Block[].class);
 		}
 	}
@@ -1130,7 +1128,15 @@ public class Genotype {
 	 * 
 	 * @return Size of the body (in blocks).
 	 */
-	public int getSize() {
+	public int size() {
+		int size = 0;
+		
+		for (Gene g : chromosome) {
+			if (g.getTrait() == Trait.LENGTH) {
+				size++;
+			}
+		}
+		
 		return size;
 	}
 	
@@ -1161,7 +1167,9 @@ public class Genotype {
 			gString.append(g.toString());
 			gString.append(Helper.NEWLINE);
 		}
-		gString.deleteCharAt(gString.length() - 1);
+		if (gString.length() > 1) {
+			gString.deleteCharAt(gString.length() - 1);			
+		}
 		gString.append('}');
 
 		return gString.toString();
