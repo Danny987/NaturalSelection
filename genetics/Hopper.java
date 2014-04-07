@@ -34,6 +34,7 @@ public class Hopper implements Comparable<Hopper> {
 	private int children;
 	private float fitness;
 	private int fitnessEvaluations;
+	private boolean impotent;
 
 	/**
 	 * Instantiate a new Hopper with random Genotype and name.
@@ -80,6 +81,7 @@ public class Hopper implements Comparable<Hopper> {
 		children = 0;
 		fitness = 0;
 		fitnessEvaluations = 0;
+		impotent = false;
 	}
 
 	/**
@@ -96,6 +98,8 @@ public class Hopper implements Comparable<Hopper> {
 		timesHillClimbed = source.getTimesHillClimbed();
 		timesBred = source.getTimesBred();
 		children = source.getChildren();
+		fitness = source.getFitness();
+		fitnessEvaluations = source.getFitnessEvals();
 	}
 
 	/**
@@ -153,9 +157,7 @@ public class Hopper implements Comparable<Hopper> {
 				
 				change = test2 - test1;
 			} catch (IllegalArgumentException ex) {
-				System.out.println(
-						"advanceSimulation failed on this Creature:");
-				System.out.println(phenotype);
+				throw ex;
 			}
 			
 			// Descending or stationary - since the bounces are always lower
@@ -164,8 +166,10 @@ public class Hopper implements Comparable<Hopper> {
 			// the air or its body settles before it starts its initial jump,
 			// we want to let that happen so the jump can occur. A small amount
 			// of padding is provided as a safety measure.
-//			if (change <= 0 && steps >= 1/Simulator.DEFAULT_TIME_STEP) {
-			if (change <= 0 && steps >= 5 * Simulator.DEFAULT_TIME_STEP) {
+//			if (change <= 0 && steps >= 5 * Simulator.DEFAULT_TIME_STEP) {
+//				done = true;
+//			}
+			if (change <= 0) {
 				done = true;
 			}
 			steps++;

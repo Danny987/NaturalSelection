@@ -193,10 +193,12 @@ public class Population extends ArrayList<Hopper> {
 		cull(count);
 		// Every 100 generations, reseed the Population with 20% new, random
 		// Hoppers to provide new Alleles.
-		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
-			seedNewRandoms();
+//		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
+//			seedNewRandoms();
+//		}
+		if (size() != Helper.POPULATION_SIZE) {
+			failedAdds -= (Helper.POPULATION_SIZE - size());
 		}
-		
 		if (size() > 0) {
 			highestFitness = get(size() - 1).getFitness();
 		}
@@ -389,13 +391,19 @@ public class Population extends ArrayList<Hopper> {
 		sort();
 		try {
 			synchronized (this) {
-				newGuy = new Hopper(get(size() - 1));
+				newGuy = new Hopper(get(super.size() - 1));
 			}
 		// Should never fail since it's cloning a Hopper that's already
 		// valid.
 		} catch (IllegalArgumentException | GeneticsException e) {
 			Log.error("Cloning Hopper for getOverachiever failed.");
 //			System.out.println("Cloning Hopper for getOverachiever failed.");
+		}
+		float highestFitness = 0;
+		for (Hopper h : this) {
+			if (h.getFitness() > highestFitness) {
+				highestFitness = h.getFitness();
+			}
 		}
 		return newGuy;
 	}
