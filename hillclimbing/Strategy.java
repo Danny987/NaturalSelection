@@ -564,27 +564,38 @@ public abstract class Strategy {
 
 		ArrayList<Gene> geneList = genotype.getChromosome();
 
-		currentVal = (float)geneList.get(geneIndex).getValue();
+		currentVal = (float)geneList.get(geneIndex).getDominant().getValue();
 
 		//if allele is not a dimension, return 0
-		if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.JOINT_ORIENTATION)){
+		if(geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.JOINT_ORIENTATION)){
 			return 0;
 		}
 
 
 		//length, height, width
-		if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.LENGTH)){
-			val1 = (float)geneList.get(geneIndex+1).getValue();
-			val2 = (float)geneList.get(geneIndex+2).getValue();
+		if(geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
+			if(geneList.get(geneIndex+1).getDominant().getTrait().equals(Allele.Trait.WIDTH)){
+				val1 = (float)geneList.get(geneIndex+1).getDominant().getValue();
+			}
+			if(geneList.get(geneIndex+2).getDominant().getTrait().equals(Allele.Trait.HEIGHT)){
+				val2 = (float)geneList.get(geneIndex+2).getDominant().getValue();
+			}
 		}
-		else if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.HEIGHT)){
-			val1 = (float)geneList.get(geneIndex-1).getValue();
-			val2 = (float)geneList.get(geneIndex+1).getValue();
-
+		else if(geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.HEIGHT)){
+			if(geneList.get(geneIndex-1).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
+				val1 = (float)geneList.get(geneIndex-1).getDominant().getValue();
+			}
+			if(geneList.get(geneIndex+1).getDominant().getTrait().equals(Allele.Trait.WIDTH)){
+				val2 = (float)geneList.get(geneIndex+1).getDominant().getValue();
+			}
 		}
-		else if(geneList.get(geneIndex).getTrait().equals(Allele.Trait.WIDTH)){
-			val1 = (float)geneList.get(geneIndex-1).getValue();
-			val2 = (float)geneList.get(geneIndex-2).getValue();
+		else if(geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.WIDTH)){
+			if(geneList.get(geneIndex-1).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
+				val1 = (float)geneList.get(geneIndex-1).getDominant().getValue();
+			}
+			if(geneList.get(geneIndex-2).getDominant().getTrait().equals(Allele.Trait.HEIGHT)){
+				val1 = (float)geneList.get(geneIndex-2).getDominant().getValue();
+			}
 		}
 
 		//return the smallest value

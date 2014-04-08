@@ -74,7 +74,8 @@ public class AddBlock extends Strategy{
 			//get joint DoF
 			for(int i = 0; i < jointBuilder.getNumDoFs(); i++){
 				//numer of rules per DoF
-				for(int j = 0; j < Helper.RANDOM.nextInt(10); j++){
+				int numOfRules = Helper.RANDOM.nextInt(10);
+				for(int j = 0; j < numOfRules; j++){
 					//start rule builder
 					RuleBuilder ruleBuilder = new RuleBuilder();
 
