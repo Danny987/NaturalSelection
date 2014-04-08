@@ -836,7 +836,7 @@ public class Allele {
 		 * 
 		 * @return New age.
 		 */
-		public int age() {
+		public int older() {
 			return ++age;
 		}
 		

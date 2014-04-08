@@ -32,7 +32,7 @@ public class Population extends ArrayList<Hopper> {
 	// The Crossover module this Population will use.
 	private Crossover crossover;
 	// The hill-climbing Tribe brain for this Population.
-	private TribeBrain brain = new TribeBrain();
+	private TribeBrain brain = new TribeBrain(crossover);
 	// Statistics.
 	private long lifetimeOffspring;
 	private long lifetimeHillClimbs;

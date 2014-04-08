@@ -10,12 +10,18 @@
 package creature.geeksquad.genetics;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.Set;
+import java.util.TreeSet;
 
+import creature.geeksquad.genetics.Allele.Key;
+import creature.geeksquad.genetics.Allele.Value;
 import creature.geeksquad.genetics.Allele.*;
 import creature.geeksquad.library.Helper;
 
@@ -736,6 +742,38 @@ public class Crossover {
 			if (it.next().isEmpty()) {
 				it.remove();
 			}
+		}
+	}
+	
+	/**
+	 * Scans the weight table for elements that can be removed. If an element
+	 * has gone untouched for Helper.WEIGHT_MAX_AGE (20) generations, it is
+	 * removed. If the weight table exceeds Heler.WEIGHT_TABLE_CAPACITY (2000),
+	 * the oldest elements are removed. An element's weight is reset to 0 every
+	 * time it is accessed during crossover.
+	 */
+	public void adjustWeightTable() {
+		// A new set of references to the weightMap entries, sorted by age.
+		Set<Map.Entry<Key, Value>> weightSet =
+				new TreeSet<Map.Entry<Key, Value>>(
+				new Comparator<Map.Entry<Key, Value>>() {
+			@Override
+			public int compare(Map.Entry<Key, Value> e1,
+							   Map.Entry<Key, Value> e2) {
+				int a1 = e1.getValue().getAge();
+				int a2 = e2.getValue().getAge();
+				if (a1 < a2) {
+					return -1;
+				} else if (a1 > a2) {
+					return 1;
+				} else {
+					return 0;
+				}
+			}
+		});
+		weightSet.addAll(weightMap.entrySet());
+		for (Map.Entry<Key, Value> e : weightSet) {
+			
 		}
 	}
 	
