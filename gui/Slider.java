@@ -7,7 +7,6 @@ package creature.geeksquad.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.util.Hashtable;
 import javax.swing.JSlider;
 
 /**
@@ -43,6 +42,11 @@ public class Slider extends JSlider{
     public void setMaximum(int size){
         super.setMaximum(size);
         setMajorTickSpacing(size/10);
+    }
+    
+    @Override
+    public int getValue(){
+        return super.getValue() - 1;
     }
     
 }

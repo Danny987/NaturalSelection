@@ -282,7 +282,6 @@ public class Renderer implements GLEventListener {
         float height = 500;
         float width = 500;
 
-        drawBlock(gl, 500, 500, 500, new Vector3(0, 500, 0), Vector3.UP, Vector3.FORWARD);
         gl.glPushMatrix();
 
         // move to the center of the block

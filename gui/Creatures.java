@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 /**
@@ -40,10 +41,10 @@ public class Creatures {
                     future.add(executor.submit(call));
                 }
                 
-                Log.popup(null, "Loading Please Wait");
+                JFrame frame = new JFrame();
+                Log.popup(frame, "Loading Please Wait");
                 
                 Tribe tribe;
-                int i = 0;
                 for(Future<Population> f: future){
                     try {
                         String name = Names.getTribeName();
@@ -58,6 +59,7 @@ public class Creatures {
                 }
                 
                 gui = new GUI(tribeList, nameList);
+                gui.setVisible(true);
             }
         });
     }

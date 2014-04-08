@@ -17,6 +17,8 @@ import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.swing.BorderFactory;
@@ -77,12 +79,14 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private JScrollPane scroll;
 
     // Statistics stuff/////////////////////////////////
-    private JLabel currentFitness;
     private Panel statsPanel;
     private JLabel totalHillclimbs;
     private JLabel totalBreed;
     private Hopper bestHopper;
+
     private JLabel bestFitness;
+    private JLabel currentFitness;
+    private float bestFitnessValue = 0f;
 
     /////////////////////////////////////////////////////
     // contains all buttons, sliders, and JComboBox
@@ -115,6 +119,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private Button writePopulation;
     private Button loadPopulation;
     private Button getBest;
+    private Button reset;
 
     // Label...
     private JLabel currentCreature;
@@ -142,8 +147,11 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         currentTribe = tribeList.get(0);
         init();
-
-        setVisible(true);
+        try {
+            changeHopper(new Hopper(currentTribe.getHopper(0)));
+        } catch (IllegalArgumentException | GeneticsException ex) {
+            Log.error(ex.toString());
+        }
     }
 
     /**
@@ -154,8 +162,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(keyTimer)) {
-            if (hopper != null) {
-                currentFitness.setText("Current Fitness: " + hopper.getPhenotype().advanceSimulation());
+            if (hopper != null && graphicsPanel.animating()) {
+
+                float hf = hopper.getPhenotype().advanceSimulation();
+                bestFitnessValue = hf > bestFitnessValue ? hf : bestFitnessValue;
+                
+                String b = String.format("%.5f", bestFitnessValue);
+                String c = String.format("%.5f", hf);
+                bestFitness.setText("Best Fitness: " + b);
+                currentFitness.setText("Current Fitness: " + c);
             }
 
             rotate();
@@ -170,6 +185,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 generations.setText("Total Generations: " + totalGenerations);
 
                 if (secondsSinceStart != 0) {
+
                     generationsPerSecond.setText("Generations/second: " + (float) totalGenerations / secondsSinceStart);
                 }
             }
@@ -181,7 +197,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         switch (e.getActionCommand()) {
 
             // Animate Crature
-            case "Animate":
+            case "Animate On":
                 if (!graphicsPanel.animating()) {
                     animate.setText("Animator On");
                     graphicsPanel.startAnimator();
@@ -226,9 +242,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             case "Load Population":
                 break;
             case "Overachiever":
-                hopper = currentTribe.getOverachiever();
-                renderer.setHopper(hopper);
-                mainTab.setTitleAt(1, hopper.getName());
+                changeHopper(currentTribe.getOverachiever());
                 break;
 
             // Step Next Generation
@@ -241,8 +255,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 currentTribe = tribeList.get(tribes.getSelectedIndex());
 
                 try {
-                    hopper = new Hopper(currentTribe.getHopper(0));
-                    renderer.setHopper(hopper);
+                    changeHopper(new Hopper(currentTribe.getHopper(0)));
                 } catch (GeneticsException ex) {
                     Log.error(ex.toString());
                 }
@@ -252,15 +265,16 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 currentTribe = tribeList.get(tribes.getSelectedIndex());
                 if (hopper != null) {
                     try {
-                        hopper = new Hopper(currentTribe.getHopper(0));
+                        changeHopper(new Hopper(currentTribe.getHopper(0)));
                         slider.setMaximum(currentTribe.getSize() - 1);
                         slider.setValue(0);
-                        renderer.setHopper(hopper);
-                        mainTab.setTitleAt(1, hopper.getName());
                     } catch (GeneticsException ex) {
                         Log.error(ex.toString());
                     }
                 }
+                break;
+            case "Reset":
+                hopper.getPhenotype().resetSimulation();
                 break;
         }
 
@@ -303,14 +317,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
             try {
                 slider.setMaximum(currentTribe.getSize() - 1);
-                hopper = new Hopper(currentTribe.getHopper(slider.getValue()));
-                renderer.setHopper(hopper);
-                String floating = new DecimalFormat("#.#####").format(hopper.getFitness());
-                currentFitness.setText("Current Fitness: " + floating);
-
-                if (hopper != null) {
-                    mainTab.setTitleAt(1, hopper.getName());
-                }
+                changeHopper(new Hopper(currentTribe.getHopper(slider.getValue())));
             } catch (GeneticsException | NullPointerException ex) {
                 Log.error(ex.toString());
             }
@@ -358,18 +365,14 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
      * Read Genotype from user selected file
      */
     private void loadGenotype() {
-        hopper = Log.loadHopper(this, hopper);
+        changeHopper(Log.loadHopper(this, hopper));
+//        hopper.getPhenotype().
 
         if (hopper != null) {
             currentTribe.addHopper(hopper);
 
             slider.setMaximum(currentTribe.getSize() - 1);
             slider.setValue(currentTribe.getSize() - 1);
-
-            renderer.setHopper(hopper);
-            mainTab.setTitleAt(1, hopper.getName());
-            graphicsPanel.startAnimator();
-            animate.setText("Animator On");
 
             secondsSinceStart = 0;
             minutesSinceStart = 0;
@@ -471,14 +474,21 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         pause = new Button(130, 20, "Pause");
         pause.setText("Start");
 
-        animate = new Button(130, 20, "Animate");
-        animate.setText("Animator On");
+        animate = new Button(130, 20, "Animate On");
+        
         nextGeneration = new Button(130, 20, "Next Generation");
+        
         writeFile = new Button(130, 20, "Write Genome");
+        
         loadFile = new Button(130, 20, "Load Genome");
+        
         writePopulation = new Button(130, 20, "Write Population");
+        
         loadPopulation = new Button(130, 20, "Load Population");
+        
         getBest = new Button(130, 20, "Overachiever");
+        
+        reset = new Button(130, 20, "Reset");
         //////////////////////////////////////////////////////////
 
         statsPanel.add(getBest);
@@ -493,8 +503,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 0, 0, 0);
-        slider.setMaximum(currentTribe.getSize() - 1);
+        slider = new Slider("Creature", 1, currentTribe.getSize(), 1);
         slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 
@@ -550,11 +559,15 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         writePopulation.addActionListener(this);
         loadPopulation.addActionListener(this);
         getBest.addActionListener(this);
+        reset.addActionListener(this);
         tribes.addActionListener(this);
         ///////////////////////////////////////////////
 
-        currentFitness = new JLabel("Creature Fitness: 0");
+        currentFitness = new JLabel("Creature Fitness: 0.00000");
         currentFitness.setForeground(FONTCOLOR);
+
+        bestFitness = new JLabel("Best Fitness: 0.00000");
+        bestFitness.setForeground(FONTCOLOR);
 
         // Add things to the buttons panel
         buttonsPanel.add(tribes);
@@ -568,7 +581,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         buttonsPanel.add(writePopulation);
         buttonsPanel.add(loadPopulation);
         buttonsPanel.add(getBest);
+        buttonsPanel.add(bestFitness);
         buttonsPanel.add(currentFitness);
+        buttonsPanel.add(reset);
         //////////////////////////////////////////////
 
         // Setup the upper panel
@@ -581,10 +596,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         mainTab.addTab("Main", mainPanel);
         mainTab.addTab("", scroll);
         mainTab.addTab("Stats", statsPanel);
-
-        if (hopper != null) {
-            mainTab.setTitleAt(1, hopper.getName());
-        }
 
         add(mainTab, BorderLayout.CENTER);
         add(bottomPanel);
@@ -603,6 +614,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         timer.start();
         keyTimer.start();
+        
+        
     }
 
     private void rotate() {
@@ -621,5 +634,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         if (controlMap.get("down")) {
             renderer.zoomOut();
         }
+    }
+
+    private void changeHopper(Hopper hopper) {
+        bestFitnessValue = 0f;
+        this.hopper = hopper;
+        renderer.setHopper(hopper);
+        mainTab.setTitleAt(1, hopper.getName());
     }
 }

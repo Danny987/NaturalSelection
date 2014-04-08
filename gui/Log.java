@@ -8,7 +8,6 @@ import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Population;
 import creature.geeksquad.library.Helper;
-import java.awt.Color;
 import java.awt.Component;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,13 +18,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 
 /**
  *
@@ -168,7 +161,6 @@ public class Log {
             reader.readLine();
 
             line = reader.readLine();
-            System.out.println(line);
             
             while (!line.contains("/genotype") && line.length() > 2) {
 
@@ -187,6 +179,7 @@ public class Log {
 
                 alleles.add(Allele.stringToAllele(lineArray[0] + ")"));
                 alleles.add(Allele.stringToAllele("(" + lineArray[1]));
+
                 line = reader.readLine();
             }
 
