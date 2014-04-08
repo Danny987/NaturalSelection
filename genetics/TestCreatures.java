@@ -13,6 +13,7 @@ public class TestCreatures {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	public static Block[] getJoel1() {
 		Vector3.setDisplayDecimalPlaces(3);
 		Vector3.test();
@@ -150,6 +151,7 @@ public class TestCreatures {
 //		Creature mycritter = new Creature(body, rootForward, rootUp);
 	}
 	
+	@SuppressWarnings("unused")
 	public static Block[] getJoel2() {
 		Vector3.setDisplayDecimalPlaces(3);
 	    Vector3.test();

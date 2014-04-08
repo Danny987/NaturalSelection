@@ -484,7 +484,7 @@ public class Allele {
 					neuronString.length() - 1);
 		// Since the NeuronInput toString is formatted differently for the
 		// different types, we need to use regex to split it.
-		String[] strings = trimmedString.split("[\\W&&[^\\.]]+");
+		String[] strings = trimmedString.split("[\\W&&[^\\.^\\-]]+");
 		
 		EnumNeuronInputType inputType = EnumNeuronInputType.valueOf(strings[0]);
 		int boxIndex;
@@ -555,7 +555,7 @@ public class Allele {
 			default:
 				// Fall through.
 		}
-		
+		// If it gets here, it failed.
 		return false;
 	}
 	
@@ -568,20 +568,24 @@ public class Allele {
 	 */
 	@Override
 	public boolean equals(Object other) {
-		if (other instanceof Allele) {
-			if (trait.equals(((Allele) other).getTrait())) {
-				if (trait.equals(Trait.RULE_INPUT_A)
-						|| trait.equals(Trait.RULE_INPUT_B)
-						|| trait.equals(Trait.RULE_INPUT_C)
-						|| trait.equals(Trait.RULE_INPUT_D)
-						|| trait.equals(Trait.RULE_INPUT_E)) {
-					NeuronInput thisNeuron = (NeuronInput) value;
-					NeuronInput otherNeuron =
-							(NeuronInput) (((Allele) other).getValue());
-					return sameNeuron(thisNeuron, otherNeuron);
-				} else {
-					return value == ((Allele) other).getValue();
-				}
+		if (other == this) {
+			return true;
+		} else if (!(other instanceof Allele)) {
+			return false;
+		}
+
+		if (trait.equals(((Allele) other).getTrait())) {
+			if (trait.equals(Trait.RULE_INPUT_A)
+					|| trait.equals(Trait.RULE_INPUT_B)
+					|| trait.equals(Trait.RULE_INPUT_C)
+					|| trait.equals(Trait.RULE_INPUT_D)
+					|| trait.equals(Trait.RULE_INPUT_E)) {
+				NeuronInput thisNeuron = (NeuronInput) value;
+				NeuronInput otherNeuron =
+						(NeuronInput) (((Allele) other).getValue());
+				return sameNeuron(thisNeuron, otherNeuron);
+			} else {
+				return value == ((Allele) other).getValue();
 			}
 		}
 
@@ -595,7 +599,7 @@ public class Allele {
 	 */
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		return Helper.HASH_PRIME * trait.hashCode() + value.hashCode();
 	}
 	
 	/**

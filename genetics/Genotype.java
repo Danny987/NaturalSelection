@@ -1267,7 +1267,7 @@ public class Genotype {
 		 * Default constructor makes the weight methods always return a random
 		 * float.
 		 */
-		public WeightHelper() {
+		private WeightHelper() {
 			random = true;
 		}
 		
@@ -1277,7 +1277,7 @@ public class Genotype {
 		 * 
 		 * @param cross Crossover from which to clone the weight table.
 		 */
-		public WeightHelper(Crossover cross) {
+		private WeightHelper(Crossover cross) {
 			random = false;
 			// Deep clone the map.
 			for (Map.Entry<Allele, Float> e : cross.getMap().entrySet()) {
@@ -1290,7 +1290,7 @@ public class Genotype {
 		 * 
 		 * @return Random float between 0 (inclusive) and 1 (exclusive).
 		 */
-		public float weight() {
+		private float weight() {
 			return Helper.RANDOM.nextFloat();
 		}
 		
@@ -1305,7 +1305,7 @@ public class Genotype {
 		 *             weight table was set but the allele isn't in the weight
 		 *             table, returns Helper.MEDIAN_WEIGHT (5.0f).
 		 */
-		public float weight(Allele allele) {
+		private float weight(Allele allele) {
 			if (random) {
 				return weight();
 			} else if (weightMap.containsKey(allele)) {
