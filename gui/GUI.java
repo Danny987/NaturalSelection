@@ -33,6 +33,8 @@ import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.Timer;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.TitledBorder;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
@@ -388,6 +390,13 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
      * Initializes and setup the GUI
      */
     private void init() {
+        
+        try {
+            UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+            Log.error(ex.toString());
+        }
+        
         // Setup JFrame
         setSize(WIDTH + 8, HEIGHT + 50);
         getContentPane().setBackground(new Color(15, 15, 15));
@@ -396,6 +405,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         setPreferredSize(new Dimension(WIDTH + 8, HEIGHT + 50));
         setResizable(false);
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
+        
 
         // Used to set specification for closing the window
         addWindowListener(new WindowAdapter() {
