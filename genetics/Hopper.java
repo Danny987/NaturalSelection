@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import creature.geeksquad.gui.Names;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
-import creature.physics.Simulator;
 
 /**
  * A wrapper class for the Genotype and associated Creature (phenotype),
@@ -25,8 +24,12 @@ import creature.physics.Simulator;
  * @group Marcos Lemus
  */
 public class Hopper implements Comparable<Hopper> {
-	private String name = "";
+	// Class variables.
+	private static int hopperCount = 0;
+	// Instance variables.
+	private String name;
 	private int age;
+	private final long serialNumber;
 	private Genotype genotype;
 	private Creature phenotype;
 	private int timesHillClimbed;
@@ -76,6 +79,7 @@ public class Hopper implements Comparable<Hopper> {
 			name = randomName();
 		}
 		age = 0;
+		serialNumber = hopperCount++;
 		timesHillClimbed = 0;
 		timesBred = 0;
 		children = 0;
@@ -138,7 +142,6 @@ public class Hopper implements Comparable<Hopper> {
 	 * @return float Hopper's highest fitness achieved during the simulation.
 	 */
 	public float evalFitness() {
-		int steps = 0;
 		float peak = 0.0f;
 		boolean done = false;
 		
@@ -172,7 +175,6 @@ public class Hopper implements Comparable<Hopper> {
 			if (change <= 0) {
 				done = true;
 			}
-			steps++;
 		}
 		
 		fitnessEvaluations++;
@@ -316,6 +318,24 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	public int getChildren() {
 		return children;
+	}
+	
+	/**
+	 * Check if the Hopper is impotent.
+	 * 
+	 * @return True if impotent flag is set, false otherwise.
+	 */
+	public boolean isImpotent() {
+		return impotent;
+	}
+	
+	/**
+	 * Set the impotent flag.
+	 * 
+	 * @param flag Boolean value to set to impotent.
+	 */
+	public void setImpotent(boolean flag) {
+		impotent = flag;
 	}
 	
 	/**
