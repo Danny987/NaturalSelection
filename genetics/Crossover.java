@@ -214,8 +214,11 @@ public class Crossover {
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
 		
-		// Randomly choose the transition point.
-		int transition = rand.nextInt(size);
+		// Randomly choose the transition point. In order to prevent the
+		// child from being identical to the parent, the transition point
+		// cannot be within 20% length to either end.
+		int interval = size / 5;
+		int transition = rand.nextInt(size - (2 * interval)) + interval;
 		
 		// Iterate over the lists.
 		for (int i = 0; i < size; i++) {
@@ -272,9 +275,13 @@ public class Crossover {
 		ArrayList<Gene> childA = new ArrayList<Gene>();
 		ArrayList<Gene> childB = new ArrayList<Gene>();
 		
-		// Randomly choose the transition points.
-		int transition1 = rand.nextInt(size);
-		int transition2 = transition1 + rand.nextInt(size - transition1);
+		// Randomly choose the transition points. To prevent the child from
+		// being too similar to the parent, it sets a minimum distance between
+		// transitions of 10% of the strand's length.
+		int interval = size / 10;
+		int transition1 = rand.nextInt(size - (2 * interval)) + interval;
+		int transition2 = transition1 + interval + rand.nextInt(size
+				- transition1 - (2 * interval));
 		
 		// Iterate over the lists and pick a random allele from each parent.
 		for (int i = 0; i < size; i++) {
