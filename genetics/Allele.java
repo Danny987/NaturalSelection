@@ -568,13 +568,20 @@ public class Allele {
 	 */
 	@Override
 	public boolean equals(Object other) {
-		if (other == this) {
+		if (this == other) {
 			return true;
-		} else if (!(other instanceof Allele)) {
+		}
+		if ((other == null) || (other.getClass() != getClass())) {
 			return false;
 		}
-
-		if (trait.equals(((Allele) other).getTrait())) {
+		// Must be Allele.
+		Allele allele = (Allele) other;
+		// Compare Traits.
+		if (trait != allele.trait) {
+			return false;
+		}
+		// Compare values - since they're objects, they need special handling.
+		if (trait.equals(allele.getTrait())) {
 			if (trait.equals(Trait.RULE_INPUT_A)
 					|| trait.equals(Trait.RULE_INPUT_B)
 					|| trait.equals(Trait.RULE_INPUT_C)
@@ -585,7 +592,7 @@ public class Allele {
 						(NeuronInput) (((Allele) other).getValue());
 				return sameNeuron(thisNeuron, otherNeuron);
 			} else {
-				return value == ((Allele) other).getValue();
+				return value.equals(allele.getValue());
 			}
 		}
 
@@ -599,6 +606,8 @@ public class Allele {
 	 */
 	@Override
 	public int hashCode() {
+		// Since the hash code needs to be based off multiple values, we can
+		// use this nifty trick I read about where we use a small prime number.
 		return Helper.HASH_PRIME * trait.hashCode() + value.hashCode();
 	}
 	
@@ -700,6 +709,12 @@ public class Allele {
 		System.out.println("jointNeuron " + jointNeuron);
 		System.out.println("-------------------------------------------------");
 		System.out.println();
+		// Test equals and hashCode.
+		Allele a = new Allele(Trait.LENGTH, new Float(1.0f), 0.59586f);
+		Allele b = new Allele(Trait.LENGTH, new Float(1.0f), 0.106f);
+		System.out.println("a.equals(b) = " + a.equals(b));
+		System.out.println("a.hashCode = " + a.hashCode());
+		System.out.println("b.hashCode = " + b.hashCode());
 		
 	}
 	

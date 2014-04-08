@@ -738,7 +738,11 @@ public class Crossover {
 		} else if (weight < Helper.MIN_WEIGHT) {
 			weight = Helper.MIN_WEIGHT;
 		}
-		weightMap.put(new Allele(allele), weight);
+		if (weightMap.containsKey(allele)) {
+			weightMap.put(allele, weight);
+		} else {
+			weightMap.put(new Allele(allele), weight);
+		}
 	}
 	
 	/**
