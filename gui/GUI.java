@@ -13,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -142,22 +143,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         currentTribe = tribeList.get(0);
         init();
 
-        Log.loadingScreen();
-        int numbRunning = 0;
-        while (numbRunning < 8) {
-            numbRunning = 0;
-            for (Tribe t : tribeList) {
-                if (t.isRunning()) {
-                    numbRunning++;
-                }
-            }
-            Log.updateProgress(numbRunning);
-            try {
-                Thread.sleep(5);
-            } catch (InterruptedException ex) {
-            }
-        }
-
         setVisible(true);
     }
 
@@ -181,9 +166,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         if (e.getSource().equals(timer)) {
             if (!paused) {
                 time.setText(" Time: " + time());
-                if (currentTribe.isRunning()) {
-                    totalGenerations = currentTribe.getGenerations();
-                }
+                totalGenerations = currentTribe.getGenerations();
                 generations.setText("Total Generations: " + totalGenerations);
 
                 if (secondsSinceStart != 0) {
@@ -228,9 +211,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
             // Write the currently selected genome to use selected file.
             case "Write Genome":
-                if (currentTribe.isRunning()) {
-                    Log.hopper(this, hopper, currentTribe.getName());
-                }
+                Log.hopper(this, hopper, currentTribe.getName());
                 break;
 
             // Read user selected Genome
@@ -317,22 +298,22 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         if (mainTab.getSelectedIndex() == 1) {
             populateTree();
         }
-        else {
-            graphicsPanel.startAnimator();
-            animate.setText("Animator On");
-        }
 
-        try {
-            slider.setMaximum(currentTribe.getSize() - 1);
-            hopper = new Hopper(currentTribe.getHopper(slider.getValue()));
-            renderer.setHopper(hopper);
-            currentFitness.setText("Current Fitness: " + hopper.getFitness());
+        if (e.getSource().equals(slider)) {
 
-            if (hopper != null) {
-                mainTab.setTitleAt(1, hopper.getName());
+            try {
+                slider.setMaximum(currentTribe.getSize() - 1);
+                hopper = new Hopper(currentTribe.getHopper(slider.getValue()));
+                renderer.setHopper(hopper);
+                String floating = new DecimalFormat("#.#####").format(hopper.getFitness());
+                currentFitness.setText("Current Fitness: " + floating);
+
+                if (hopper != null) {
+                    mainTab.setTitleAt(1, hopper.getName());
+                }
+            } catch (GeneticsException | NullPointerException ex) {
+                Log.error(ex.toString());
             }
-        } catch (GeneticsException | NullPointerException ex) {
-            Log.error(ex.toString());
         }
     }
 
@@ -347,8 +328,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         if (str == null) {
             return;
         }
-
-        String title = str[2];
 
         root.removeAllChildren();
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
@@ -366,7 +345,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 block.add(new DefaultMutableTreeNode(str[i]));
             }
         }
-        table.setPreferredSize(new Dimension(WIDTH + 450, root.getChildCount() * root.getLeafCount()));
+        table.setPreferredSize(new Dimension(WIDTH + 450, root.getChildCount() * root.getLeafCount() * 5));
         table.setBorder(BorderFactory.createTitledBorder(null,
                                                          null,
                                                          TitledBorder.LEFT,
@@ -383,7 +362,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         if (hopper != null) {
             currentTribe.addHopper(hopper);
+
             slider.setMaximum(currentTribe.getSize() - 1);
+            slider.setValue(currentTribe.getSize() - 1);
 
             renderer.setHopper(hopper);
             mainTab.setTitleAt(1, hopper.getName());
@@ -513,9 +494,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         // Make slider////////////////////////////////////////////
         slider = new Slider("Creature", 0, 0, 0);
-        if (currentTribe.isRunning()) {
-            slider.setMaximum(currentTribe.getSize() - 1);
-        }
+        slider.setMaximum(currentTribe.getSize() - 1);
         slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 

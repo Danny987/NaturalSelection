@@ -24,6 +24,7 @@ import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 
 /**
@@ -32,11 +33,13 @@ import javax.swing.JProgressBar;
  */
 public class Log {
 
+    public static final int NUMB_CORES = Runtime.getRuntime().availableProcessors();
+    
     private static BufferedWriter writer;
     private static BufferedReader reader;
-    private static JProgressBar progress;
-    private static JFrame progressFrame;
 
+    private static LoadingScreen loadingScreen;
+    
     private static final JFileChooser fileChooser = new JFileChooser();
 
     /**
@@ -262,32 +265,12 @@ public class Log {
     }
     
     public static void popup(Component parent, String message){
-        JOptionPane.showMessageDialog(parent, 
-                                      message, 
-                                      "Evolving Virtual Creatures", 
-                                      JOptionPane.INFORMATION_MESSAGE);
-        
+        loadingScreen = new LoadingScreen(200, 200);
+        loadingScreen.setVisible(true);
     }
     
-    public static void loadingScreen(){
-        progressFrame = new JFrame("Loading");
-        progressFrame.setSize(200, 200);
-        progressFrame.setVisible(true);
-        progressFrame.setResizable(false);
-        progressFrame.setBackground(new Color(55, 55, 55));
-        progressFrame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        
-        progress = new JProgressBar(JProgressBar.HORIZONTAL, 0, 8);
-        
-        progressFrame.add(new JLabel("Loading Please Wait"));
-        progressFrame.add(progress);
-    }
-    
-    public static void updateProgress(int i){
-        progress.setValue(i);
-        if(i == 8){
-            progressFrame.dispose();
-        }
+    public static void updateProgress(){
+        loadingScreen.update();
     }
     
 }

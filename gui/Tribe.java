@@ -7,16 +7,17 @@ import creature.geeksquad.genetics.Population;
  *
  * @author Marcos
  */
-public class Tribe extends Thread {
+public class Tribe extends Thread{
 
     public static final int POPULATION_SIZE = 1000;
-    private Population population;
+    private final Population population;
 
     private boolean paused = true;
-    private boolean running = false;
+    private boolean running = true;
 
-    public Tribe(String name) {
+    public Tribe(String name, Population population) {
         this.setName(name);
+        this.population = population;
     }
 
     /**
@@ -29,11 +30,6 @@ public class Tribe extends Thread {
     @Override
     public void run() {
         
-        synchronized (this) {
-            population = new Population(POPULATION_SIZE);
-            running = true;
-        }
-
         while (running) {
             synchronized (this) {
 
@@ -50,10 +46,6 @@ public class Tribe extends Thread {
         }
     }
 
-    public boolean isRunning(){
-            return running;
-    }
-    
     public int getGenerations() {
         return population.getGenerations();
     }

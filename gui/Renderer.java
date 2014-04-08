@@ -77,8 +77,8 @@ public class Renderer implements GLEventListener {
                 length = body[i].getLength();
                 height = body[i].getHeight();
                 width = body[i].getWidth();
+                
                 center = phenotype.getBlockCenter(i);
-
                 up = phenotype.getBlockUpVector(i);
                 forward = phenotype.getBlockForwardVector(i);
 
@@ -181,7 +181,6 @@ public class Renderer implements GLEventListener {
         // scale to the size of the given block
         gl.glScalef(zoomAmount*length, zoomAmount*height, zoomAmount*width);
 
-//        System.out.println("Up Vector = " + up + "Forward Vector = " + forward);
         setColor(gl, length / 10, height / 10, width / 10);
 
         // Draw the vertecies 

@@ -5,10 +5,13 @@
  */
 package creature.geeksquad.gui;
 
+import creature.geeksquad.genetics.Population;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import javax.swing.SwingUtilities;
 
 /**
@@ -25,24 +28,35 @@ public class Creatures {
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                int numberofcores = Runtime.getRuntime().availableProcessors();
-                Log.initialize(numberofcores);
+                Log.initialize(Log.NUMB_CORES);
                 List<Tribe> tribeList = new ArrayList<>();
                 List<String> nameList = new ArrayList<>();
+                List<Future<Population>> future = new ArrayList<>();
                 
-                for (int i = 0; i < numberofcores; i++) {
-                    String name = i + ": " + Names.getTribeName();
-                    
-                    while(nameList.contains(name)) name = i + ": " + Names.getTribeName();
-                    
-                    tribeList.add(new Tribe(name));
-                    nameList.add(name);
+                ExecutorService executor = Executors.newFixedThreadPool(Log.NUMB_CORES);
+                
+                CallMe call = new CallMe();
+                for(int i = 0; i < Log.NUMB_CORES; i++){
+                    future.add(executor.submit(call));
                 }
-
-                for (Tribe t : tribeList) {
-                    t.start();
+                
+                Log.popup(null, "Loading Please Wait");
+                
+                Tribe tribe;
+                int i = 0;
+                for(Future<Population> f: future){
+                    try {
+                        String name = Names.getTribeName();
+                        tribe = new Tribe(name, f.get());
+                        tribe.start();
+                        tribeList.add(tribe);
+                        nameList.add(name);
+                        Log.updateProgress();
+                    } catch (InterruptedException | ExecutionException ex) {
+                        Log.error(ex.toString());
+                    }
                 }
-
+                
                 gui = new GUI(tribeList, nameList);
             }
         });
