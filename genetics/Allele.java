@@ -38,8 +38,9 @@ public class Allele {
 	 *   ...etc.
 	 */
 	private Trait trait;
-	private Object value;
+	private final Object value;
 	private float weight;
+	public final Key key;
 	
 	/**
 	 * Instantiates an empty Allele. Used for padding when strand lengths
@@ -50,6 +51,7 @@ public class Allele {
 		trait = Trait.EMPTY;
 		value = "none";
 		weight = 0.0f;
+		key = new Key(trait, value);
 	}
 	
 	/**
@@ -189,9 +191,6 @@ public class Allele {
 							"Index to parent must be >= -1.");
 				}
 				break;
-			case JOINT_ORIENTATION:
-				this.value = new Float((Float) value);
-				break;
 			case DOF_MARKER:
 				int dof = (Integer) value;
 				if (dof < EnumJointType.DOF_1 || dof > EnumJointType.DOF_2) {
@@ -214,6 +213,7 @@ public class Allele {
 		}
 		
 		this.weight = weight;
+		key = new Key(trait, value);
 	}
 	
 	/**
@@ -299,124 +299,124 @@ public class Allele {
 		this.weight = weight;
 	}
 	
-	/**
-	 * A float setter for the Allele's value.
-	 * 
-	 * @param value Float to assign to this Allele's value.
-	 * @throws IllegalArgumentException if input is invalid for this type.
-	 */
-	public void setValue(float value) throws IllegalArgumentException {
-		if (trait.equals(Trait.HEIGHT) || trait.equals(Trait.WIDTH) ||
-			trait.equals(Trait.LENGTH) ||
-			trait.equals(Trait.JOINT_ORIENTATION)) {
-				this.value = new Float(value);
-		} else {
-			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				" cannot be assigned value of type float.");
-		}
-	}
-	
-	/**
-	 * An int setter for the Allele's value.
-	 * 
-	 * @param value Int to assign to this Allele's value.
-	 * @throws IllegalArgumentException if input is invalid for this type.
-	 */
-	public void setValue(int value) throws IllegalArgumentException {
-		if (trait.equals(Trait.INDEX_TO_PARENT) ||
-					(trait.equals((Trait.DOF_MARKER)))) {
-				this.value = new Integer(value);
-		} else {
-			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				" cannot be assigned value of type int.");
-		}
-		
-	}
-	
-	/**
-	 * An EnumJointType setter for the Allele's value.
-	 * 
-	 * @param value EnumJointType to assign to this Allele's value.
-	 * @throws IllegalArgumentException if input is invalid for this type.
-	 */
-	public void setValue(EnumJointType value) throws IllegalArgumentException {
-		if (trait.equals(Trait.JOINT_TYPE)) {
-			this.value = value;
-		} else {
-			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				" cannot be assigned value of type EnumJointType.");
-		}
-	}
-	
-	/**
-	 * An EnumJointSite setter for the Allele's value.
-	 * 
-	 * @param value EnumJointSite to assign to this Allele's value.
-	 * @throws IllegalArgumentException if input is invalid for this type.
-	 */
-	public void setValue(EnumJointSite value) throws IllegalArgumentException {
-		if (trait.equals(Trait.JOINT_SITE_ON_PARENT) ||
-				trait.equals(Trait.JOINT_SITE_ON_CHILD)) {
-			this.value = value;
-		} else {
-			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				" cannot be assigned value of type EnumJointSite.");
-		}
-	}
-	
-	/**
-	 * An EnumOperatorBinary setter for the Allele's value.
-	 * 
-	 * @param value EnumOperatorBinary to assign to this Allele's value.
-	 * @throws IllegalArgumentException if input is invalid for this type.
-	 */
-	public void setValue(EnumOperatorBinary value)
-								throws IllegalArgumentException {
-		if (trait.equals(Trait.BINARY_OPERATOR_1) ||
-				trait.equals(Trait.BINARY_OPERATOR_3)) {
-			this.value = value;
-		} else {
-			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				" cannot be assigned value of type EnumOperatorBinary.");
-		}
-	}
-	
-	/**
-	 * An EnumOperatorUnary setter for the Allele's value.
-	 * 
-	 * @param value EnumOperatorUnary to assign to this Allele's value.
-	 * @throws IllegalArgumentException if input is invalid for this type.
-	 */
-	public void setValue(EnumOperatorUnary value)
-								throws IllegalArgumentException {
-		if (trait.equals(Trait.UNARY_OPERATOR_2) ||
-				trait.equals(Trait.UNARY_OPERATOR_4)) {
-			this.value = value;
-		} else {
-			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				" cannot be assigned value of type EnumOperatorUnary.");
-		}
-	}
-	
-	/**
-	 * A NeuronInput setter for the Allele's value.
-	 * 
-	 * @param value NeuronInput to assign to this Allele's value.
-	 * @throws IllegalArgumentException if input is invalid for this type.
-	 */
-	public void setValue(NeuronInput value)
-								throws IllegalArgumentException {
-		if (trait.equals(Trait.RULE_INPUT_A) ||
-				trait.equals(Trait.RULE_INPUT_B) ||
-				trait.equals(Trait.RULE_INPUT_C) ||
-				trait.equals(Trait.RULE_INPUT_D) ||
-				trait.equals(Trait.RULE_INPUT_E)) {
-			this.value = value;
-		} else {
-			throw new IllegalArgumentException("Allele of type Trait." + trait +
-				" cannot be assigned value of type EnumJointType.");
-		}
-	}
+//	/**
+//	 * A float setter for the Allele's value.
+//	 * 
+//	 * @param value Float to assign to this Allele's value.
+//	 * @throws IllegalArgumentException if input is invalid for this type.
+//	 */
+//	public void setValue(float value) throws IllegalArgumentException {
+//		if (trait.equals(Trait.HEIGHT) || trait.equals(Trait.WIDTH) ||
+//			trait.equals(Trait.LENGTH) ||
+//			trait.equals(Trait.JOINT_ORIENTATION)) {
+//				this.value = new Float(value);
+//		} else {
+//			throw new IllegalArgumentException("Allele of type Trait." + trait +
+//				" cannot be assigned value of type float.");
+//		}
+//	}
+//	
+//	/**
+//	 * An int setter for the Allele's value.
+//	 * 
+//	 * @param value Int to assign to this Allele's value.
+//	 * @throws IllegalArgumentException if input is invalid for this type.
+//	 */
+//	public void setValue(int value) throws IllegalArgumentException {
+//		if (trait.equals(Trait.INDEX_TO_PARENT) ||
+//					(trait.equals((Trait.DOF_MARKER)))) {
+//				this.value = new Integer(value);
+//		} else {
+//			throw new IllegalArgumentException("Allele of type Trait." + trait +
+//				" cannot be assigned value of type int.");
+//		}
+//		
+//	}
+//	
+//	/**
+//	 * An EnumJointType setter for the Allele's value.
+//	 * 
+//	 * @param value EnumJointType to assign to this Allele's value.
+//	 * @throws IllegalArgumentException if input is invalid for this type.
+//	 */
+//	public void setValue(EnumJointType value) throws IllegalArgumentException {
+//		if (trait.equals(Trait.JOINT_TYPE)) {
+//			this.value = value;
+//		} else {
+//			throw new IllegalArgumentException("Allele of type Trait." + trait +
+//				" cannot be assigned value of type EnumJointType.");
+//		}
+//	}
+//	
+//	/**
+//	 * An EnumJointSite setter for the Allele's value.
+//	 * 
+//	 * @param value EnumJointSite to assign to this Allele's value.
+//	 * @throws IllegalArgumentException if input is invalid for this type.
+//	 */
+//	public void setValue(EnumJointSite value) throws IllegalArgumentException {
+//		if (trait.equals(Trait.JOINT_SITE_ON_PARENT) ||
+//				trait.equals(Trait.JOINT_SITE_ON_CHILD)) {
+//			this.value = value;
+//		} else {
+//			throw new IllegalArgumentException("Allele of type Trait." + trait +
+//				" cannot be assigned value of type EnumJointSite.");
+//		}
+//	}
+//	
+//	/**
+//	 * An EnumOperatorBinary setter for the Allele's value.
+//	 * 
+//	 * @param value EnumOperatorBinary to assign to this Allele's value.
+//	 * @throws IllegalArgumentException if input is invalid for this type.
+//	 */
+//	public void setValue(EnumOperatorBinary value)
+//								throws IllegalArgumentException {
+//		if (trait.equals(Trait.BINARY_OPERATOR_1) ||
+//				trait.equals(Trait.BINARY_OPERATOR_3)) {
+//			this.value = value;
+//		} else {
+//			throw new IllegalArgumentException("Allele of type Trait." + trait +
+//				" cannot be assigned value of type EnumOperatorBinary.");
+//		}
+//	}
+//	
+//	/**
+//	 * An EnumOperatorUnary setter for the Allele's value.
+//	 * 
+//	 * @param value EnumOperatorUnary to assign to this Allele's value.
+//	 * @throws IllegalArgumentException if input is invalid for this type.
+//	 */
+//	public void setValue(EnumOperatorUnary value)
+//								throws IllegalArgumentException {
+//		if (trait.equals(Trait.UNARY_OPERATOR_2) ||
+//				trait.equals(Trait.UNARY_OPERATOR_4)) {
+//			this.value = value;
+//		} else {
+//			throw new IllegalArgumentException("Allele of type Trait." + trait +
+//				" cannot be assigned value of type EnumOperatorUnary.");
+//		}
+//	}
+//	
+//	/**
+//	 * A NeuronInput setter for the Allele's value.
+//	 * 
+//	 * @param value NeuronInput to assign to this Allele's value.
+//	 * @throws IllegalArgumentException if input is invalid for this type.
+//	 */
+//	public void setValue(NeuronInput value)
+//								throws IllegalArgumentException {
+//		if (trait.equals(Trait.RULE_INPUT_A) ||
+//				trait.equals(Trait.RULE_INPUT_B) ||
+//				trait.equals(Trait.RULE_INPUT_C) ||
+//				trait.equals(Trait.RULE_INPUT_D) ||
+//				trait.equals(Trait.RULE_INPUT_E)) {
+//			this.value = value;
+//		} else {
+//			throw new IllegalArgumentException("Allele of type Trait." + trait +
+//				" cannot be assigned value of type EnumJointType.");
+//		}
+//	}
 	
 	/**
 	 * Create a completely fresh Allele built from an input String. Used
@@ -606,8 +606,8 @@ public class Allele {
 	 */
 	@Override
 	public int hashCode() {
-		// Since the hash code needs to be based off multiple values, we can
-		// use this nifty trick I read about where we use a small prime number.
+		// Since the hash code needs to be based off multiple values, we use a
+		// small prime number.
 		return Helper.HASH_PRIME * trait.hashCode() + value.hashCode();
 	}
 	
@@ -647,6 +647,218 @@ public class Allele {
 	}
 	
 	/**
+	 * A nested map Key class containing the Trait and value of the Allele for
+	 * storage in Crossover's weight table.
+	 */
+	public static class Key {
+		public final Trait trait;
+		public final Object value;
+		
+		/**
+		 * Instantiates the Key with the passed Trait and value.
+		 * 
+		 * @param trait The Key/Allele's Trait.
+		 * @param value The Key/Allele's value Object.
+		 */
+		public Key(Trait trait, Object value) {
+			this.trait = trait;
+			this.value = value;
+		}
+		
+		/**
+		 * Instantiates the Key with the Trait and value of the passed Allele.
+		 * 
+		 * @param allele Allele from which to pull the Trait and value.
+		 */
+		public Key(Allele allele) {
+			this(allele.trait, allele.value);
+		}
+		
+		/**
+		 * Override of equals. Keys, like Alleles, are considered equal if
+		 * their Traits and values are the same.
+		 * 
+		 * @param other Key to compare to.
+		 * @return True if same trait and value match; false otherwise.
+		 */
+		@Override
+		public boolean equals(Object other) {
+			if (this == other) {
+				return true;
+			}
+			if ((other == null) || (other.getClass() != getClass())) {
+				return false;
+			}
+			// Must be Key.
+			Key key = (Key) other;
+			// Compare Traits.
+			if (trait != key.trait) {
+				return false;
+			}
+			// Compare values - since they're objects, they need special
+			// handling.
+			if (trait.equals(key.trait)) {
+				if (trait.equals(Trait.RULE_INPUT_A)
+						|| trait.equals(Trait.RULE_INPUT_B)
+						|| trait.equals(Trait.RULE_INPUT_C)
+						|| trait.equals(Trait.RULE_INPUT_D)
+						|| trait.equals(Trait.RULE_INPUT_E)) {
+					NeuronInput thisNeuron = (NeuronInput) value;
+					NeuronInput otherNeuron =
+							(NeuronInput) (((Key) other).value);
+					return sameNeuron(thisNeuron, otherNeuron);
+				} else {
+					return value.equals(key.value);
+				}
+			}
+
+			return false;
+		}
+		
+		/**
+		 * Override of hashCode.
+		 * 
+		 * @return hashCode of this Gene's alleles array.
+		 */
+		@Override
+		public int hashCode() {
+			// Since the hash code needs to be based off multiple values, we 
+			// use a small prime number.
+			return Helper.HASH_PRIME * trait.hashCode() + value.hashCode();
+		}
+		
+		/**
+		 * Override of toString.
+		 * 
+		 * @return String representation as "[Trait:Value]".
+		 */
+		@Override
+		public String toString() {
+			return "[" + trait + ":" + value + "]";
+		}
+	}
+	
+	/**
+	 * A nested map Value class containing the weight and age for storage
+	 * in Crossover's weight table.
+	 */
+	public static class Value {
+		private float weight;
+		private int age;
+		
+		
+		/**
+		 * Instantiates the Value with the passed weight and age.
+		 * 
+		 * @param weight The weight for this value's Allele.
+		 * @param age The age for this value.
+		 */
+		public Value(float weight, int age) {
+			this.weight = weight;
+			this.age = age;
+		}
+
+		/**
+		 * Instantiates the Value with the passed weight and age 0.
+		 * 
+		 * @param weight The weight for this value's Allele.
+		 */
+		public Value(float weight) {
+			this(weight, 0);
+		}
+		
+		/**
+		 * Instantiates the Value as a deep clone of the passed Value.
+		 * 
+		 * @param value Value to be cloned.
+		 */
+		public Value(Value value) {
+			this.weight = value.weight;
+			this.age = value.age;
+		}
+		
+		/**
+		 * Instantiates the Value with the weight of a passed Allele and age 0.
+		 * 
+		 * @param allele Allele from which to pull the weight.
+		 */
+		public Value(Allele allele) {
+			this(allele.weight);
+		}
+		
+		/**
+		 * Getter for weight.
+		 * 
+		 * @return Weight as a float.
+		 */
+		public float getWeight() {
+			return weight;
+		}
+		
+		/**
+		 * Setter for weight.
+		 * 
+		 * @param weight New weight float to assign.
+		 */
+		public void setWeight(float weight) {
+			if (weight > Helper.MAX_WEIGHT) {
+				weight = Helper.MAX_WEIGHT;
+			} else if (weight < Helper.MIN_WEIGHT) {
+				weight = Helper.MIN_WEIGHT;
+			}
+			this.weight = weight;
+		}
+		
+		/**
+		 * Getter for age.
+		 * 
+		 * @return Age as an int.
+		 */
+		public int getAge() {
+			return age;
+		}
+		
+		/**
+		 * Setter for age.
+		 * 
+		 * @param age New age int to assign.
+		 */
+		public void setAge(int age) {
+			if (age < 0) {
+				this.age = 0;
+			} else {
+				this.age = age;
+			}
+		}
+		
+		/**
+		 * Incrementer for age.
+		 * 
+		 * @return New age.
+		 */
+		public int age() {
+			return ++age;
+		}
+		
+		/**
+		 * Sets age to zero.
+		 */
+		public void floor() {
+			age = 0;
+		}
+		
+		/**
+		 * Override of toString.
+		 * 
+		 * @return String representation as "[Weight:Age]".
+		 */
+		@Override
+		public String toString() {
+			return "[" + weight + ":" + age + "]";
+		}
+	}
+	
+	/**
 	 * Allele main method for testing.
 	 * 
 	 * @param args Command-line arguments.
@@ -680,15 +892,6 @@ public class Allele {
 				default:
 					break;
 			}
-		}
-		
-		// Check to make sure the setters throw exceptions properly.
-		try {
-			alleles.get(0).setValue(EnumJointType.HINGE);
-		} catch (IllegalArgumentException ex) {
-			System.out.println();
-			System.out.println("***** THIS EXCEPTION MEANS IT'S WORKING *****");
-			ex.printStackTrace();
 		}
 		
 		System.out.println("-------------------------------------------------");

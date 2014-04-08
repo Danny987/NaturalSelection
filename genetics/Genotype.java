@@ -15,7 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 
-import creature.geeksquad.genetics.Allele.Trait;
+import creature.geeksquad.genetics.Allele.*;
 import creature.geeksquad.genetics.Crossover.Strategy;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
@@ -1261,7 +1261,7 @@ public class Genotype {
 	 */
 	private class WeightHelper {
 		private boolean random;
-		private Map<Allele, Float> weightMap = new HashMap<Allele, Float>();
+		private Map<Key, Value> weightMap = new HashMap<Key, Value>();
 		
 		/**
 		 * Default constructor makes the weight methods always return a random
@@ -1280,8 +1280,8 @@ public class Genotype {
 		private WeightHelper(Crossover cross) {
 			random = false;
 			// Deep clone the map.
-			for (Map.Entry<Allele, Float> e : cross.getMap().entrySet()) {
-				weightMap.put(new Allele(e.getKey()), new Float(e.getValue()));
+			for (Map.Entry<Key, Value> e : cross.getMap().entrySet()) {
+				weightMap.put(e.getKey(), new Value(e.getValue()));
 			}
 		}
 		
@@ -1309,7 +1309,7 @@ public class Genotype {
 			if (random) {
 				return weight();
 			} else if (weightMap.containsKey(allele)) {
-				return weightMap.get(allele);
+				return weightMap.get(allele).getWeight();
 			} else {
 				return Helper.MEDIAN_WEIGHT;
 			}

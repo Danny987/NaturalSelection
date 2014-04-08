@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
 
-import creature.geeksquad.genetics.Allele.Trait;
+import creature.geeksquad.genetics.Allele.*;
 import creature.geeksquad.library.Helper;
 
 /**
@@ -28,13 +28,13 @@ import creature.geeksquad.library.Helper;
  */
 public class Crossover {
 	private static Random rand = Helper.RANDOM;
-	private Map<Allele, Float> weightMap;
+	private Map<Key, Value> weightMap;
 	
 	/**
 	 * Instantiate a new Crossover and initialize an empty weight table.
 	 */
 	public Crossover() {
-		weightMap = new HashMap<Allele, Float>();
+		weightMap = new HashMap<Key, Value>();
 	}
 	
 	/**
@@ -55,27 +55,43 @@ public class Crossover {
 	 */
 	public Crossover(Crossover crossA, Crossover crossB) {
 		this();
-		// Average the weights from the two input Crossovers.
-		for (Map.Entry<Allele, Float> entry : weightMap.entrySet()) {
-			Allele allele = entry.getKey();
-			float weight = entry.getValue();
-			weightMap.put(new Allele(allele), weight);
+		// Average the weights from the two input Crossovers. If a Key only
+		// appears in one map, only its weight gets used. Since this Crossover
+		// will only be used once, its ages don't matter, so they just get
+		// set to 0.
+		for (Map.Entry<Key, Value> e : crossA.weightMap.entrySet()) {
+			weightMap.put(e.getKey(), e.getValue());
+		}
+		for (Map.Entry<Key, Value> e : crossB.weightMap.entrySet()) {
+			Key k = e.getKey();
+			Value v = e.getValue();
+			if (weightMap.containsKey(k)) {
+				float oldWeight = v.getWeight();
+				float newWeight = (oldWeight + v.getWeight()) / 2;
+				weightMap.put(k, new Value(newWeight));
+			} else {
+				weightMap.put(k, v);
+			}
 		}
 	}
 	
 	/**
 	 * Instantiates a new Crossover with the data from the provided map. If the
 	 * map doesn't contain data for a particular key, it assigns the value for
-	 * that key to Helper.MEDIAN_WEIGHT.
+	 * that key to Helper.MEDIAN_WEIGHT with age 0.
 	 * 
-	 * @param map Map<Allele, Float> containing the data for this Crossover.
+	 * @param map Map<Key, Value> containing the data for this Crossover.
 	 */
-	public Crossover(Map<Allele, Float> map) {
+	public Crossover(Map<Key, Value> map) {
 		this();
-		for (Entry<Allele, Float> entry : map.entrySet()) {
-			Allele allele = entry.getKey();
-			float weight = entry.getValue();
-			weightMap.put(new Allele(allele), weight);
+		for (Entry<Key, Value> entry : map.entrySet()) {
+			Key k = entry.getKey();
+			Value v = entry.getValue();
+			if (weightMap.containsKey(k)) {
+				weightMap.put(k, new Value(v));
+			} else {
+				weightMap.put(k, new Value(Helper.MEDIAN_WEIGHT, 0));
+			}
 		}
 	}
 	
@@ -555,11 +571,14 @@ public class Crossover {
 		}
 		Allele newAllele;
 		float weight = allele.getWeight();
-		if (!weightMap.containsKey(allele)) {
-			weightMap.put(allele, weight);
+		if (!weightMap.containsKey(allele.key)) {
+			weightMap.put(allele.key, new Value(allele));
 			return allele;
 		}
-		float mapWeight = weightMap.get(allele);
+		
+		Value mapValue = weightMap.get(allele.key);
+		mapValue.floor();
+		float mapWeight = mapValue.getWeight();
 	
 		// Adjust the child Allele's weight toward the map weight.
 		if (weight > mapWeight) {
@@ -721,13 +740,13 @@ public class Crossover {
 	}
 	
 	/**
-	 * Getter for the weights in the weight table.
+	 * Getter for the weight of a specified Allele in the weight table.
 	 * 
 	 * @param allele Allele key to look up in the weights table.
 	 * @return The weight attached to key Trait and value in the weights table.
 	 */
 	public float getWeight(Allele allele) {
-		return weightMap.get(allele);
+		return weightMap.get(allele.key).getWeight();
 	}
 	
 	/**
@@ -745,10 +764,11 @@ public class Crossover {
 		} else if (weight < Helper.MIN_WEIGHT) {
 			weight = Helper.MIN_WEIGHT;
 		}
-		if (weightMap.containsKey(allele)) {
-			weightMap.put(allele, weight);
+		// Accessing a Key in the map resets its age to 0.
+		if (weightMap.containsKey(allele.key)) {
+			weightMap.put(allele.key, new Value(weight));
 		} else {
-			weightMap.put(new Allele(allele), weight);
+			weightMap.put(allele.key, new Value(weight));
 		}
 	}
 	
@@ -761,16 +781,17 @@ public class Crossover {
 	 * 		      positive, increases the value; if negative, decreases.
 	 */
 	public void setWeightPercent(Allele allele, float percent) {
-		if (weightMap.containsKey(allele)) {
-			float old = weightMap.get(allele);
+		if (weightMap.containsKey(allele.key)) {
+			float old = weightMap.get(allele.key).getWeight();
 			if (old + (old * percent) > Helper.MAX_WEIGHT) {
 				percent = Helper.MAX_WEIGHT;
 			} else if (old + (old * percent) < Helper.MIN_WEIGHT) {
 				percent = Helper.MIN_WEIGHT;
 			}
-			weightMap.put(new Allele(allele), old + (old * percent));
+			weightMap.get(allele.key).setWeight(old + (old * percent));
+			weightMap.get(allele.key).floor();
 		} else {
-			weightMap.put(allele, allele.getWeight());
+			weightMap.put(allele.key, new Value(allele.getWeight()));
 		}
 	}
 	
@@ -799,9 +820,9 @@ public class Crossover {
 	/**
 	 * Getter for weightMap.
 	 * 
-	 * @return Map<Allele, Float> containing the weight table.
+	 * @return Map<Key, Value> containing the weight table.
 	 */
-	public Map<Allele, Float> getMap() {
+	public Map<Key, Value> getMap() {
 		return weightMap;
 	}
 	
@@ -814,10 +835,12 @@ public class Crossover {
 	public String toString() {
 		StringBuilder builder = new StringBuilder("");
 		builder.append("{");
-		for (Map.Entry<Allele, Float> entry : weightMap.entrySet()) {
+		for (Map.Entry<Key, Value> entry : weightMap.entrySet()) {
+			builder.append("(");
 			builder.append(entry.getKey());
 			builder.append(":");
 			builder.append(entry.getValue());
+			builder.append(")");
 			builder.append(Helper.NEWLINE);
 		}
 		if (builder.length() > 1) {
