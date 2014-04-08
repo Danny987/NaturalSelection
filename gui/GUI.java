@@ -13,12 +13,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.media.opengl.GLCapabilities;
 import javax.media.opengl.GLProfile;
 import javax.swing.BorderFactory;
@@ -49,7 +46,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     //Size
     private final int WIDTH = 700;
     private final int HEIGHT = 600;
-
+    private Dimension size;
+    
     //Controls
     private final PlayerControls controls = new PlayerControls();
     private final Map<String, Boolean> controlMap = controls.getInputs();
@@ -356,7 +354,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
         table.setPreferredSize(new Dimension(WIDTH + 450, root.getChildCount() * root.getLeafCount() * 5));
         table.setBorder(BorderFactory.createTitledBorder(null,
-                                                         null,
+                                                         "ID number: " + Long.toString(hopper.getSerial()),
                                                          TitledBorder.LEFT,
                                                          TitledBorder.TOP,
                                                          null,
@@ -398,11 +396,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
         
         // Setup JFrame
-        setSize(WIDTH + 8, HEIGHT + 50);
+        size = new Dimension(WIDTH + 8, HEIGHT + 50);
+        setSize(size);
         getContentPane().setBackground(new Color(15, 15, 15));
-        setMinimumSize(new Dimension(WIDTH + 8, HEIGHT + 50));
-        setMaximumSize(new Dimension(WIDTH + 8, HEIGHT + 50));
-        setPreferredSize(new Dimension(WIDTH + 8, HEIGHT + 50));
+        setMinimumSize(size);
+        setMaximumSize(size);
+        setPreferredSize(size);
         setResizable(false);
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
         
@@ -430,17 +429,18 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         //////////////////////////////////////////////////
         // main tab///////////////////////////////////////
         mainTab = new JTabbedPane();
-        mainTab.setSize(WIDTH, HEIGHT);
-        mainTab.setMinimumSize(new Dimension(WIDTH, HEIGHT));
-        mainTab.setMaximumSize(new Dimension(WIDTH, HEIGHT));
+        size = new Dimension(WIDTH, HEIGHT);
+        mainTab.setSize(size);
+        mainTab.setMinimumSize(size);
+        mainTab.setMaximumSize(size);
         //////////////////////////////////////////////////
 
         // Initialize JPanels
-        mainPanel = new Panel(WIDTH, HEIGHT);
+        mainPanel = new Panel(size);
         mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.X_AXIS));
 
         // Stats contains number of sucessful breads/hill climbs, over achiever for population, heighest fitness
-        statsPanel = new Panel(WIDTH, HEIGHT);
+        statsPanel = new Panel(size);
         statsPanel.setBackground(BACKGROUND_COLOR);
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
 
@@ -456,10 +456,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         statsPanel.add(bestFitness);
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
-        buttonsPanel = new Panel(WIDTH - graphicsPanel.getWidth(), HEIGHT);
+        size = new Dimension(WIDTH - graphicsPanel.getWidth(), HEIGHT);
+        buttonsPanel = new Panel(size);
         buttonsPanel.setBackground(BACKGROUND_COLOR);
 
-        bottomPanel = new Panel(WIDTH, 20);
+        size = new Dimension(WIDTH, 20);
+        bottomPanel = new Panel(size);
         bottomPanel.setBackground(BACKGROUND_COLOR);
 
         time = new JLabel(" Time: 0:00");
@@ -481,34 +483,35 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         //////////////////////////////////////////////////////////////////
 
         //Initialize buttons
-        pause = new Button(130, 20, "Pause");
+        size = new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20);
+        pause = new Button(size, "Pause");
         pause.setText("Start");
 
-        animate = new Button(130, 20, "Animate On");
+        animate = new Button(size, "Animate On");
         
-        nextGeneration = new Button(130, 20, "Next Generation");
+        nextGeneration = new Button(size, "Next Generation");
         
-        writeFile = new Button(130, 20, "Write Genome");
+        writeFile = new Button(size, "Write Genome");
         
-        loadFile = new Button(130, 20, "Load Genome");
+        loadFile = new Button(size, "Load Genome");
         
-        writePopulation = new Button(130, 20, "Write Population");
+        writePopulation = new Button(size, "Write Population");
         
-        loadPopulation = new Button(130, 20, "Load Population");
+        loadPopulation = new Button(size, "Load Population");
         
-        getBest = new Button(130, 20, "Overachiever");
+        getBest = new Button(size, "Overachiever");
         
-        reset = new Button(130, 20, "Reset");
+        reset = new Button(size, "Reset");
         //////////////////////////////////////////////////////////
 
         statsPanel.add(getBest);
 
         // Initialize tribes JComboBox/////////////////////////////
         tribes = new JComboBox(nameList.toArray());
-        tribes.setSize(new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20));
-        tribes.setPreferredSize(new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20));
-        tribes.setMaximumSize(new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20));
-        tribes.setMinimumSize(new Dimension(WIDTH - graphicsPanel.getWidth() - 20, 20));
+        tribes.setSize(size);
+        tribes.setPreferredSize(size);
+        tribes.setMaximumSize(size);
+        tribes.setMinimumSize(size);
         tribes.setActionCommand("Change Tribe");
         ///////////////////////////////////////////////////////////
 
@@ -523,7 +526,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         //////////////////////////////////////////////////////////
         // Setup default table/////////////////////////////////////
-        table = new Panel(WIDTH, HEIGHT);
+        table = new Panel(new Dimension(WIDTH, HEIGHT));
         table.setAlignmentX(CENTER_ALIGNMENT);
         table.setBorder(BorderFactory.createTitledBorder(null,
                                                          "No Selection",
@@ -641,8 +644,17 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         if (controlMap.get("up")) {
             renderer.zoomIn();
         }
-        if (controlMap.get("down")) {
+        else if (controlMap.get("down")) {
             renderer.zoomOut();
+        }
+        else if (controlMap.get("left")) {
+            renderer.rotateLeft();
+        }
+        else if (controlMap.get("right")) {
+            renderer.rotateRight();
+        }
+        else if(controlMap.get("space")){
+            hopper.getPhenotype().resetSimulation();
         }
     }
 

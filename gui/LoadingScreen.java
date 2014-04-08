@@ -28,7 +28,7 @@ public class LoadingScreen extends JFrame{
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setBackground(new Color(55, 0, 55));
         
-        configButton = new Button(200, 50, "Configure");
+        configButton = new Button(new Dimension(200, 20), "Configure");
         loadingLabel = new JLabel("Loading Please Wait");
         loadingLabel.setForeground(new Color(205, 205, 205));
         progressBar = new JProgressBar(JProgressBar.HORIZONTAL, 0, 8);

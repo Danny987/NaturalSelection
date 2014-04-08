@@ -164,8 +164,6 @@ public class Log {
             
             while (!line.contains("/genotype") && line.length() > 2) {
 
-                System.out.println(line);
-                
                 if (line.startsWith("{")) {
                     line = line.replace("{", "");
                 }

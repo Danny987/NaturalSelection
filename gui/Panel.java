@@ -18,9 +18,8 @@ public class Panel extends JPanel{
      * @param width
      * @param height
      */
-    public Panel(int width, int height){
+    public Panel(Dimension size){
         super();
-        Dimension size = new Dimension(width, height);
         setSize(size);
         setPreferredSize(size);
         setMinimumSize(size);

@@ -13,15 +13,14 @@ public class Button extends JButton
 
     /**
      *
+     * @param size
      * @param width
      * @param height
      * @param name
      */
-    public Button(int width, int height, String name)
+    public Button(Dimension size, String name)
     {
         super(name);
-        
-        Dimension size = new Dimension(width, height);
         
         setSize(size);
         setPreferredSize(size);
