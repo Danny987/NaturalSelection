@@ -35,8 +35,8 @@ public class Helper {
 	// giving up.
 	public static final int FAULT_TOLERENCE = 50;
 	// Max size of the Crossover weight table and age to remove weights.
-	public static final int WEIGHT_TABLE_CAPACITY = 2000;
-	public static final int MAX_WEIGHT_AGE = 20;
+	public static final int WEIGHT_TABLE_CAPACITY = 1000;
+	public static final int MAX_WEIGHT_AGE = 10;
 	// Seed constants.
 	public static final int SEED_MAX_BLOCKS = 12;
 	public static final int SEED_MAX_SIZE = 10;

@@ -262,6 +262,9 @@ public class Population extends ArrayList<Hopper> {
 		flushBreeders();
 		addAll(children);
 		
+		// Clean up the Crossover.
+//		crossover.cleanUp();
+		
 		return children.size();
 	}
 	
