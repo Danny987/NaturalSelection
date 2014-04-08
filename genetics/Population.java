@@ -399,12 +399,6 @@ public class Population extends ArrayList<Hopper> {
 			Log.error("Cloning Hopper for getOverachiever failed.");
 //			System.out.println("Cloning Hopper for getOverachiever failed.");
 		}
-		float highestFitness = 0;
-		for (Hopper h : this) {
-			if (h.getFitness() > highestFitness) {
-				highestFitness = h.getFitness();
-			}
-		}
 		return newGuy;
 	}
 	

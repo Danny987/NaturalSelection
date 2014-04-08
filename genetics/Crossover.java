@@ -772,8 +772,15 @@ public class Crossover {
 			}
 		});
 		weightSet.addAll(weightMap.entrySet());
+		// In entry hasn't been accessed in Helper.MAX_WEIGHT_AGE Crossover
+		// generations, remove it from the map.
 		for (Map.Entry<Key, Value> e : weightSet) {
-			
+			Key k = e.getKey();
+			Value v = e.getValue();
+			int age = v.getAge();
+			if (age > Helper.MAX_WEIGHT_AGE) {
+				weightMap.remove(k);
+			}
 		}
 	}
 	
