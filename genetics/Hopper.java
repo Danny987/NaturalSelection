@@ -25,11 +25,11 @@ import creature.phenotype.*;
  */
 public class Hopper implements Comparable<Hopper> {
 	// Class variables.
-	private static int hopperCount = 0;
+	private static int totalHoppers = 0;
 	// Instance variables.
 	private String name;
 	private int age;
-	private final long serialNumber;
+	private final long serial;
 	private Genotype genotype;
 	private Creature phenotype;
 	private int timesHillClimbed;
@@ -52,6 +52,7 @@ public class Hopper implements Comparable<Hopper> {
 	
 	/**
 	 * Instantiate a new Hopper with the passed Genotype and provided name.
+	 * Unique (non-cloned) Hoppers each get a unique serial number.
 	 * 
 	 * @param genotype Genotype of the new Hopper.
 	 * @param name String to use as the Hopper's name.
@@ -79,7 +80,7 @@ public class Hopper implements Comparable<Hopper> {
 			name = randomName();
 		}
 		age = 0;
-		serialNumber = hopperCount++;
+		serial = totalHoppers++;
 		timesHillClimbed = 0;
 		timesBred = 0;
 		children = 0;
@@ -89,7 +90,8 @@ public class Hopper implements Comparable<Hopper> {
 	}
 
 	/**
-	 * Instantiate a new deep clone of the passed Hopper.
+	 * Instantiate a new deep clone of the passed Hopper. The cloned Hopper
+	 * adopts the serial number from its source.
 	 * 
 	 * @param source Hopper to deep clone.
 	 * @throws IllegalArgumentException if thrown by Genotype.
@@ -97,7 +99,20 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	public Hopper(Hopper source) throws IllegalArgumentException,
 			GeneticsException {
-		this(new Genotype(source.getGenotype()), new String(source.getName()));
+		try {
+			genotype = new Genotype(source.getGenotype());
+			this.phenotype = genotype.getPhenotype();
+		} catch (IllegalArgumentException ex) {
+			this.genotype = null;
+			this.phenotype = null;
+			throw ex;
+		}
+		if (genotype == null || phenotype == null) {
+			System.err.println(
+					"Error: Hopper genotype/phenotype instantiation was null.");
+		}
+		serial = source.getSerial();
+		name = source.getName();
 		age = source.age;
 		timesHillClimbed = source.getTimesHillClimbed();
 		timesBred = source.getTimesBred();
@@ -336,6 +351,25 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	public void setImpotent(boolean flag) {
 		impotent = flag;
+	}
+	
+	/**
+	 * Getter for serialNumber.
+	 * 
+	 * @return Hopper's serial number as a long.
+	 */
+	public long getSerial() {
+		return serial;
+	}
+	
+	/**
+	 * A static getter for the Class variable hopperCount, which represents
+	 * the total number of unique (non-cloned) Hoppers ever created.
+	 * 
+	 * @return The total number of unique (non-cloned) Hoppers ever created.
+	 */
+	public static long getTotalHoppers() {
+		return totalHoppers;
 	}
 	
 	/**
