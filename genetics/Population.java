@@ -167,12 +167,12 @@ public class Population extends ArrayList<Hopper> {
 		
 		// Add the children to their respective populations.
 		synchronized (pop1) {
-			pop1.cull(children1.size());
 			pop1.addAll(children1);
+			pop1.cull();
 		}
 		synchronized(pop2) {
-			pop2.cull(children2.size());
 			pop2.addAll(children2);
+			pop2.cull();
 		}
 		
 	}
@@ -182,17 +182,17 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	public void update() {
 		generations++;
-		hillClimb();
-		// Every five hill climbing generations, also perform a crossover
-		// generation.
-		if (generations % 5 == 0) {
-			// Hill climbing the population will change the creatures, which
-			// means their sorting will no longer be valid. However,
-			// moveBreeders will sort them again, so it's fine.
+		// Randomly select hill climbing or breeding this generation.
+		// Hill climbing the population will change the creatures, which
+		// means their sorting will no longer be valid. However,
+		// moveBreeders will sort them again, so it's fine.
+		if (Helper.choose() > 0) {
+			hillClimb();			
+		} else {
 			moveBreeders();
-			int count = breed();
-			cull(count);
+			breed();
 		}
+		cull();
 		// Like above, breeding will change the creatures in the collection,
 		// but cull will sort them again.
 		// Every 100 generations, reseed the Population with 20% new, random
@@ -297,6 +297,7 @@ public class Population extends ArrayList<Hopper> {
 //					"HillClimbing produced an illegal creature. Skipping.");
 			}
 		}
+		breeders.clear();
 	}
 	
 	/**
@@ -307,8 +308,8 @@ public class Population extends ArrayList<Hopper> {
 	public void seedNewRandoms() {
 		int newHopperCount = (int) (size() * Helper.BREED_PERCENTAGE);
 		Population newBlood = new Population(newHopperCount);
-		cull(newHopperCount);
 		addAll(newBlood);
+		cull();
 		sort();
 	}
 	
@@ -370,22 +371,14 @@ public class Population extends ArrayList<Hopper> {
 	 * 
 	 * @param n Number of individuals to kill off.
 	 */
-	private void cull(int n) {
-		if (n - failedAdds <= 0) {
-			return;
-		}
-		
+	private void cull() {
 		sort();
-		if (n - failedAdds < super.size()) {
-			synchronized (this) {
-				removeRange(0, n - failedAdds);
-			}
-		} else {
-			synchronized (this) {
-				clear();
+		synchronized (this) {
+			int size = size();
+			if (size > Helper.POPULATION_SIZE) {
+				removeRange(0, size - Helper.POPULATION_SIZE);
 			}
 		}
-		failedAdds = 0;
 	}
 	
 	/**

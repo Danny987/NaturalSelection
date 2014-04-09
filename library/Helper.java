@@ -49,7 +49,7 @@ public class Helper {
 	// Percentage by which to increase/decrease Allele weights.
 	public static final float WEIGHT_STEP = 0.025f;
 	// How many generations between seeding of new random Hoppers.
-	public static final int SEED_NEW_RANDOMS_GAP = 100;
+	public static final int SEED_NEW_RANDOMS_GAP = 50;
 	
 	/**
 	 * Sets the random number generator's seed.

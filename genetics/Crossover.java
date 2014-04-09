@@ -166,15 +166,15 @@ public class Crossover {
 		
 		try {
 			switch (strategy) {
-				case SINGLE_POINT:
-					children = singlePoint(chromosomeA, chromosomeB);
-					break;
-				case DOUBLE_POINT:
-					children = doublePoint(chromosomeA, chromosomeB);
-					break;
-				case CUT_AND_SPLICE:
-					children = cutAndSplice(chromosomeA, chromosomeB);
-					break;
+//				case SINGLE_POINT:
+//					children = singlePoint(chromosomeA, chromosomeB);
+//					break;
+//				case DOUBLE_POINT:
+//					children = doublePoint(chromosomeA, chromosomeB);
+//					break;
+//				case CUT_AND_SPLICE:
+//					children = cutAndSplice(chromosomeA, chromosomeB);
+//					break;
 				case RANDOM:
 					children = randomCross(chromosomeA, chromosomeB);
 					break;
@@ -752,6 +752,10 @@ public class Crossover {
 	 */
 	public void cleanUp() {
 		// A new set of references to the weightMap entries, sorted by age.
+		if (weightMap == null) {
+			return;
+		}
+		
 		PriorityQueue<Map.Entry<Key, Value>> weightQueue =
 				new PriorityQueue<Map.Entry<Key, Value>>(weightMap.size(),
 				new Comparator<Map.Entry<Key, Value>>() {
@@ -902,8 +906,8 @@ public class Crossover {
 	 * A nested enum representing the strategy of Crossover to use.
 	 */
 	public enum Strategy {
-		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM, RANDOM_SINGLE_POINT,
-		RANDOM_DOUBLE_POINT, RANDOM_CUT_AND_SPLICE;
+		SINGLE_POINT, DOUBLE_POINT, CUT_AND_SPLICE, RANDOM,
+		RANDOM_SINGLE_POINT, RANDOM_DOUBLE_POINT, RANDOM_CUT_AND_SPLICE;
 	}
 	
 	/**
