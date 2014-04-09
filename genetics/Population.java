@@ -183,14 +183,18 @@ public class Population extends ArrayList<Hopper> {
 	public void update() {
 		generations++;
 		hillClimb();
-		// Hill climbing the population will change the creatures, which
-		// means their sorting will no longer be valid. However,
-		// moveBreeders will sort them again, so it's fine.
-		moveBreeders();
-		int count = breed();
+		// Every five hill climbing generations, also perform a crossover
+		// generation.
+		if (generations % 5 == 0) {
+			// Hill climbing the population will change the creatures, which
+			// means their sorting will no longer be valid. However,
+			// moveBreeders will sort them again, so it's fine.
+			moveBreeders();
+			int count = breed();
+			cull(count);
+		}
 		// Like above, breeding will change the creatures in the collection,
 		// but cull will sort them again.
-		cull(count);
 		// Every 100 generations, reseed the Population with 20% new, random
 		// Hoppers to provide new Alleles.
 //		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
@@ -263,7 +267,7 @@ public class Population extends ArrayList<Hopper> {
 		addAll(children);
 		
 		// Clean up the Crossover.
-//		crossover.cleanUp();
+		crossover.cleanUp();
 		
 		return children.size();
 	}
