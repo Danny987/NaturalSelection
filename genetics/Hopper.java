@@ -37,7 +37,7 @@ public class Hopper implements Comparable<Hopper> {
 	private int children;
 	private float fitness;
 	private int fitnessEvaluations;
-	private boolean impotent;
+	private boolean eligible;
 
 	/**
 	 * Instantiate a new Hopper with random Genotype and name.
@@ -86,7 +86,7 @@ public class Hopper implements Comparable<Hopper> {
 		children = 0;
 		fitness = 0;
 		fitnessEvaluations = 0;
-		impotent = false;
+		determineEligibility();
 	}
 
 	/**
@@ -195,6 +195,24 @@ public class Hopper implements Comparable<Hopper> {
 		fitnessEvaluations++;
 		
 		return peak;
+	}
+	
+	/**
+	 * Determine if Hopper is eligible for breeding. A hopper is considered
+	 * eligible if it has (1) at least one non-rigid joint and (2) at least
+	 * one rule.
+	 */
+	public void determineEligibility() {
+		eligible = genotype.hasRules() && genotype.hasNonRigidJoints();
+	}
+	
+	/**
+	 * Getter for eligible.
+	 * 
+	 * @return True if Hopper is eligible for breeding, else false.
+	 */
+	public boolean isEligible() {
+		return eligible;
 	}
 	
 	/**
@@ -333,24 +351,6 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	public int getChildren() {
 		return children;
-	}
-	
-	/**
-	 * Check if the Hopper is impotent.
-	 * 
-	 * @return True if impotent flag is set, false otherwise.
-	 */
-	public boolean isImpotent() {
-		return impotent;
-	}
-	
-	/**
-	 * Set the impotent flag.
-	 * 
-	 * @param flag Boolean value to set to impotent.
-	 */
-	public void setImpotent(boolean flag) {
-		impotent = flag;
 	}
 	
 	/**

@@ -25,15 +25,16 @@ import creature.geeksquad.hillclimbing.TribeBrain;
 @SuppressWarnings("serial")
 public class Population extends ArrayList<Hopper> {
 	private int generations;
-	private int failedAdds;
 	// Sub-collections allow the Population to separate the Hoppers that need
 	// special handling from those in the general population.
 	private final ArrayList<Hopper> breeders;
 	// The Crossover module this Population will use.
 	private Crossover crossover;
 	// The hill-climbing Tribe brain for this Population.
-	private TribeBrain brain = new TribeBrain(crossover);
+	private TribeBrain brain;
 	// Statistics.
+	private float averageFitness;
+	private float highestFitness;
 	private long lifetimeOffspring;
 	private long lifetimeHillClimbs;
 	private long currentFailedBreeds;
@@ -41,7 +42,6 @@ public class Population extends ArrayList<Hopper> {
 	private long lifetimeFailedBreeds;
 	private long lifetimeFailedHillClimbs;
 	private long failedRandomHoppers;
-	private float highestFitness;
 	
 	/**
 	 * The default constructor creates an empty Population.
@@ -49,7 +49,8 @@ public class Population extends ArrayList<Hopper> {
 	public Population() {
 		super();
 		generations = 0;
-		failedAdds = 0;
+		averageFitness = 0.0f;
+		highestFitness = 0.0f;
 		lifetimeOffspring = 0l;
 		lifetimeHillClimbs = 0l;
 		currentFailedBreeds = 0l;
@@ -57,9 +58,9 @@ public class Population extends ArrayList<Hopper> {
 		lifetimeFailedBreeds = 0l;
 		lifetimeFailedHillClimbs = 0l;
 		failedRandomHoppers = 0l;
-		highestFitness = 0.0f;
 		breeders = new ArrayList<Hopper>();
 		crossover = new Crossover();
+		brain = new TribeBrain(crossover);
 	}
 	
 	/**
@@ -200,9 +201,6 @@ public class Population extends ArrayList<Hopper> {
 //		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
 //			seedNewRandoms();
 //		}
-		if (size() != Helper.POPULATION_SIZE) {
-			failedAdds -= (Helper.POPULATION_SIZE - size());
-		}
 		if (size() > 0) {
 			highestFitness = get(size() - 1).getFitness();
 		}
@@ -268,6 +266,9 @@ public class Population extends ArrayList<Hopper> {
 		
 		// Clean up the Crossover.
 		crossover.cleanUp();
+		
+		// Calculate the average fitness.
+		calculateAverageFitness();
 		
 		return children.size();
 	}
@@ -382,6 +383,41 @@ public class Population extends ArrayList<Hopper> {
 	}
 	
 	/**
+	 * Sort this Population according to its natural ordering: ascending Hopper
+	 * fitness.
+	 */
+	private void sort() {
+		synchronized (this) {
+			Collections.sort(this);
+		}
+	}
+	
+	/**
+	 * Calculate the average fitness of this Population.
+	 */
+	private void calculateAverageFitness() {
+		float sum = 0.0f;
+		int size = super.size();
+		for (Hopper h : this) {
+			sum += h.getFitness();
+		}
+		
+		synchronized (this) {
+			averageFitness = sum / size;
+		}
+	}
+	
+	/**
+	 * Getter for averageFitness.
+	 */
+	public float getAverageFitness() {
+		synchronized (this) {
+			return averageFitness;
+		}
+	}
+
+	
+	/**
 	 * Get a clone of the Hopper with the highest fitness.
 	 * 
 	 * @return Deep clone of Hopper with the highest fitness.
@@ -420,36 +456,6 @@ public class Population extends ArrayList<Hopper> {
 		return generations;
 	}
 	
-	/**
-	 * Get the average fitness of this Population. Takes n time since it has
-	 * to iterate over the whole array. This method makes no guarantees about
-	 * the accuracy of its result.
-	 * 
-	 * @return Average fitness of Population as a float.
-	 */
-	public float getAverageFitness() {
-		float sum = 0.0f;
-		ArrayList<Hopper> hoppers;
-		synchronized (this) {
-			hoppers = new ArrayList<Hopper>(this);
-		}
-		int size = super.size();
-		for (Hopper h : hoppers) {
-			sum += h.getFitness();
-		}
-
-		return sum / size;
-	}
-	
-	/**
-	 * Sort this Population according to its natural ordering: ascending Hopper
-	 * fitness.
-	 */
-	private void sort() {
-		synchronized (this) {
-			Collections.sort(this);
-		}
-	}
 	
 	/**
 	 * Getter/setter for lifetimeOffspring.
@@ -563,14 +569,13 @@ public class Population extends ArrayList<Hopper> {
 		// Short-circuits if hopper is null.
 		if (hopper == null || hopper.getGenotype() == null
 				|| hopper.getPhenotype() == null || hopper.getBody() == null) {
-			failedAdds++;
 			return;
 		}
 		
 		try {
 			super.add(new Hopper(hopper));
 		} catch (IllegalArgumentException | GeneticsException e) {
-			failedAdds++;
+			return;
 		}
 	}
 	
@@ -646,11 +651,7 @@ public class Population extends ArrayList<Hopper> {
 				if (h.getGenotype() != null && h.getPhenotype() != null
 						&& h.getBody() != null) {
 					hoppers.add(h);
-				} else {
-					failedAdds++;
 				}
-			} else {
-				failedAdds++;
 			}
 		}
 		

@@ -10,11 +10,6 @@
 
 package creature.geeksquad.genetics;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import creature.geeksquad.genetics.Allele.Key;
-import creature.geeksquad.genetics.Allele.Value;
 import creature.geeksquad.library.Helper;
 
 /**
@@ -28,8 +23,8 @@ import creature.geeksquad.library.Helper;
  * @group Marcos Lemus
  */
 public class WeightHelper {
+	private Crossover cross;
 	private boolean random;
-	private Map<Key, Value> weightMap = new HashMap<Key, Value>();
 	
 	/**
 	 * Default constructor makes the weight methods always return a random
@@ -46,11 +41,8 @@ public class WeightHelper {
 	 * @param cross Crossover from which to clone the weight table.
 	 */
 	public WeightHelper(Crossover cross) {
+		this.cross = cross;
 		random = false;
-		// Deep clone the map.
-		for (Map.Entry<Key, Value> e : cross.getMap().entrySet()) {
-			weightMap.put(e.getKey(), new Value(e.getValue()));
-		}
 	}
 	
 	/**
@@ -65,21 +57,28 @@ public class WeightHelper {
 	/**
 	 * Get a weight from the weight table based on the passed Allele. If
 	 * the table wasn't set (default constructor used, random = false),
-	 * return a random float.
+	 * return a random float. If the weight wasn't in the table, it's a new
+	 * Allele (as from hill climbing), so it gets Helper.MAX_WEIGHT, since
+	 * we already know hill climbed Alleles are beneficial.
 	 * 
 	 * @param allele Allele to look up in the weight table.
 	 * @return The float assigned to allele in the weight table. If the
 	 *             weight table wasn't set, returns a random float. If the
 	 *             weight table was set but the allele isn't in the weight
-	 *             table, returns Helper.MEDIAN_WEIGHT (5.0f).
+	 *             table, returns Helper.MAX_WEIGHT (1.0f).
 	 */
 	public float weight(Allele allele) {
 		if (random) {
 			return weight();
-		} else if (weightMap.containsKey(allele)) {
-			return weightMap.get(allele).getWeight();
+		} else if (cross.getMap().containsKey(allele.key)) {
+			// Substantially boost the weight of the Allele. If it exceeds
+			// Helper.MAX_WEIGHT, setWeight will cap it at MAX_WEIGHT.
+			float newWeight = cross.getMap().get(allele.key).getWeight()
+					+ Helper.MEDIAN_WEIGHT;
+			cross.setWeight(allele, newWeight);
+			return cross.getMap().get(allele.key).getWeight();
 		} else {
-			return Helper.MEDIAN_WEIGHT;
+			return Helper.MAX_WEIGHT;
 		}
 	}
 }

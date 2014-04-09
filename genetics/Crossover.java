@@ -581,7 +581,8 @@ public class Crossover {
 		}
 		
 		Value mapValue = weightMap.get(allele.key);
-		mapValue.floor();
+		// Reset age.
+		mapValue.reset();
 		float mapWeight = mapValue.getWeight();
 	
 		// Adjust the child Allele's weight toward the map weight.
@@ -751,11 +752,11 @@ public class Crossover {
 	 * time it is accessed during crossover.
 	 */
 	public void cleanUp() {
-		// A new set of references to the weightMap entries, sorted by age.
 		if (weightMap == null) {
 			return;
 		}
-		
+		// A new PriorityQueue of references to the weightMap entries,
+		// sorted by age.
 		PriorityQueue<Map.Entry<Key, Value>> weightQueue =
 				new PriorityQueue<Map.Entry<Key, Value>>(weightMap.size(),
 				new Comparator<Map.Entry<Key, Value>>() {
@@ -794,10 +795,15 @@ public class Crossover {
 	 * Getter for the weight of a specified Allele in the weight table.
 	 * 
 	 * @param allele Allele key to look up in the weights table.
-	 * @return The weight attached to key Trait and value in the weights table.
+	 * @return The weight attached to Allele key and value in the weights table.
+	 *         If the table doesn't contain key, return Helper.MEDIAN_WEIGHT.
 	 */
 	public float getWeight(Allele allele) {
-		return weightMap.get(allele.key).getWeight();
+		if (weightMap.containsKey(allele.key)) {
+			return weightMap.get(allele.key).getWeight();
+		} else {
+			return Helper.MEDIAN_WEIGHT;
+		}
 	}
 	
 	/**
@@ -815,7 +821,8 @@ public class Crossover {
 		} else if (weight < Helper.MIN_WEIGHT) {
 			weight = Helper.MIN_WEIGHT;
 		}
-		// Accessing a Key in the map resets its age to 0.
+		// Accessing a Key in the map resets its age. Instantiating Value
+		// without providing an age sets the Value's age to 0.
 		if (weightMap.containsKey(allele.key)) {
 			weightMap.put(allele.key, new Value(weight));
 		} else {
@@ -824,23 +831,23 @@ public class Crossover {
 	}
 	
 	/**
-	 * Change a weight of a Trait in the weight table by a percentage of the
-	 * current value.
+	 * Change a weight of a Trait in the weight table by a passed value.
 	 * 
 	 * @param allele Allele key to change in the weights table.
-	 * @param percent Percentage float by which to change the weight. If
-	 * 		      positive, increases the value; if negative, decreases.
+	 * @param amount Amount by which to change the weight. If positive,
+	 * 		      increases the value; if negative, decreases.
 	 */
-	public void setWeightPercent(Allele allele, float percent) {
+	public void setWeightPercent(Allele allele, float amount) {
 		if (weightMap.containsKey(allele.key)) {
 			float old = weightMap.get(allele.key).getWeight();
-			if (old + (old * percent) > Helper.MAX_WEIGHT) {
-				percent = Helper.MAX_WEIGHT;
-			} else if (old + (old * percent) < Helper.MIN_WEIGHT) {
-				percent = Helper.MIN_WEIGHT;
+			if (old + amount > Helper.MAX_WEIGHT) {
+				amount = Helper.MAX_WEIGHT;
+			} else if (old + amount < Helper.MIN_WEIGHT) {
+				amount = Helper.MIN_WEIGHT;
 			}
-			weightMap.get(allele.key).setWeight(old + (old * percent));
-			weightMap.get(allele.key).floor();
+			weightMap.get(allele.key).setWeight(old + amount);
+			// Reset age.
+			weightMap.get(allele.key).reset();
 		} else {
 			weightMap.put(allele.key, new Value(allele.getWeight()));
 		}

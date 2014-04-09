@@ -843,7 +843,7 @@ public class Allele {
 		/**
 		 * Sets age to zero.
 		 */
-		public void floor() {
+		public void reset() {
 			age = 0;
 		}
 		

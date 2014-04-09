@@ -44,10 +44,12 @@ public class Genotype {
 	 *   ...etc.
 	 */
 	
+	private Random random = Helper.RANDOM;
 	private ArrayList<Gene> chromosome;
 	private Block[] body;
 	private Creature phenotype;
-	private Random random = Helper.RANDOM;
+	private boolean hasNonRigidJoints;
+	private boolean hasRules;
 	
 	/**
 	 * Instantiate a new Genotype with random Genes.
@@ -819,6 +821,8 @@ public class Genotype {
 		BlockBuilder block = new BlockBuilder();
 		JointBuilder joint = new JointBuilder();
 		RuleBuilder rule = new RuleBuilder();
+		hasNonRigidJoints = false;
+		hasRules = false;
 		
 		// Iterate over the chromosome and parse it into the body.
 		for (int i = 0; i < chromosome.size(); i++) {
@@ -874,6 +878,9 @@ public class Genotype {
 				case JOINT_TYPE:
 					joint = new JointBuilder();
 					joint.setType((EnumJointType) value);
+					if ((EnumJointType) value != EnumJointType.RIGID) {
+						hasNonRigidJoints = true;
+					}
 					break;
 				// Joint orientation and sites.
 				case JOINT_ORIENTATION:
@@ -922,6 +929,7 @@ public class Genotype {
 					Rule r = rule.toRule();
 					
 					if (r != null) {
+						hasRules = true;
 						if (dof == EnumJointType.DOF_1) {
 							dof1.add(r);
 						} else {
@@ -1195,6 +1203,25 @@ public class Genotype {
 	 */
 	public Block[] getBody() {
 		return body;
+	}
+	
+	/**
+	 * Getter for hasNonRigidJoints.
+	 * 
+	 * @return True if the Genotype has at least one non-rigid Joint,
+	 *             else false.
+	 */
+	public boolean hasNonRigidJoints() {
+		return hasNonRigidJoints;
+	}
+	
+	/**
+	 * Getter for hasRules.
+	 * 
+	 * @return True if the Genotype has at least one Rule, else false.
+	 */
+	public boolean hasRules() {
+		return hasRules;
 	}
 	
 	/**
