@@ -9,7 +9,7 @@ import creature.geeksquad.genetics.Population;
  */
 public class Tribe extends Thread{
 
-    public static final int POPULATION_SIZE = 500;
+    public static final int POPULATION_SIZE = 501;
     private final Population population;
 
     private boolean paused = true;
@@ -83,5 +83,9 @@ public class Tribe extends Thread{
      */
     public void kill() {
         running = false;
+    }
+    
+    public float getFitness(){
+        return population.getAverageFitness();
     }
 }

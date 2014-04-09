@@ -25,7 +25,7 @@ public class Slider extends JSlider{
     public Slider(String name, int min, int max, int init){
         super(JSlider.VERTICAL, min, max, init);
         
-        Dimension size = new Dimension(140, 235);
+        Dimension size = new Dimension(140, 230);
         setSize(size);
         setPreferredSize(size);
         setMinimumSize(size);
@@ -43,10 +43,4 @@ public class Slider extends JSlider{
         super.setMaximum(size);
         setMajorTickSpacing(size/10);
     }
-    
-    @Override
-    public int getValue(){
-        return super.getValue() - 1;
-    }
-    
 }

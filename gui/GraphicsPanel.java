@@ -39,7 +39,7 @@ public class GraphicsPanel extends GLCanvas {
 
         addGLEventListener(renderer);
 
-        animator = new FPSAnimator(this, 60);
+        animator = new FPSAnimator(this, 30);
         animator.start();
         animator.pause();
 

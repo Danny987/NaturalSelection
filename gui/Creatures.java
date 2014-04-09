@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 /**
@@ -45,14 +44,17 @@ public class Creatures {
                 for(Future<Population> f: future){
                     try {
                         String name = Names.getTribeName();
+                        while(nameList.contains(name)) name = Names.getTribeName();
+                        nameList.add(name);
                         tribe = new Tribe(name, f.get());
                         tribe.start();
                         tribeList.add(tribe);
-                        nameList.add(name);
                     } catch (InterruptedException | ExecutionException ex) {
                         Log.error(ex.toString());
                     }
                 }
+                
+                executor.shutdown();
                 
                 gui = new GUI(tribeList, nameList);
                 gui.setVisible(true);

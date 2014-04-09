@@ -75,6 +75,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private Renderer renderer;           // used to specify the drawn creature
 
     // All JLabels
+    private JLabel tribeFitness;
     private JLabel bestFitness;          // Best fitness found from simulation
     private JLabel currentFitness;       // Current fitness from simulation
     private JLabel totalHillclimbs;      // total number of hill climbs
@@ -104,7 +105,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     // Variabes
     private float bestFitnessValue = 0f; //Best fitness value from simulation
     private int totalGenerations = 0;    //total hillclimb + total crossover
-    private int secondsSinceStart = 0;   //For time formating
     private long startmilis;
     private long milistime = 0;
     private long waittime = 0;
@@ -186,10 +186,13 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 totalGenerations = currentTribe.getGenerations();
                 generations.setText("Total Generations: " + totalGenerations);
 
-                if(milistime != 0){
-                    String f = String.format("%.5f", (float)totalGenerations / (milistime/1000));
-                    generationsPerSecond.setText("Generations/second: " + (float) totalGenerations / (milistime/1000));
+                long div = milistime/1000;
+                if(div != 0){
+                    String f = String.format("%.5f", (float)(totalGenerations / div));
+                    generationsPerSecond.setText("Generations/second: " + f);
                 }
+                
+                tribeFitness.setText("Tribe Fitness: " + String.format("%.5f", currentTribe.getFitness()));
             }
             else {
                 waittime = milistime;
@@ -249,6 +252,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 break;
             case "Overachiever":
                 changeHopper(currentTribe.getOverachiever());
+                slider.setValue(currentTribe.getSize() - 1);
                 break;
 
             // Step Next Generation
@@ -290,6 +294,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         nextGeneration.setEnabled(paused);
     }
 
+    /**
+     * @return string containing formated time h:m:s
+     */
     private String time() {
         milistime = System.currentTimeMillis() - startmilis + waittime;
         long elapsedSecs = milistime / 1000;
@@ -305,18 +312,11 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         return h + ":" + m + ":" + s;
     }
 
-    public void mouseClicked(MouseEvent e) {
-    }
-
-    public void mouseEntered(MouseEvent e) {
-    }
-
-    public void mouseExited(MouseEvent e) {
-    }
-
-    public void mousePressed(MouseEvent e) {
-    }
-
+    public void mouseClicked(MouseEvent e) {}
+    public void mouseEntered(MouseEvent e) {}
+    public void mouseExited(MouseEvent e) {}
+    public void mousePressed(MouseEvent e) {}
+    
     @Override
     public void mouseReleased(MouseEvent e) {
         if (mainTab.getSelectedIndex() == 1) {
@@ -336,6 +336,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
     /**
      * Populate the tree with the current creatures phenotype
+     * currently a little ugly.
      */
     private void populateTree() {
         DefaultMutableTreeNode block = null;
@@ -364,7 +365,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
         table.setPreferredSize(new Dimension(WIDTH + 450, root.getChildCount() * root.getLeafCount() * 5));
         table.setBorder(BorderFactory.createTitledBorder(null,
-                                                         "ID number: " + Long.toString(hopper.getSerial()),
+                                                         "ID Number: " + Long.toString(hopper.getSerial()),
                                                          TitledBorder.LEFT,
                                                          TitledBorder.TOP,
                                                          null,
@@ -387,6 +388,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
     }
 
+    /**
+     * load a population from user selected file.
+     */
     private void loadPopulation() {
 
     }
@@ -475,7 +479,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         time.setForeground(FONTCOLOR);
 
         // labels /////////////////////////////////////////////////////////
-        generationsPerSecond = new JLabel("Generations/Second: 0");
+        generationsPerSecond = new JLabel("Generations/Second: 0.0000");
         generationsPerSecond.setForeground(FONTCOLOR);
 
         generations = new JLabel("Total Generations: " + totalGenerations);
@@ -523,7 +527,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 1, currentTribe.getSize(), 1);
+        slider = new Slider("Creature", 0, currentTribe.getSize(), 1);
         slider.addMouseListener(this);
         ////////////////////////////////////////////////////////
 
@@ -578,7 +582,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         reset.addActionListener(this);
         tribes.addActionListener(this);
         ///////////////////////////////////////////////
-
+        tribeFitness = new JLabel("Tribe Fitness: 0.00000");
+        tribeFitness.setForeground(FONTCOLOR);
+        
+        
         currentFitness = new JLabel("Creature Fitness: 0.00000");
         currentFitness.setForeground(FONTCOLOR);
 
@@ -586,20 +593,26 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         bestFitness.setForeground(FONTCOLOR);
 
         // Add things to the buttons panel
+        buttonsPanel.add(tribeFitness);
         buttonsPanel.add(tribes);
         buttonsPanel.add(pause);
         buttonsPanel.add(nextGeneration);
         buttonsPanel.add(animate);
-        buttonsPanel.add(currentCreature);
+//        buttonsPanel.add(currentCreature);
         buttonsPanel.add(slider);
+        buttonsPanel.add(bestFitness);
+        buttonsPanel.add(currentFitness);
+        buttonsPanel.add(reset);
+        buttonsPanel.add(getBest);
+        buttonsPanel.add(Box.createHorizontalStrut(100));
+        buttonsPanel.add(Box.createHorizontalStrut(100));
+        buttonsPanel.add(Box.createHorizontalStrut(100));
+        buttonsPanel.add(Box.createHorizontalStrut(100));
+
         buttonsPanel.add(writeFile);
         buttonsPanel.add(loadFile);
         buttonsPanel.add(writePopulation);
         buttonsPanel.add(loadPopulation);
-        buttonsPanel.add(getBest);
-        buttonsPanel.add(bestFitness);
-        buttonsPanel.add(currentFitness);
-        buttonsPanel.add(reset);
         //////////////////////////////////////////////
 
         // Setup the upper panel
@@ -623,7 +636,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         pack();
 
         timer = new Timer(1000, this);
-        keyTimer = new Timer(1000 / 60, this);
+        keyTimer = new Timer(1000 / 30, this);
 
         graphicsPanel.requestFocus();
         KeyBinds keyBinds = new KeyBinds((JComponent) getContentPane(), controls);
@@ -634,6 +647,11 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         
     }
 
+    /**
+     * respond to the keys responsible for rotation
+     * left or A rotates left
+     * right or D rotates right
+     */
     private void rotate() {
         if (controlMap.get("left") && graphicsPanel.animating()) {
             renderer.rotateLeft();
@@ -643,6 +661,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
     }
 
+    /**
+     * respond the zoom
+     * up or w zooms in
+     * down or s zooms out
+     * space resets the timer for the simulation
+     */
     private void zoom() {
         if (controlMap.get("up")) {
             renderer.zoomIn();
@@ -661,6 +685,10 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
     }
 
+    /**
+     * Helper class to change the current hopper.
+     * @param hopper the hopper to change to.
+     */
     private void changeHopper(Hopper hopper) {
         bestFitnessValue = 0f;
         this.hopper = hopper;
