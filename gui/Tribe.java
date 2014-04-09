@@ -9,7 +9,7 @@ import creature.geeksquad.genetics.Population;
  */
 public class Tribe extends Thread{
 
-    public static final int POPULATION_SIZE = 1000;
+    public static final int POPULATION_SIZE = 500;
     private final Population population;
 
     private boolean paused = true;

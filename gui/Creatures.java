@@ -41,9 +41,6 @@ public class Creatures {
                     future.add(executor.submit(call));
                 }
                 
-                JFrame frame = new JFrame();
-                Log.popup(frame, "Loading Please Wait");
-                
                 Tribe tribe;
                 for(Future<Population> f: future){
                     try {
@@ -52,7 +49,6 @@ public class Creatures {
                         tribe.start();
                         tribeList.add(tribe);
                         nameList.add(name);
-                        Log.updateProgress();
                     } catch (InterruptedException | ExecutionException ex) {
                         Log.error(ex.toString());
                     }

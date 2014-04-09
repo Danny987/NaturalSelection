@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import javax.swing.JFileChooser;
+import javax.swing.SwingUtilities;
 
 /**
  *
@@ -27,12 +28,12 @@ import javax.swing.JFileChooser;
 public class Log {
 
     public static final int NUMB_CORES = Runtime.getRuntime().availableProcessors();
-    
+
     private static BufferedWriter writer;
     private static BufferedReader reader;
 
     private static LoadingScreen loadingScreen;
-    
+
     private static final JFileChooser fileChooser = new JFileChooser();
 
     /**
@@ -131,9 +132,9 @@ public class Log {
 
                 reader = new BufferedReader(new FileReader(f));
                 return parseHopper(reader, hopper);
-            }catch(GeneticsException | 
-                   FileNotFoundException | 
-                   IllegalArgumentException ex){
+            } catch (GeneticsException |
+                     FileNotFoundException |
+                     IllegalArgumentException ex) {
                 Log.error(ex.toString());
                 popup(parent, "Loading Hopper Failed");
             } catch (IOException ex) {
@@ -141,7 +142,7 @@ public class Log {
                 popup(parent, "Loading Hopper Failed");
             }
         }
-            
+
         return hopper;
     }
 
@@ -161,7 +162,7 @@ public class Log {
             reader.readLine();
 
             line = reader.readLine();
-            
+
             while (!line.contains("/genotype") && line.length() > 2) {
 
                 if (line.startsWith("{")) {
@@ -186,8 +187,8 @@ public class Log {
 
             hopper = new Hopper(genotype, name);
 
-        } catch (GeneticsException | IllegalArgumentException| IOException ex) {
-            throw(ex);
+        } catch (GeneticsException | IllegalArgumentException | IOException ex) {
+            throw (ex);
         }
         return hopper;
     }
@@ -254,14 +255,18 @@ public class Log {
             }
         }
     }
-    
-    public static void popup(Component parent, String message){
-        loadingScreen = new LoadingScreen(200, 200);
-        loadingScreen.setVisible(true);
+
+    public static void popup(Component parent, String message) {
     }
-    
-    public static void updateProgress(){
-        loadingScreen.update();
+
+    public static void updateProgress() {
+//        loadingScreen.update();
     }
-    
+
+    public static void main(String arg[]) {
+
+        LoadingScreen load = new LoadingScreen(200, 100);
+        load.setVisible(true);
+    }
+
 }

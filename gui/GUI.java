@@ -27,7 +27,6 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.Timer;
 import javax.swing.UIManager;
@@ -46,92 +45,74 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     //Size
     private final int WIDTH = 700;
     private final int HEIGHT = 600;
-    private Dimension size;
+    private Dimension size; //temp variable 
     
     //Controls
     private final PlayerControls controls = new PlayerControls();
     private final Map<String, Boolean> controlMap = controls.getInputs();
 
     //Colors
-    private final Color FONTCOLOR = new Color(205, 205, 205);
-    private final Color BACKGROUND_COLOR = new Color(55, 55, 55);
+    private final Color FONTCOLOR = new Color(205, 205, 205);     
+    private final Color BACKGROUND_COLOR = new Color(55, 55, 55); 
 
-    //Read and save files
-    //Tribe Names
-    private List<String> nameList = new ArrayList<>();
-    private List<Tribe> tribeList = new ArrayList<>();
-    private Tribe currentTribe;
+    // Data structures
+    private List<String> nameList = new ArrayList<>(); //names for all the generations
+    private List<Tribe> tribeList = new ArrayList<>(); //tribe threafs
+    private Tribe currentTribe;                        //currently selected tribe
+    private Hopper hopper = null;                      //currently selected hopper
 
-    // Contains opengl graphics
-    private GraphicsPanel graphicsPanel;
-    private Renderer renderer;
+    //Maintabs
+    private JTabbedPane mainTab; // contains other tabs
+    private Panel mainPanel;     // contains tribe info, buttons, slider, jcombobox
+    private JScrollPane scroll;  // contains the tree
+    private Panel statsPanel;    // contains the accumulated statistics 
+    
+    // Inner panels
+    private Panel buttonsPanel;          // contains all buttons 
+    private Panel bottomPanel;           // contains time and generation statistic
+    private Panel table;                 // contains the current creatures table
+    private GraphicsPanel graphicsPanel; // contains the opengl graphics
+    private Renderer renderer;           // used to specify the drawn creature
 
-    private Timer timer;
-    private Timer keyTimer;
-
-    private Hopper hopper = null;
-
-    //Maintab
-    private JTabbedPane mainTab;
-
-    //Mainpanel contains upper panel and lower panel
-    private Panel mainPanel;
-    private JScrollPane scroll;
-
-    // Statistics stuff/////////////////////////////////
-    private Panel statsPanel;
-    private JLabel totalHillclimbs;
-    private JLabel totalBreed;
-    private Hopper bestHopper;
-
-    private JLabel bestFitness;
-    private JLabel currentFitness;
-    private float bestFitnessValue = 0f;
-
-    /////////////////////////////////////////////////////
-    // contains all buttons, sliders, and JComboBox
-    private Panel buttonsPanel;
-
-    // panel for the slider and or jcombobox
-    private Panel bottomPanel;
-
-    // Display the statistics
-    private JLabel time;
-    private JLabel generations;
-    private JLabel generationsPerSecond;
-
-    private int totalGenerations = 0;
-    private int minutesSinceStart = 0;
-    private int secondsSinceStart = 0;
-
-    private Panel table;
-    private JTree tree;
-    private DefaultMutableTreeNode root;
-
-    private JTextArea rules;
-
+    // All JLabels
+    private JLabel bestFitness;          // Best fitness found from simulation
+    private JLabel currentFitness;       // Current fitness from simulation
+    private JLabel totalHillclimbs;      // total number of hill climbs
+    private JLabel totalBreed;           // total number of crossover
+    private JLabel time;                 // time since the start button was pressed
+    private JLabel generations;          // number of hillclimb + crossover
+    private JLabel generationsPerSecond; // generations / time
+    private JLabel currentCreature;      // current creature label
+    
     // Buttons!
-    private Button pause;
-    private Button animate;
-    private Button nextGeneration;
-    private Button writeFile;
-    private Button loadFile;
-    private Button writePopulation;
-    private Button loadPopulation;
-    private Button getBest;
-    private Button reset;
+    private Button pause;           // Pause/Start threads
+    private Button animate;         // Pause/Start opengl graphics
+    private Button nextGeneration;  // hillclimb and crossover once
+    private Button writeFile;       // write current selected genome to file
+    private Button loadFile;        // load saved genome 
+    private Button writePopulation; // write the entire population to a file
+    private Button loadPopulation;  // load saved population
+    private Button getBest;         // get the current populations overachiever
+    private Button reset;           // reset the current creatures simulation
+    
+    //Misc Components
+    private Slider slider;               //JSlider used to select hopper in the current population
+    private JComboBox tribes;            //JComboBox, select different threads
+    private JTree tree;                  //JTree, populated with current creatures phenotype
+    private DefaultMutableTreeNode root; //The first brand of the tree
+    
+    // Variabes
+    private float bestFitnessValue = 0f; //Best fitness value from simulation
+    private int totalGenerations = 0;    //total hillclimb + total crossover
+    private int secondsSinceStart = 0;   //For time formating
+    private long startmilis;
+    private long milistime = 0;
+    private long waittime = 0;
+    private boolean paused = true;       //Are the thread paused
 
-    // Label...
-    private JLabel currentCreature;
-
-    // slider used to choose creatures
-    private Slider slider;
-
-    // used to choose tribe
-    private JComboBox tribes;
-
-    // Disable or enable all searching threads
-    private boolean paused = true;
+    //Timers
+    private Timer timer;    //Runs 1 frame/second
+    private Timer keyTimer; //Run 60 frame/second
 
     /**
      * Calls JPanel super and initializes the list of name.
@@ -152,10 +133,30 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         } catch (IllegalArgumentException | GeneticsException ex) {
             Log.error(ex.toString());
         }
+        
+        startmilis = System.currentTimeMillis();
+        milistime = 0;
     }
 
     /**
-     * Listens for buttons, slider, and JComboBox
+     * Listens for buttons, slider, timers, and JComboBox
+     * Events:
+     * keyTimer: advances the simulation, bestFitness and currentFitness values,
+     *           if a key was pressed the corresponding action will take place.
+     * 
+     * timer: updated timer running crossover + hill climbing.
+     * 
+     * actionCommand: Each button has an actionCommand associated with it.
+     *                Animation On : toggles opengl animation
+     *                Pause: toggles the tribes to life.
+     *                Write Genome: Saves genome to user selected file
+     *                Load Genome: Loads user selected file
+     *                Write Population: Writes population to user selected file
+     *                Load Population: Loads user selected population
+     *                Overachiever: polls the population for the best creature
+     *                Next Generation: Runs one instance of crossover and hill climbing
+     *                Change Tribe: Listens for changes to JComboBox
+     *                Reset: Resets the current hopper simulation
      *
      * @param e ActionEvent
      */
@@ -179,15 +180,20 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
 
         if (e.getSource().equals(timer)) {
+            
             if (!paused) {
                 time.setText(" Time: " + time());
                 totalGenerations = currentTribe.getGenerations();
                 generations.setText("Total Generations: " + totalGenerations);
 
-                if (secondsSinceStart != 0) {
-
-                    generationsPerSecond.setText("Generations/second: " + (float) totalGenerations / secondsSinceStart);
+                if(milistime != 0){
+                    String f = String.format("%.5f", (float)totalGenerations / (milistime/1000));
+                    generationsPerSecond.setText("Generations/second: " + (float) totalGenerations / (milistime/1000));
                 }
+            }
+            else {
+                waittime = milistime;
+                startmilis = System.currentTimeMillis();
             }
 
             return;
@@ -253,6 +259,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
                 slider.setMaximum(currentTribe.getSize() - 1);
                 currentTribe = tribeList.get(tribes.getSelectedIndex());
+                totalGenerations = currentTribe.getGenerations();
+                generations.setText("Total Generations: " + totalGenerations);
 
                 try {
                     changeHopper(new Hopper(currentTribe.getHopper(0)));
@@ -283,16 +291,18 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     }
 
     private String time() {
-        int seconds;
-        secondsSinceStart++;
-        if (secondsSinceStart == 60) {
-            minutesSinceStart++;
-        }
-
-        seconds = secondsSinceStart % 60;
-
-        return minutesSinceStart + ":"
-                + (seconds > 9 ? seconds : "0" + seconds);
+        milistime = System.currentTimeMillis() - startmilis + waittime;
+        long elapsedSecs = milistime / 1000;
+        long elapsedMins = elapsedSecs / 60;
+        long hours = elapsedMins / 60;
+        long mins = elapsedMins % 60;
+        long secs = elapsedSecs % 60;
+        
+        String h = hours > 9 ? hours + "": ("0" + hours);
+        String m = mins > 9 ? mins + "": ("0" + mins);
+        String s = secs > 9 ? secs + "": ("0" + secs);
+        
+        return h + ":" + m + ":" + s;
     }
 
     public void mouseClicked(MouseEvent e) {
@@ -374,9 +384,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
             slider.setMaximum(currentTribe.getSize() - 1);
             slider.setValue(currentTribe.getSize() - 1);
 
-            secondsSinceStart = 0;
-            minutesSinceStart = 0;
-            totalGenerations = 0;
         }
     }
 
@@ -464,11 +471,11 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         bottomPanel = new Panel(size);
         bottomPanel.setBackground(BACKGROUND_COLOR);
 
-        time = new JLabel(" Time: 0:00");
+        time = new JLabel(" Time: 00:00:00");
         time.setForeground(FONTCOLOR);
 
         // labels /////////////////////////////////////////////////////////
-        generationsPerSecond = new JLabel("Generations/second: 0");
+        generationsPerSecond = new JLabel("Generations/Second: 0");
         generationsPerSecond.setForeground(FONTCOLOR);
 
         generations = new JLabel("Total Generations: " + totalGenerations);
@@ -539,10 +546,6 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         table.setLayout(new BorderLayout());
 
         scroll = new JScrollPane(table);
-        rules = new JTextArea();
-        rules.setBackground(BACKGROUND_COLOR);
-        rules.setForeground(FONTCOLOR);
-
         //////////////////////////////////////////////////////////
         // Tree///////////////////////////////////////////////////
         root = new DefaultMutableTreeNode("Blocks");
