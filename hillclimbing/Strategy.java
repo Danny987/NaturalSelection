@@ -7,11 +7,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import creature.geeksquad.genetics.Allele;
+import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Allele.Trait;
+import creature.geeksquad.genetics.WeightHelper;
+import creature.geeksquad.genetics.Genotype.*;
 import creature.phenotype.Creature;
 import creature.phenotype.EnumJointSite;
 import creature.phenotype.EnumJointType;
@@ -29,6 +32,10 @@ public abstract class Strategy {
 
 	Genotype currentGenotype;
 	Genotype newGenotype;
+	
+	Crossover crossover;
+	
+	WeightHelper weightHelper;
 
 	//allele location - allele weight
 	HashMap<Integer,Integer> alleleWeights = new HashMap<Integer,Integer>();
@@ -58,7 +65,9 @@ public abstract class Strategy {
 	HashMap<Integer, Integer> removeBlockWeights = new HashMap<Integer, Integer>();
 
 
-	public Strategy(){
+	public Strategy(Crossover crossover){
+		this.crossover = crossover;
+		//this.weightHelper = new WeightHelper(this.crossover);
 		//initialize all the probability maps
 		initializeMaps();
 	}
@@ -307,125 +316,119 @@ public abstract class Strategy {
 					Allele allele1;
 					Allele allele2;
 					//a
-					allele1 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele1 = new Allele(allele1.getTrait(),
-							climbRule((NeuronInput)allele1.getValue(), 'A', boxIndex, j+1),
-							allele1.getWeight());
+							climbRule((NeuronInput)allele1.getValue(), 'A', boxIndex, j+1), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					//allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'A', boxIndex, j+1));
-					allele2 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele2 = new Allele(allele2.getTrait(), 
-							climbRule((NeuronInput)allele2.getValue(), 'A', boxIndex, j+1),
-							allele2.getWeight());
+							climbRule((NeuronInput)allele2.getValue(), 'A', boxIndex, j+1), 0f);
+					allele2.setWeight(weightHelper.weight(allele2));
 					
-					//allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'A', boxIndex, j+1));
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
 					//b
-					allele1 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele1 = new Allele(allele1.getTrait(),
-							climbRule((NeuronInput)allele1.getValue(), 'B', boxIndex, j+1),
-							allele1.getWeight());
+							climbRule((NeuronInput)allele1.getValue(), 'B', boxIndex, j+1), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					//allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'B', boxIndex, j+1));
-					allele2 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele2 = new Allele(allele2.getTrait(), 
-							climbRule((NeuronInput)allele2.getValue(), 'B', boxIndex, j+1),
-							allele2.getWeight());
+							climbRule((NeuronInput)allele2.getValue(), 'B', boxIndex, j+1), 0f);
+					allele2.setWeight(weightHelper.weight(allele2));
 					
-					//allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'B', boxIndex, j+1));
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
 					//c
-					allele1 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele1 = new Allele(allele1.getTrait(),
-							climbRule((NeuronInput)allele1.getValue(), 'C', boxIndex, j+1),
-							allele1.getWeight());
+							climbRule((NeuronInput)allele1.getValue(), 'C', boxIndex, j+1), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					//allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'C', boxIndex, j+1));
-					allele2 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele2 = new Allele(allele2.getTrait(), 
-							climbRule((NeuronInput)allele2.getValue(), 'C', boxIndex, j+1),
-							allele2.getWeight());
+							climbRule((NeuronInput)allele2.getValue(), 'C', boxIndex, j+1), 0f);
+					allele2.setWeight(weightHelper.weight(allele2));
 					
-					//allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'C', boxIndex, j+1));
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
 					//d
-					allele1 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele1 = new Allele(allele1.getTrait(),
-							climbRule((NeuronInput)allele1.getValue(), 'D', boxIndex, j+1),
-							allele1.getWeight());
+							climbRule((NeuronInput)allele1.getValue(), 'D', boxIndex, j+1), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					allele2 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele2 = new Allele(allele2.getTrait(), 
-							climbRule((NeuronInput)allele2.getValue(), 'D', boxIndex, j+1),
-							allele2.getWeight());
+							climbRule((NeuronInput)allele2.getValue(), 'D', boxIndex, j+1), 0f);
+					allele2.setWeight(weightHelper.weight(allele2));
 					
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
 					//e
-					allele1 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele1 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele1 = new Allele(allele1.getTrait(),
-							climbRule((NeuronInput)allele1.getValue(), 'E', boxIndex, j+1),
-							allele1.getWeight());
+							climbRule((NeuronInput)allele1.getValue(), 'E', boxIndex, j+1), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					allele2 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
+					allele2 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0f);
 					allele2 = new Allele(allele2.getTrait(), 
-							climbRule((NeuronInput)allele2.getValue(), 'E', boxIndex, j+1),
-							allele2.getWeight());
+							climbRule((NeuronInput)allele2.getValue(), 'E', boxIndex, j+1), 0f);
+					allele2.setWeight(weightHelper.weight(allele2));
 					
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
 					//bin1
-					allele1 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0.5f);
+					allele1 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0f);
 					allele1 = new Allele(allele1.getTrait(), 
-							pickBinaryValue('1'),
-							allele1.getWeight());
+							pickBinaryValue('1'), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					allele2 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0.5f);
+					allele2 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0f);
 					allele2 = new Allele(allele2.getTrait(), 
-							pickBinaryValue('1'),
-							allele2.getWeight());
+							pickBinaryValue('1'), 0f);
+					allele2.setWeight(weightHelper.weight(allele2));
 					
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
 					//un2
-					allele1 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, 0.3f);
+					allele1 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, 0f);
 					allele1 = new Allele(allele1.getTrait(), 
-							pickUnaryValue('2'),
-							allele1.getWeight());
+							pickUnaryValue('2'), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					allele2 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, 0.3f);
+					allele2 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, 0f);
 					allele2 = new Allele(allele2.getTrait(), 
-							pickUnaryValue('2'),
-							allele2.getWeight());
+							pickUnaryValue('2'), 0f);
+					//allele2.setWeight(weightHelper.weight(allele2));
 					
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
 					//bin3
-					allele1 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0.5f);
+					allele1 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0f);
 					allele1 = new Allele(allele1.getTrait(),
-							pickBinaryValue('3'),
-							allele1.getWeight());
+							pickBinaryValue('3'), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					allele2 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0.5f);
+					allele2 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0f);
 					allele2 = new Allele(allele2.getTrait(),
-							pickBinaryValue('3'),
-							allele2.getWeight());
+							pickBinaryValue('3'), 0f);
+					allele2.setWeight(weightHelper.weight(allele2));
 					
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
 					//un4
-					allele1 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, 0.5f);
+					allele1 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, 0f);
 					allele1 = new Allele(allele1.getTrait(),
-							pickUnaryValue('4'),
-							allele1.getWeight());
+							pickUnaryValue('4'), 0f);
+					allele1.setWeight(weightHelper.weight(allele1));
 					
-					allele2 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, 0.5f);
+					allele2 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, 0f);
 					allele2 = new Allele(allele2.getTrait(),
-							pickUnaryValue('4'),
-							allele2.getWeight());
+							pickUnaryValue('4'), 0f);
+					allele2.setWeight(weightHelper.weight(allele2));
 					
 					geneList.add(i, new Gene(allele1, allele2));
 					i++;
@@ -435,9 +438,7 @@ public abstract class Strategy {
 		return genotype;
 	}
 
-	/*public void climbInt(Allele allele){
-		int i = (Integer) allele.getValue();
-	}*/
+
 
 	/**
 	 * This method compares the new and current fitness and returns

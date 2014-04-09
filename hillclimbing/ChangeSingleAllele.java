@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import creature.geeksquad.genetics.Allele;
+import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
@@ -33,8 +34,9 @@ public class ChangeSingleAllele extends Strategy{
 	//a map to store the gene indices and their success probability
 	HashMap<Integer, Integer> geneWeights = new HashMap<Integer, Integer>();
 
-	public ChangeSingleAllele() {
+	public ChangeSingleAllele(Crossover crossover){
 		//TODO average number of rules in genotype
+		super(crossover);
 	}
 
 	/**

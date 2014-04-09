@@ -30,7 +30,7 @@ public class TribeBrain {
 	HashMap<Integer,Integer> strategyWeights = new HashMap<Integer,Integer>();
 
 	//number of strategies
-	int numberOfStrategies = 3;
+	int numberOfStrategies = 4;
 	//starting strategy weight
 	int startingWeight = 1;
 
@@ -142,17 +142,19 @@ public class TribeBrain {
 		//chosen above.
 		if(strat == 0){ //create new strategy 0
 			currentStrat = 0;
-			return new ChangeSingleAllele();
+			return new ChangeSingleAllele(this.crossover);
 		}
 		else if(strat == 1){ //strategy 1
 			currentStrat = 1;
 			return new AddBlock(this.crossover);
 		} 
 		else if(strat == 2){ //strategy 2
-			return new RemoveBlock();
+			currentStrat = 2;
+			return new RemoveBlock(this.crossover);
 		}
 		else if(strat == 3){ //strategy 3
 			currentStrat = 3;
+			return new AddRule(this.crossover);
 		}
 		else if(strat == 4){ //strategy 4
 			currentStrat = 4;

@@ -25,6 +25,7 @@ public class AddBlock extends Strategy{
 	Crossover crossover = null;
 	
 	public AddBlock(Crossover crossover){
+		super(crossover);
 		this.crossover = crossover;
 	}
 	

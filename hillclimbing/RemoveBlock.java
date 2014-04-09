@@ -1,11 +1,17 @@
 package creature.geeksquad.hillclimbing;
 
+import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.library.Helper;
 
 public class RemoveBlock extends Strategy {
 	
+	public RemoveBlock(Crossover crossover) {
+		super(crossover);
+		// TODO Auto-generated constructor stub
+	}
+
 	public Hopper climb(Hopper originalHopper) throws IllegalArgumentException,
 	GeneticsException{
 		
