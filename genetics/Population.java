@@ -340,8 +340,13 @@ public class Population extends ArrayList<Hopper> {
 				breeders.addAll(this);
 				clear();
 			} else {
-				for (int i = size - 1; i >= stop; i--) {
-					breeders.add(remove(i));
+				for (int i = size - 1; i >= stop; ) {
+					if (get(i).isEligible()) {
+						breeders.add(remove(i));
+					} else {
+						stop--;
+					}
+					i--;
 				}
 			}
 			int count = 0;

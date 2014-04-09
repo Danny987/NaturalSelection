@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import creature.geeksquad.gui.Names;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
+import creature.physics.Simulator;
 
 /**
  * A wrapper class for the Genotype and associated Creature (phenotype),
@@ -37,7 +38,6 @@ public class Hopper implements Comparable<Hopper> {
 	private int children;
 	private float fitness;
 	private int fitnessEvaluations;
-	private boolean eligible;
 
 	/**
 	 * Instantiate a new Hopper with random Genotype and name.
@@ -84,9 +84,8 @@ public class Hopper implements Comparable<Hopper> {
 		timesHillClimbed = 0;
 		timesBred = 0;
 		children = 0;
-		fitness = 0;
+		fitness = 0.0f;
 		fitnessEvaluations = 0;
-		determineEligibility();
 	}
 
 	/**
@@ -159,14 +158,22 @@ public class Hopper implements Comparable<Hopper> {
 	public float evalFitness() {
 		float peak = 0.0f;
 		boolean done = false;
+		phenotype.resetSimulation();
+		int steps = 0;
+		float test1 = -1.0f;
+		float test2 = -1.0f;
+		float change = 0;
 		
-		while (!done) {
-			float test1 = 0;
-			float test2 = 0;
-			float change = 0;
-			
+		while (!done) {			
 			try {
-				test1 = phenotype.advanceSimulation();
+				// If test1 < 0, this is the first time through the loop, so
+				// run the simulation twice. Otherwise, just set test1 to the
+				// previous value of test2 and run it once.
+				if (test1 < 0) {
+					test1 = phenotype.advanceSimulation();
+				} else {
+					test1 = test2;
+				}
 				test2 = phenotype.advanceSimulation();
 				float currentMax = (test1 > test2 ? test1 : test2);
 				if (currentMax > peak) {
@@ -184,15 +191,13 @@ public class Hopper implements Comparable<Hopper> {
 			// the air or its body settles before it starts its initial jump,
 			// we want to let that happen so the jump can occur. A small amount
 			// of padding is provided as a safety measure.
-//			if (change <= 0 && steps >= 5 * Simulator.DEFAULT_TIME_STEP) {
-//				done = true;
-//			}
-			if (change <= 0) {
+			if (change <= 0 && steps++ >= 1 / Simulator.DEFAULT_TIME_STEP) {
 				done = true;
 			}
 		}
 		
 		fitnessEvaluations++;
+		fitness = peak;
 		
 		return peak;
 	}
@@ -202,17 +207,8 @@ public class Hopper implements Comparable<Hopper> {
 	 * eligible if it has (1) at least one non-rigid joint and (2) at least
 	 * one rule.
 	 */
-	public void determineEligibility() {
-		eligible = genotype.hasRules() && genotype.hasNonRigidJoints();
-	}
-	
-	/**
-	 * Getter for eligible.
-	 * 
-	 * @return True if Hopper is eligible for breeding, else false.
-	 */
 	public boolean isEligible() {
-		return eligible;
+		return genotype.hasRules() && genotype.hasNonRigidJoints();
 	}
 	
 	/**
@@ -232,11 +228,10 @@ public class Hopper implements Comparable<Hopper> {
 	 * @return Hopper's fitness as a float.
 	 */
 	public float getFitness() {
-		if (fitnessEvaluations > 0) {
-			return fitness;
-		} else {
-			return evalFitness();
+		if (fitnessEvaluations < 1) {
+			evalFitness();
 		}
+		return fitness;
 	}
 	
 	/**
@@ -430,6 +425,7 @@ public class Hopper implements Comparable<Hopper> {
 			}
 		}
 		System.out.println("Peak Fitness: " + peakFitness);
+		System.out.println("hopper1.getFitness(): " + hopper1.getFitness());
 	}
 
 }

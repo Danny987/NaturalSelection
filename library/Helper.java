@@ -12,8 +12,6 @@ package creature.geeksquad.library;
 
 import java.util.Random;
 
-import creature.geeksquad.gui.Tribe;
-
 /**
  * An Allele class for the Genotype.
  * 
@@ -24,10 +22,10 @@ import creature.geeksquad.gui.Tribe;
 public class Helper {
 	public static final Random RANDOM = new Random();
 	public static final String NEWLINE = System.getProperty("line.separator");
+	public static final int POPULATION_SIZE = 1000;
+	public static final int MAX_BLOCKS = 50;
 	// HASH_PRIME is a small prime number for Allele's hash code generation.
 	public static final int HASH_PRIME = 31;
-	public static final int POPULATION_SIZE = Tribe.POPULATION_SIZE;
-	public static final int MAX_BLOCKS = 50;
 	// Use the top 20% of the Population for breeding each generation. This
 	// mirrors the portion used in the original Karl Sims experiment.
 	public static final float BREED_PERCENTAGE = 0.2f; 
