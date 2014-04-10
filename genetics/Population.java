@@ -338,11 +338,7 @@ public class Population extends ArrayList<Hopper> {
 			}
 			
 			for (int i = size - 1; i >= stop && stop >= 0 && i > 0; ) {
-				if (get(i).isEligible()) {
-					breeders.add(remove(i));
-				} else {
-					stop--;
-				}
+				breeders.add(remove(i));
 				i--;
 			}
 			int count = 0;
@@ -353,10 +349,7 @@ public class Population extends ArrayList<Hopper> {
 			}
 			for (int i = 0; i < count && i < size(); ) {
 				int index = Helper.RANDOM.nextInt(size());
-				if (get(i).isEligible()) {
-					breeders.add(remove(index));
-					i++;
-				}
+				breeders.add(remove(index));
 			}
 		}
 	}
