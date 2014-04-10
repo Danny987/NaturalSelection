@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.PriorityQueue;
@@ -63,18 +64,32 @@ public class Crossover {
 		// appears in one map, only its weight gets used. Since this Crossover
 		// will only be used once, its ages don't matter, so they just get
 		// set to 0.
-		for (Map.Entry<Key, Value> e : crossA.weightMap.entrySet()) {
-			weightMap.put(e.getKey(), e.getValue());
+		LinkedList<Entry<Key, Value>> listA =
+				new LinkedList<Entry<Key, Value>>();
+		listA.addAll(crossA.getMap().entrySet());
+		LinkedList<Entry<Key, Value>> listB =
+				new LinkedList<Entry<Key, Value>>();
+		listB.addAll(crossB.getMap().entrySet());
+		int sizeA = listA.size();
+		int sizeB = listB.size();
+		
+		for (int i = 0; i < sizeA; i++) {
+			Entry<Key, Value> e = listA.get(i);
+			Key k = e.getKey();
+			Value v = e.getValue();
+			weightMap.put(new Key(k), new Value(v.getWeight()));
 		}
-		for (Map.Entry<Key, Value> e : crossB.weightMap.entrySet()) {
+		
+		for (int i = 0; i < sizeB; i++) {
+			Entry<Key, Value> e = listB.get(i);
 			Key k = e.getKey();
 			Value v = e.getValue();
 			if (weightMap.containsKey(k)) {
-				float oldWeight = v.getWeight();
+				float oldWeight = weightMap.get(k).getWeight();
 				float newWeight = (oldWeight + v.getWeight()) / 2;
 				weightMap.put(k, new Value(newWeight));
-			} else {
-				weightMap.put(k, v);
+			} else {				
+				weightMap.put(new Key(k), new Value(v.getWeight()));
 			}
 		}
 	}
@@ -88,10 +103,15 @@ public class Crossover {
 	 */
 	public Crossover(Map<Key, Value> map) {
 		this();
-		for (Entry<Key, Value> entry : map.entrySet()) {
-			Key k = entry.getKey();
-			Value v = entry.getValue();
-			weightMap.put(k, new Value(v.getWeight()));
+		LinkedList<Entry<Key, Value>> list =
+				new LinkedList<Entry<Key, Value>>();
+		list.addAll(map.entrySet());
+		int size = list.size();
+		for (int i = 0; i < size; i++) {
+			Entry<Key, Value> e = list.get(i);
+			Key k = e.getKey();
+			Value v = e.getValue();
+			weightMap.put(new Key(k), new Value(v.getWeight()));
 		}
 	}
 	

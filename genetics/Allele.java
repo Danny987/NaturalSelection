@@ -675,6 +675,15 @@ public class Allele {
 		}
 		
 		/**
+		 * Instantiate the Key as a *shallow* clone of the passed Key.
+		 * 
+		 * @param source Key to deep clone.
+		 */
+		public Key(Key source) {
+			this(source.trait, source.value);
+		}
+		
+		/**
 		 * Override of equals. Keys, like Alleles, are considered equal if
 		 * their Traits and values are the same.
 		 * 
