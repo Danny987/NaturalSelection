@@ -91,11 +91,7 @@ public class Crossover {
 		for (Entry<Key, Value> entry : map.entrySet()) {
 			Key k = entry.getKey();
 			Value v = entry.getValue();
-			if (weightMap.containsKey(k)) {
-				weightMap.put(k, new Value(v));
-			} else {
-				weightMap.put(k, new Value(Helper.MEDIAN_WEIGHT, 0));
-			}
+			weightMap.put(k, new Value(v.getWeight()));
 		}
 	}
 	
