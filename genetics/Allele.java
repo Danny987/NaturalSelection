@@ -296,7 +296,29 @@ public class Allele {
 	 * @param weight New weight to give this Allele as a float.
 	 */
 	public void setWeight(float weight) {
-		this.weight = weight;
+		if (weight > Helper.MAX_WEIGHT) {
+			this.weight = Helper.MAX_WEIGHT;
+		} else if (weight < Helper.MIN_WEIGHT) {
+			this.weight = Helper.MIN_WEIGHT;
+		} else {
+			this.weight = weight;
+		}
+	}
+	
+	/**
+	 * Increase the Allele's weight by a constant step size.
+	 */
+	public float increaseWeight() {
+		setWeight(weight + Helper.WEIGHT_STEP);
+		return weight;
+	}
+	
+	/**
+	 * Decrease the Allele's weight by a constant step size.
+	 */
+	public float decreaseWeight() {
+		setWeight(weight - Helper.WEIGHT_STEP);
+		return weight;
 	}
 	
 //	/**

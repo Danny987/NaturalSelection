@@ -115,14 +115,14 @@ public class Genotype {
 			Block testBlock = block.toBlock();
 			if (testBlock != null) {
 				try {
-					testGenotype.addBlock(testBlock);
+					testGenotype.addBlock(testBlock, true);
 					Creature testCreature = buildPhenotype();
 					// If the test phenotype was valid, then we know it's safe
 					// to add the block to *this* Genotype. Short-circuits if
 					// testGenotype is null.
 					if (testCreature != null && 
 							testGenotype.buildPhenotype() != null) {
-						addBlock(testBlock);
+						addBlock(testBlock, true);
 						i++;
 					}
 				} catch (IllegalArgumentException | GeneticsException ex) {
@@ -241,7 +241,7 @@ public class Genotype {
 		// Non-root blocks.
 		for (int i = 1; i < body.length; i++) {
 			try {
-				genotype.addBlock(body[i]);
+				genotype.addBlock(body[i], true);
 			} catch (IllegalArgumentException | GeneticsException e) {
 				return null;
 			}
@@ -262,48 +262,36 @@ public class Genotype {
 	 * at the end of the list.
 	 * 
 	 * @param block Block to add.
-	 * @param crossover Optional crossover module from which to pull Allele
-	 * 	          weights.
+	 * @param random Boolean of whether or not to use random weights. If true,
+	 * 	          newly created Alleles get random values; if false, new
+	 * 			  Alleles start with 1.0f as their weight.
 	 * @return True if add successful; false if not (e.g. if position is
 	 *             invalid).
 	 * @throws IllegalArgumentException if one of the Builders' setters was
 	 * 		       passed an invalid argument.
 	 * @throws GeneticsException if buildBody detected an error.
 	 */
-	public boolean addBlock(Block block, Crossover...crossover) throws 
+	public boolean addBlock(Block block, boolean random) throws 
 			IllegalArgumentException, GeneticsException {
-		WeightHelper helper;
-		// Short-circuits if crossover.length is 0.
-		if (crossover.length > 0 && crossover[0] != null) {
-			helper = new WeightHelper(crossover[0]);
-		} else {
-			helper = new WeightHelper();
-		}
+		WeightHelper helper = new WeightHelper(random);
 		
 		Allele length = new Allele(Trait.LENGTH, new Float(block.getLength()),
-					0.0f);
-		length.setWeight(helper.weight(length));
+					helper.weight());
 		Allele height = new Allele(Trait.HEIGHT, new Float(block.getHeight()),
-				0.0f);
-		height.setWeight(helper.weight(height));
-		Allele width = new Allele(Trait.WIDTH, block.getWidth(), 0.0f);
-		width.setWeight(helper.weight(width));
+				helper.weight());
+		Allele width = new Allele(Trait.WIDTH, block.getWidth(),
+				helper.weight());
 		Allele indexToParent = new Allele(Trait.INDEX_TO_PARENT,
-				block.getIndexOfParent(), 0.0f);
-		indexToParent.setWeight(helper.weight(indexToParent));
+				block.getIndexOfParent(), helper.weight());
 		Joint joint = block.getJointToParent();
 		Allele jointType = new Allele(Trait.JOINT_TYPE, joint.getType(),
-				0.0f);
-		jointType.setWeight(helper.weight(jointType));
+				helper.weight());
 		Allele jointOrientation = new Allele(Trait.JOINT_ORIENTATION,
-				joint.getOrientation(), 0.0f);
-		jointOrientation.setWeight(helper.weight(jointOrientation));
+				joint.getOrientation(), helper.weight());
 		Allele jointSiteOnParent = new Allele(Trait.JOINT_SITE_ON_PARENT,
-				joint.getSiteOnParent(), 0.0f);
-		jointSiteOnParent.setWeight(helper.weight(jointSiteOnParent));
+				joint.getSiteOnParent(), helper.weight());
 		Allele jointSiteOnChild = new Allele(Trait.JOINT_SITE_ON_CHILD,
-				joint.getSiteOnChild(), 0.0f);
-		jointSiteOnChild.setWeight(helper.weight(jointSiteOnChild));
+				joint.getSiteOnChild(), helper.weight());
 		ArrayList<Rule> ruleList1 = new ArrayList<Rule>();
 		ArrayList<Rule> ruleList2 = new ArrayList<Rule>();
 		int maxDoF = joint.getType().getDoF();
@@ -333,32 +321,23 @@ public class Genotype {
 		
 		for (Rule r : ruleList1) {
 			Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, r.getInput(0),
-										   0.0f);
-			ruleInputA.setWeight(helper.weight(ruleInputA));
+					helper.weight());
 			Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, r.getInput(1),
-										   0.0f);
-			ruleInputB.setWeight(helper.weight(ruleInputB));
+					helper.weight());
 			Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, r.getInput(2),
-										   0.0f);
-			ruleInputC.setWeight(helper.weight(ruleInputC));
+					helper.weight());
 			Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, r.getInput(3),
-										   0.0f);
-			ruleInputD.setWeight(helper.weight(ruleInputD));
+					helper.weight());
 			Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, r.getInput(4),
-										   0.0f);
-			ruleInputE.setWeight(helper.weight(ruleInputE));
+					helper.weight());
 			Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-										   r.getOp1(), 0.0f);
-			binaryOperator1.setWeight(helper.weight(binaryOperator1));
+										   r.getOp1(), helper.weight());
 			Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-					   					   r.getOp2(), 0.0f);
-			unaryOperator2.setWeight(helper.weight(unaryOperator2));
+					   					   r.getOp2(), helper.weight());
 			Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-					   					   r.getOp3(), 0.0f);
-			binaryOperator3.setWeight(helper.weight(binaryOperator3));
+					   					   r.getOp3(), helper.weight());
 			Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_4,
-					   					   r.getOp2(), 0.0f);
-			unaryOperator4.setWeight(helper.weight(unaryOperator4));
+					   					   r.getOp2(), helper.weight());
 			
 			chromosome.add(new Gene(ruleInputA));
 			chromosome.add(new Gene(ruleInputB));
@@ -374,32 +353,23 @@ public class Genotype {
 		if (maxDoF > 1) {
 			for (Rule r : ruleList2) {
 				Allele ruleInputA = new Allele(Trait.RULE_INPUT_A,
-						r.getInput(0), 0.0f);
-				ruleInputA.setWeight(helper.weight(ruleInputA));
+						r.getInput(0), helper.weight());
 				Allele ruleInputB = new Allele(Trait.RULE_INPUT_B,
-						r.getInput(1), 0.0f);
-				ruleInputB.setWeight(helper.weight(ruleInputB));
+						r.getInput(1), helper.weight());
 				Allele ruleInputC = new Allele(Trait.RULE_INPUT_C,
-						r.getInput(2), 0.0f);
-				ruleInputC.setWeight(helper.weight(ruleInputC));
+						r.getInput(2), helper.weight());
 				Allele ruleInputD = new Allele(Trait.RULE_INPUT_D,
-						r.getInput(3), 0.0f);
-				ruleInputD.setWeight(helper.weight(ruleInputD));
+						r.getInput(3), helper.weight());
 				Allele ruleInputE = new Allele(Trait.RULE_INPUT_E,
-						r.getInput(4), 0.0f);
-				ruleInputE.setWeight(helper.weight(ruleInputE));
+						r.getInput(4), helper.weight());
 				Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-						r.getOp1(), 0.0f);
-				binaryOperator1.setWeight(helper.weight(binaryOperator1));
+						r.getOp1(), helper.weight());
 				Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-						r.getOp2(), 0.0f);
-				unaryOperator2.setWeight(helper.weight(unaryOperator2));
+						r.getOp2(), helper.weight());
 				Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-						r.getOp3(), 0.0f);
-				binaryOperator3.setWeight(helper.weight(binaryOperator3));
+						r.getOp3(), helper.weight());
 				Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_4,
-						r.getOp2(), 0.0f);
-				unaryOperator4.setWeight(helper.weight(unaryOperator4));
+						r.getOp2(), helper.weight());
 				
 				chromosome.add(new Gene(ruleInputA));
 				chromosome.add(new Gene(ruleInputB));
@@ -445,7 +415,8 @@ public class Genotype {
 	 * @param dof Degree of freedom to which to add the rule (assuming more
 	 *            than one.
 	 * @param index Position in the DoF rule list at which to add the rule.
-	 * @param crossover Optional Crossover from which to get Allele weights.
+	 * @param random Boolean determining whether new Alleles should have their
+	 *            weights set randomly (true) or to Helper.MAX_WEIGHT (false).
 	 * @return boolean True if add succeeded; false if unsuccessful (such as
 	 *                if adding to joint type that doesn't support rules).
 	 * @throws IllegalArgumentException if one of the Builders' setters
@@ -453,15 +424,9 @@ public class Genotype {
 	 * @throws GeneticsException if buildBody detected an error.
 	 */
 	public boolean addRule(Rule rule, int block, int dof, int index,
-			Crossover...crossover) throws IllegalArgumentException,
+			boolean random) throws IllegalArgumentException,
 			GeneticsException {
-		WeightHelper helper;
-		// Short-circuits if crossover.length is 0.
-		if (crossover.length > 0 && crossover[0] != null) {
-			helper = new WeightHelper(crossover[0]);
-		} else {
-			helper = new WeightHelper();
-		}
+		WeightHelper helper = new WeightHelper(random);
 		
 		if (rule == null || block >= size()) {
 			return false;
@@ -523,32 +488,23 @@ public class Genotype {
 		}
 		
 		Allele ruleInputA = new Allele(Trait.RULE_INPUT_A, rule.getInput(0),
-						   0.0f);
-		ruleInputA.setWeight(helper.weight(ruleInputA));
+				helper.weight());
 		Allele ruleInputB = new Allele(Trait.RULE_INPUT_B, rule.getInput(1),
-						   0.0f);
-		ruleInputB.setWeight(helper.weight(ruleInputB));
+				helper.weight());
 		Allele ruleInputC = new Allele(Trait.RULE_INPUT_C, rule.getInput(2),
-						   0.0f);
-		ruleInputC.setWeight(helper.weight(ruleInputC));
+				helper.weight());
 		Allele ruleInputD = new Allele(Trait.RULE_INPUT_D, rule.getInput(3),
-						   0.0f);
-		ruleInputD.setWeight(helper.weight(ruleInputD));
+				helper.weight());
 		Allele ruleInputE = new Allele(Trait.RULE_INPUT_E, rule.getInput(4),
-						   0.0f);
-		ruleInputE.setWeight(helper.weight(ruleInputE));
+				helper.weight());
 		Allele binaryOperator1 = new Allele(Trait.BINARY_OPERATOR_1,
-						   rule.getOp1(), 0.0f);
-		binaryOperator1.setWeight(helper.weight(binaryOperator1));
+						   rule.getOp1(), helper.weight());
 		Allele unaryOperator2 = new Allele(Trait.UNARY_OPERATOR_2,
-						   rule.getOp2(), 0.0f);
-		unaryOperator2.setWeight(helper.weight(unaryOperator2));
+						   rule.getOp2(), helper.weight());
 		Allele binaryOperator3 = new Allele(Trait.BINARY_OPERATOR_3,
-						   rule.getOp3(), 0.0f);
-		binaryOperator3.setWeight(helper.weight(binaryOperator3));
+						   rule.getOp3(), helper.weight());
 		Allele unaryOperator4 = new Allele(Trait.UNARY_OPERATOR_4,
-						   rule.getOp2(), 0.0f);
-		unaryOperator2.setWeight(helper.weight(unaryOperator2));
+						   rule.getOp2(), helper.weight());
 		
 		chromosome.add(i, new Gene(ruleInputA));
 		chromosome.add(++i, new Gene(ruleInputB));
@@ -1405,7 +1361,7 @@ public class Genotype {
 					EnumJointSite.FACE_SOUTH, EnumJointSite.FACE_WEST,
 					30.0f);
 			Block newBlock = new Block(1, newJoint, 1.1f, 1.2f, 1.3f);
-			genotype.addBlock(newBlock);
+			genotype.addBlock(newBlock, true);
 			// addRule test.
 			Rule newRule = new Rule();
 			newRule.setInput(new NeuronInput(EnumNeuronInputType.TIME), 0);
@@ -1417,7 +1373,7 @@ public class Genotype {
 			newRule.setOp2(EnumOperatorUnary.ABS);
 			newRule.setOp3(EnumOperatorBinary.ADD);
 			newRule.setOp4(EnumOperatorUnary.ABS);
-			genotype.addRule(newRule, 1, 0, 0);
+			genotype.addRule(newRule, 1, 0, 0, true);
 			Creature phenotype = genotype.buildPhenotype();
 			System.out.println("---Genotype 1---");
 			System.out.println(genotype);
@@ -1579,8 +1535,7 @@ public class Genotype {
 			// Crossover test.
 			System.out.println("Starting crossover test.");
 			
-			Crossover crossover = new Crossover();
-			Hopper[] children = crossover.crossover(new Hopper(genotype),
+			Hopper[] children = Crossover.crossover(new Hopper(genotype),
 					new Hopper(genotype2),
 					Strategy.RANDOM);
 			System.out.println("---Child 1---");

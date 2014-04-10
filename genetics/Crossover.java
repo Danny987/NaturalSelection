@@ -10,17 +10,9 @@
 package creature.geeksquad.genetics;
 
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.PriorityQueue;
 import java.util.Random;
 
-import creature.geeksquad.genetics.Allele.Key;
-import creature.geeksquad.genetics.Allele.Value;
 import creature.geeksquad.genetics.Allele.*;
 import creature.geeksquad.library.Helper;
 
@@ -33,87 +25,6 @@ import creature.geeksquad.library.Helper;
  */
 public class Crossover {
 	private static Random rand = Helper.RANDOM;
-	private Map<Key, Value> weightMap;
-	
-	/**
-	 * Instantiate a new Crossover and initialize an empty weight table.
-	 */
-	public Crossover() {
-		weightMap = new HashMap<Key, Value>();
-	}
-	
-	/**
-	 * Instantiate a new Crossover as a deep clone of a passed Crossover.
-	 * 
-	 * @param cross Crossover object to deep clone.
-	 */
-	public Crossover(Crossover cross) {
-		this(cross.weightMap);
-	}
-	
-	/**
-	 * A special constructor that instantiates a new Crossover with the data
-	 * from two passed Crossover objects. Used for inter-Population Crossover.
-	 * 
-	 * @param crossA Crossover object from Population 1.
-	 * @param crossB Crossover object from Population 2.
-	 */
-	public Crossover(Crossover crossA, Crossover crossB) {
-		this();
-		// Average the weights from the two input Crossovers. If a Key only
-		// appears in one map, only its weight gets used. Since this Crossover
-		// will only be used once, its ages don't matter, so they just get
-		// set to 0.
-		LinkedList<Entry<Key, Value>> listA =
-				new LinkedList<Entry<Key, Value>>();
-		listA.addAll(crossA.getMap().entrySet());
-		LinkedList<Entry<Key, Value>> listB =
-				new LinkedList<Entry<Key, Value>>();
-		listB.addAll(crossB.getMap().entrySet());
-		int sizeA = listA.size();
-		int sizeB = listB.size();
-		
-		for (int i = 0; i < sizeA; i++) {
-			Entry<Key, Value> e = listA.get(i);
-			Key k = e.getKey();
-			Value v = e.getValue();
-			weightMap.put(new Key(k), new Value(v.getWeight()));
-		}
-		
-		for (int i = 0; i < sizeB; i++) {
-			Entry<Key, Value> e = listB.get(i);
-			Key k = e.getKey();
-			Value v = e.getValue();
-			if (weightMap.containsKey(k)) {
-				float oldWeight = weightMap.get(k).getWeight();
-				float newWeight = (oldWeight + v.getWeight()) / 2;
-				weightMap.put(k, new Value(newWeight));
-			} else {				
-				weightMap.put(new Key(k), new Value(v.getWeight()));
-			}
-		}
-	}
-	
-	/**
-	 * Instantiates a new Crossover with the data from the provided map. If the
-	 * map doesn't contain data for a particular key, it assigns the value for
-	 * that key to Helper.MEDIAN_WEIGHT with age 0.
-	 * 
-	 * @param map Map<Key, Value> containing the data for this Crossover.
-	 */
-	public Crossover(Map<Key, Value> map) {
-		this();
-		LinkedList<Entry<Key, Value>> list =
-				new LinkedList<Entry<Key, Value>>();
-		list.addAll(map.entrySet());
-		int size = list.size();
-		for (int i = 0; i < size; i++) {
-			Entry<Key, Value> e = list.get(i);
-			Key k = e.getKey();
-			Value v = e.getValue();
-			weightMap.put(new Key(k), new Value(v.getWeight()));
-		}
-	}
 	
 	/**
 	 * Perform crossover on two parents based on a random strategy.
@@ -126,7 +37,7 @@ public class Crossover {
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	public Hopper[] crossover(Hopper hopperA, Hopper hopperB)
+	public static Hopper[] crossover(Hopper hopperA, Hopper hopperB)
 			throws IllegalArgumentException, GeneticsException {
 		Strategy strategy = Strategy.values()
 				[Helper.RANDOM.nextInt(Strategy.values().length)];
@@ -147,8 +58,7 @@ public class Crossover {
 	 * @throws IllegalArgumentException from Genotype instantiation.
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
-	@SuppressWarnings("finally")
-	public Hopper[] crossover(Hopper hopperA, Hopper hopperB,
+	public static Hopper[] crossover(Hopper hopperA, Hopper hopperB,
 			Strategy strategy) throws IllegalArgumentException,
 			GeneticsException {
 		Genotype parentA, parentB;
@@ -182,15 +92,15 @@ public class Crossover {
 		
 		try {
 			switch (strategy) {
-//				case SINGLE_POINT:
-//					children = singlePoint(chromosomeA, chromosomeB);
-//					break;
-//				case DOUBLE_POINT:
-//					children = doublePoint(chromosomeA, chromosomeB);
-//					break;
-//				case CUT_AND_SPLICE:
-//					children = cutAndSplice(chromosomeA, chromosomeB);
-//					break;
+				case SINGLE_POINT:
+					children = singlePoint(chromosomeA, chromosomeB);
+					break;
+				case DOUBLE_POINT:
+					children = doublePoint(chromosomeA, chromosomeB);
+					break;
+				case CUT_AND_SPLICE:
+					children = cutAndSplice(chromosomeA, chromosomeB);
+					break;
 				case RANDOM:
 					children = randomCross(chromosomeA, chromosomeB);
 					break;
@@ -215,18 +125,23 @@ public class Crossover {
 		Hopper childA = null;
 		Hopper childB = null;
 		
+		genome1 = new Genotype(children[0]);
+		genome2 = new Genotype(children[1]);
+		validateCrossover(hopperA, hopperB, childA, childB);
+
 		try {
-			genome1 = new Genotype(children[0]);
 			childA = new Hopper(genome1);
-			genome2 = new Genotype(children[1]);
+		} catch (IllegalArgumentException | GeneticsException ex) {
+			childA = null;
+		}
+		try {
 			childB = new Hopper(genome2);
 		} catch (IllegalArgumentException | GeneticsException ex) {
-			throw ex;
-		} finally {
-			validateCrossover(hopperA, hopperB, childA, childB);
-			Hopper[] offspring = {childA, childB};
-			return offspring;
-		}		
+			childB = null;
+		}
+		
+		Hopper[] offspring = {childA, childB};
+		return offspring;
 	}
 	
 	/**
@@ -241,7 +156,7 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private ArrayList<Gene>[] singlePoint(ArrayList<Gene> chromosomeA,
+	private static ArrayList<Gene>[] singlePoint(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		
@@ -303,7 +218,7 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private ArrayList<Gene>[] doublePoint(ArrayList<Gene> chromosomeA,
+	private static ArrayList<Gene>[] doublePoint(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		int size = chromosomeA.size();
@@ -366,7 +281,7 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private ArrayList<Gene>[] cutAndSplice(ArrayList<Gene> chromosomeA,
+	private static ArrayList<Gene>[] cutAndSplice(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		int size = chromosomeA.size();
@@ -440,7 +355,7 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private ArrayList<Gene>[] randomCross(ArrayList<Gene> chromosomeA,
+	private static ArrayList<Gene>[] randomCross(ArrayList<Gene> chromosomeA,
 			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
 			GeneticsException {
 		int size = chromosomeA.size();
@@ -468,12 +383,10 @@ public class Crossover {
 			int b2 = (b1 == 1 ? 0 : 1);
 			// Create deep clones of the genes for the children.
 			try {
-				Gene childGeneA = adjustWeight(
-								  new Gene(parentGeneA.getAlleles()[a1],
-						                   parentGeneB.getAlleles()[b1]));
-				Gene childGeneB = adjustWeight(
-								  new Gene(parentGeneA.getAlleles()[a2],
-						                   parentGeneB.getAlleles()[b2]));
+				Gene childGeneA = new Gene(parentGeneA.getAlleles()[a1],
+						                   parentGeneB.getAlleles()[b1]);
+				Gene childGeneB = new Gene(parentGeneA.getAlleles()[a2],
+						                   parentGeneB.getAlleles()[b2]);
 				childA.add(childGeneA);
 				childB.add(childGeneB);
 			} catch (IllegalArgumentException ex) {
@@ -501,9 +414,9 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private ArrayList<Gene>[] randomSinglePoint(ArrayList<Gene> chromosomeA,
-			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
-			GeneticsException {
+	private static ArrayList<Gene>[] randomSinglePoint(
+			ArrayList<Gene> chromosomeA, ArrayList<Gene> chromosomeB)
+			throws IllegalArgumentException, GeneticsException {
 		ArrayList<Gene>[] children = new ArrayList[2];
 		if (chromosomeA != null && chromosomeB != null) {
 			children = singlePoint(chromosomeA, chromosomeB);
@@ -529,9 +442,9 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private ArrayList<Gene>[] randomDoublePoint(ArrayList<Gene> chromosomeA,
-			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
-			GeneticsException {
+	private static ArrayList<Gene>[] randomDoublePoint(
+			ArrayList<Gene> chromosomeA, ArrayList<Gene> chromosomeB)
+			throws IllegalArgumentException, GeneticsException {
 		ArrayList<Gene>[] children = new ArrayList[2];
 		if (chromosomeA != null && chromosomeB != null) {
 			children = doublePoint(chromosomeA, chromosomeB);
@@ -557,9 +470,9 @@ public class Crossover {
 	 * @throws GeneticsException from Genotype instantiation.
 	 */
 	@SuppressWarnings("unchecked")
-	private ArrayList<Gene>[] randomCutAndSplice(ArrayList<Gene> chromosomeA,
-			ArrayList<Gene> chromosomeB) throws IllegalArgumentException,
-			GeneticsException {
+	private static ArrayList<Gene>[] randomCutAndSplice(
+			ArrayList<Gene> chromosomeA, ArrayList<Gene> chromosomeB)
+			throws IllegalArgumentException, GeneticsException {
 		ArrayList<Gene>[] children = new ArrayList[2];
 		if (chromosomeA != null && chromosomeB != null) {
 			children = cutAndSplice(chromosomeA, chromosomeB);
@@ -573,60 +486,6 @@ public class Crossover {
 	}
 	
 	/**
-	 * Evaluates the weight associated with a particular Allele's
-	 * Trait-to-value pairing. If the pairing isn't already in the table,
-	 * adds it and returns its current weight. If it is in the table, the
-	 * method determines if the weight in the table should be changed and/or
-	 * if the weight for the child should be changed. After changing/not
-	 * changing the weight, it returns it returns a new Allele with the
-	 * adjusted weight.
-	 * 
-	 * @param allele The Allele whose Trait->value->weight mapping should be
-	 *            evaluated.
-	 * @return A new Allele with the adjusted weight.
-	 */
-	private Allele adjustWeight(Allele allele) {
-		if (allele == null) {
-			return allele;
-		}
-		Allele newAllele;
-		float weight = allele.getWeight();
-		if (!weightMap.containsKey(allele.key)) {
-			weightMap.put(allele.key, new Value(allele));
-			return allele;
-		}
-		
-		Value mapValue = weightMap.get(allele.key);
-		// Reset age.
-		mapValue.reset();
-		float mapWeight = mapValue.getWeight();
-	
-		// Adjust the child Allele's weight toward the map weight.
-		if (weight > mapWeight) {
-			newAllele = new Allele(allele, weight - Helper.WEIGHT_STEP);
-		} else if (weight < mapWeight) {
-			newAllele = new Allele(allele, weight + Helper.WEIGHT_STEP);
-		} else {
-			newAllele = new Allele(allele, weight);
-		}
-		
-		return newAllele;
-	}
-	
-	/**
-	 * Performs adjustWeight(Allele) on both Alleles in a Gene.
-	 * 
-	 * @param gene Gene whose Alleles should go through adjustWeight(Allele).
-	 * @return A new Gene with the adjusted Alleles.
-	 */
-	private Gene adjustWeight(Gene gene) {
-		Allele[] alleles = gene.getAlleles();
-		alleles[0] = adjustWeight(alleles[0]);
-		alleles[1] = adjustWeight(alleles[1]);
-		return new Gene(alleles);
-	}
-	
-	/**
 	 * Validates the Crossover: compares fitness and similarity of parents and
 	 * offspring, and adjusts Allele weights.
 	 * 
@@ -635,7 +494,7 @@ public class Crossover {
 	 * @param childA First child Hopper.
 	 * @param childB Second child Hopper.
 	 */
-	private void validateCrossover(Hopper parentA, Hopper parentB,
+	private static void validateCrossover(Hopper parentA, Hopper parentB,
 			Hopper childA, Hopper childB) {
 		/* ****************************************************************** */
 		/* Waiting on Joel's code.                                            */
@@ -655,7 +514,8 @@ public class Crossover {
 	 * @param parent Parent Hopper to compare.
 	 * @param child Child Hopper to compare.
 	 */
-	private void validateHelper(Hopper parentHopper, Hopper childHopper) {
+	private static void validateHelper(Hopper parentHopper,
+									   Hopper childHopper) {
 		// Return immediately if either input is null.
 		if (parentHopper == null || childHopper == null) {
 			return;
@@ -672,11 +532,11 @@ public class Crossover {
 			Allele childAllele = child.get(i).getDominant();
 			if (!childAllele.equals(parentAllele)) {
 				if (childFitness > parentFitness) {
-					increaseWeight(childAllele);
-					decreaseWeight(parentAllele);
+					childAllele.increaseWeight();
+					parentAllele.decreaseWeight();
 				} else if (parentFitness > childFitness) {
-					increaseWeight(parentAllele);
-					decreaseWeight(childAllele);
+					parentAllele.increaseWeight();
+					childAllele.decreaseWeight();
 				}
 			}
 		}
@@ -761,171 +621,6 @@ public class Crossover {
 	}
 	
 	/**
-	 * Scans the weight table for elements that can be removed. If an element
-	 * has gone untouched for Helper.WEIGHT_MAX_AGE generations, it is
-	 * removed. If the weight table exceeds Heler.WEIGHT_TABLE_CAPACITY,
-	 * the oldest elements are removed. An element's weight is reset to 0 every
-	 * time it is accessed during crossover.
-	 */
-	public void cleanUp() {
-		if (weightMap == null) {
-			return;
-		}
-		// A new PriorityQueue of references to the weightMap entries,
-		// sorted by age.
-		PriorityQueue<Map.Entry<Key, Value>> weightQueue =
-				new PriorityQueue<Map.Entry<Key, Value>>(weightMap.size(),
-				new Comparator<Map.Entry<Key, Value>>() {
-			@Override
-			public int compare(Map.Entry<Key, Value> e1,
-							   Map.Entry<Key, Value> e2) {
-				int a1 = e1.getValue().getAge();
-				int a2 = e2.getValue().getAge();
-				if (a1 < a2) {
-					return 1;
-				} else if (a1 > a2) {
-					return -1;
-				} else {
-					return 0;
-				}
-			}
-		});
-		weightQueue.addAll(weightMap.entrySet());
-		// If entry hasn't been accessed in Helper.MAX_WEIGHT_AGE Crossover
-		// generations, remove it from the map.
-		for (Map.Entry<Key, Value> e : weightQueue) {
-			Key k = e.getKey();
-			Value v = e.getValue();
-			int age = v.getAge();
-			if (age > Helper.MAX_WEIGHT_AGE) {
-				weightMap.remove(k);
-			}
-		}
-		// Reduce the size of the list if it's over capacity.
-		while (weightQueue.size() > Helper.WEIGHT_TABLE_CAPACITY) {
-			weightQueue.poll();
-		}
-	}
-	
-	/**
-	 * Getter for the weight of a specified Allele in the weight table.
-	 * 
-	 * @param allele Allele key to look up in the weights table.
-	 * @return The weight attached to Allele key and value in the weights table.
-	 *         If the table doesn't contain key, return Helper.MEDIAN_WEIGHT.
-	 */
-	public float getWeight(Allele allele) {
-		if (weightMap.containsKey(allele.key)) {
-			return weightMap.get(allele.key).getWeight();
-		} else {
-			return Helper.MEDIAN_WEIGHT;
-		}
-	}
-	
-	/**
-	 * Setter for the weights of the Traits in the weight table. If not in the
-	 * range Helper.MIN_WEIGHT (0.0f) to Helper.MAX_WEIGHT (1.0f), sets it to
-	 * the appropriate extreme instead.
-	 * 
-	 * @param allele Allele key to change in the weights table.
-	 * @param value Value of the Allele to change in the weights table.
-	 * @param weight New weight float to assign to key in the weight table.
-	 */
-	public void setWeight(Allele allele, float weight) {
-		if (weight > Helper.MAX_WEIGHT) {
-			weight = Helper.MAX_WEIGHT;
-		} else if (weight < Helper.MIN_WEIGHT) {
-			weight = Helper.MIN_WEIGHT;
-		}
-		// Accessing a Key in the map resets its age. Instantiating Value
-		// without providing an age sets the Value's age to 0.
-		if (weightMap.containsKey(allele.key)) {
-			weightMap.put(allele.key, new Value(weight));
-		} else {
-			weightMap.put(allele.key, new Value(weight));
-		}
-	}
-	
-	/**
-	 * Change a weight of a Trait in the weight table by a passed value.
-	 * 
-	 * @param allele Allele key to change in the weights table.
-	 * @param amount Amount by which to change the weight. If positive,
-	 * 		      increases the value; if negative, decreases.
-	 */
-	public void setWeightPercent(Allele allele, float amount) {
-		if (weightMap.containsKey(allele.key)) {
-			float old = weightMap.get(allele.key).getWeight();
-			if (old + amount > Helper.MAX_WEIGHT) {
-				amount = Helper.MAX_WEIGHT;
-			} else if (old + amount < Helper.MIN_WEIGHT) {
-				amount = Helper.MIN_WEIGHT;
-			}
-			weightMap.get(allele.key).setWeight(old + amount);
-			// Reset age.
-			weightMap.get(allele.key).reset();
-		} else {
-			weightMap.put(allele.key, new Value(allele.getWeight()));
-		}
-	}
-	
-	/**
-	 * Increase weight in the weight table by a fixed percentage of the
-	 * current value.
-	 * 
-	 * @param allele Allele key to change in the weights table.
-	 * @param value Value of the Allele to change in the weights table.
-	 */
-	public void increaseWeight(Allele allele) {
-		setWeightPercent(allele, Helper.WEIGHT_STEP);
-	}
-	
-	/**
-	 * Decrease weight in the weight table by a fixed percentage of the
-	 * current value.
-	 * 
-	 * @param trait Trait key to increase in the rule table.
-	 * @param value Value of the Allele to change in the weights table.
-	 */
-	public void decreaseWeight(Allele allele) {
-		setWeightPercent(allele, -Helper.WEIGHT_STEP);
-	}
-	
-	/**
-	 * Getter for weightMap.
-	 * 
-	 * @return Map<Key, Value> containing the weight table.
-	 */
-	public Map<Key, Value> getMap() {
-		return weightMap;
-	}
-	
-	/**
-	 * Override of toString. Used for saving the state of the Crossover.
-	 * 
-	 * @return Formatted String representing the state of this Crossover.
-	 */
-	@Override
-	public String toString() {
-		StringBuilder builder = new StringBuilder("");
-		builder.append("{");
-		for (Map.Entry<Key, Value> entry : weightMap.entrySet()) {
-			builder.append("(");
-			builder.append(entry.getKey());
-			builder.append(":");
-			builder.append(entry.getValue());
-			builder.append(")");
-			builder.append(Helper.NEWLINE);
-		}
-		if (builder.length() > 1) {
-			builder.deleteCharAt(builder.length() - 1);
-		}
-		builder.append('}');
-		
-		return builder.toString();
-	}
-	
-	/**
 	 * A nested enum representing the strategy of Crossover to use.
 	 */
 	public enum Strategy {
@@ -940,14 +635,13 @@ public class Crossover {
 	 */
 	public static void main(String[] args) {
 		try {
-			Crossover cross = new Crossover();
 			Hopper parent1 = new Hopper(TestCreatures.getGenotype());
 			Hopper parent2 = new Hopper();
 			System.out.println("---Parent 1---");
 			System.out.println(parent1);
 			System.out.println("---Parent 2---");
 			System.out.println(parent2);
-			Hopper[] children = cross.crossover(parent1, parent2,
+			Hopper[] children = crossover(parent1, parent2,
 					Strategy.RANDOM);
 			System.out.println(children);
 		} catch (IllegalArgumentException | GeneticsException e) {

@@ -83,8 +83,8 @@ public class Hopper implements Comparable<Hopper> {
 		timesHillClimbed = 0;
 		timesBred = 0;
 		children = 0;
-		fitness = 0.0f;
 		fitnessEvaluations = 0;
+		fitness = evalFitness();
 	}
 
 	/**

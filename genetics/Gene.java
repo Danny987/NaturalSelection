@@ -14,6 +14,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import creature.geeksquad.genetics.Allele.Trait;
+import creature.geeksquad.library.Helper;
 import creature.phenotype.Block;
 import creature.phenotype.EnumJointType;
 
@@ -262,7 +263,8 @@ public class Gene {
 	 */
 	@Override
 	public int hashCode() {
-		return super.hashCode();
+		return Helper.HASH_PRIME * alleles[0].hashCode()
+				+ alleles[1].hashCode();
 	}
 
 	/**
@@ -278,8 +280,7 @@ public class Gene {
 	/**
 	 * Main method for testing purposes.
 	 * 
-	 * @param args
-	 *            Command-line arguments.
+	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
 		java.util.ArrayList<Allele> alleles = new java.util.ArrayList<Allele>();
