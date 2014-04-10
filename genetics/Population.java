@@ -204,6 +204,7 @@ public class Population extends ArrayList<Hopper> {
 		if (size() > 0) {
 			highestFitness = get(size() - 1).getFitness();
 		}
+		calculateAverageFitness();
 	}
 	
 	/**
@@ -266,9 +267,6 @@ public class Population extends ArrayList<Hopper> {
 		
 		// Clean up the Crossover.
 		crossover.cleanUp();
-		
-		// Calculate the average fitness.
-		calculateAverageFitness();
 		
 		return children.size();
 	}
@@ -338,7 +336,8 @@ public class Population extends ArrayList<Hopper> {
 			if (stop >= size) {
 				stop = 0;
 			}
-			for (int i = size - 1; i >= stop && stop >= 0; ) {
+			
+			for (int i = size - 1; i >= stop && stop >= 0 && i > 0; ) {
 				if (get(i).isEligible()) {
 					breeders.add(remove(i));
 				} else {
@@ -352,7 +351,7 @@ public class Population extends ArrayList<Hopper> {
 			} else {
 				count = (int) (size * (over / 2));
 			}
-			for (int i = 0; i < count; ) {
+			for (int i = 0; i < count && i < size(); ) {
 				int index = Helper.RANDOM.nextInt(size());
 				if (get(i).isEligible()) {
 					breeders.add(remove(index));

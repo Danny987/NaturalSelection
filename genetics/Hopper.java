@@ -375,10 +375,11 @@ public class Hopper implements Comparable<Hopper> {
 	 */
 	@Override
 	public int compareTo(Hopper other) {
+		float thisFitness = getFitness();
 		float otherFitness = other.getFitness();
-		if (fitness < otherFitness) {
+		if (thisFitness < otherFitness) {
 			return -1;
-		} else if (fitness > otherFitness) {
+		} else if (thisFitness > otherFitness) {
 			return 1;
 		} else {
 			return 0;

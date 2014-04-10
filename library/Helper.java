@@ -12,6 +12,7 @@ package creature.geeksquad.library;
 
 import java.util.Random;
 
+import creature.geeksquad.gui.Tribe;
 import creature.physics.Simulator;
 
 /**
@@ -24,7 +25,7 @@ import creature.physics.Simulator;
 public class Helper {
 	public static final Random RANDOM = new Random();
 	public static final String NEWLINE = System.getProperty("line.separator");
-	public static final int POPULATION_SIZE = 1000;
+	public static final int POPULATION_SIZE = Tribe.POPULATION_SIZE;
 	public static final int MAX_BLOCKS = 50;
 	// HASH_PRIME is a small prime number for Allele's hash code generation.
 	public static final int HASH_PRIME = 31;
