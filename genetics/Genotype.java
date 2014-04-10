@@ -1172,7 +1172,8 @@ public class Genotype {
 		case CONSTANT:
 			neuronInput = new NeuronInput(inputType, 
 					random.nextFloat()
-						+ random.nextInt(Helper.SEED_MAX_CONSTANT) - 10);
+						+ random.nextInt(Helper.SEED_MAX_CONSTANT)
+						- ((Helper.SEED_MAX_CONSTANT - 1) / 2));
 			break;
 		case HEIGHT: case TOUCH:
 			neuronInput = new NeuronInput(inputType, index);

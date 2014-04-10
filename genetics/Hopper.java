@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import creature.geeksquad.gui.Names;
 import creature.geeksquad.library.Helper;
 import creature.phenotype.*;
-import creature.physics.Simulator;
 
 /**
  * A wrapper class for the Genotype and associated Creature (phenotype),
@@ -158,11 +157,11 @@ public class Hopper implements Comparable<Hopper> {
 	public float evalFitness() {
 		float peak = 0.0f;
 		boolean done = false;
-		phenotype.resetSimulation();
 		int steps = 0;
 		float test1 = -1.0f;
 		float test2 = -1.0f;
 		float change = 0;
+		phenotype.resetSimulation();
 		
 		while (!done) {			
 			try {
@@ -191,7 +190,7 @@ public class Hopper implements Comparable<Hopper> {
 			// the air or its body settles before it starts its initial jump,
 			// we want to let that happen so the jump can occur. A small amount
 			// of padding is provided as a safety measure.
-			if (change <= 0 && steps++ >= 1 / Simulator.DEFAULT_TIME_STEP) {
+			if (change <= 0 && steps++ >= Helper.PADDING) {
 				done = true;
 			}
 		}

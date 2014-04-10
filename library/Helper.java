@@ -12,6 +12,8 @@ package creature.geeksquad.library;
 
 import java.util.Random;
 
+import creature.physics.Simulator;
+
 /**
  * An Allele class for the Genotype.
  * 
@@ -28,7 +30,7 @@ public class Helper {
 	public static final int HASH_PRIME = 31;
 	// Use the top 20% of the Population for breeding each generation. This
 	// mirrors the portion used in the original Karl Sims experiment.
-	public static final float BREED_PERCENTAGE = 0.2f; 
+	public static final float BREED_PERCENTAGE = 0.2f;
 	// Allow up to 50 errors to accrue during random Genotype generation before
 	// giving up.
 	public static final int FAULT_TOLERENCE = 50;
@@ -38,7 +40,7 @@ public class Helper {
 	// Seed constants.
 	public static final int SEED_MAX_BLOCKS = 12;
 	public static final int SEED_MAX_SIZE = 10;
-	public static final int SEED_MAX_CONSTANT = 10;
+	public static final int SEED_MAX_CONSTANT = 20;
 	public static final int SEED_MAX_RULES = 10;
 	// Allele weight constants.
 	public static final float MIN_WEIGHT = 0.0f;
@@ -48,6 +50,9 @@ public class Helper {
 	public static final float WEIGHT_STEP = 0.025f;
 	// How many generations between seeding of new random Hoppers.
 	public static final int SEED_NEW_RANDOMS_GAP = 50;
+	// Amount of padding when evaluating fitness with the physics simulation.
+	public static final float TIME_STEP = Simulator.DEFAULT_TIME_STEP;
+	public static final int PADDING = 0;
 	
 	/**
 	 * Sets the random number generator's seed.

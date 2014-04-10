@@ -298,7 +298,6 @@ public class Population extends ArrayList<Hopper> {
 //					"HillClimbing produced an illegal creature. Skipping.");
 			}
 		}
-		breeders.clear();
 	}
 	
 	/**
@@ -337,17 +336,15 @@ public class Population extends ArrayList<Hopper> {
 			int size = size();
 			int stop = (int) (size - (over * size));
 			if (stop >= size) {
-				breeders.addAll(this);
-				clear();
-			} else {
-				for (int i = size - 1; i >= stop; ) {
-					if (get(i).isEligible()) {
-						breeders.add(remove(i));
-					} else {
-						stop--;
-					}
-					i--;
+				stop = 0;
+			}
+			for (int i = size - 1; i >= stop && stop >= 0; ) {
+				if (get(i).isEligible()) {
+					breeders.add(remove(i));
+				} else {
+					stop--;
 				}
+				i--;
 			}
 			int count = 0;
 			if (under.length > 0) {
@@ -355,9 +352,12 @@ public class Population extends ArrayList<Hopper> {
 			} else {
 				count = (int) (size * (over / 2));
 			}
-			for (int i = 0; i < count; i++) {
+			for (int i = 0; i < count; ) {
 				int index = Helper.RANDOM.nextInt(size());
-				breeders.add(remove(index));
+				if (get(i).isEligible()) {
+					breeders.add(remove(index));
+					i++;
+				}
 			}
 		}
 	}
