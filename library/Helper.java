@@ -53,7 +53,7 @@ public class Helper {
 	public static final int SEED_NEW_RANDOMS_GAP = 50;
 	// Amount of padding when evaluating fitness with the physics simulation.
 	public static final float TIME_STEP = Simulator.DEFAULT_TIME_STEP;
-	public static final int PADDING = (int) (200 * TIME_STEP);
+	public static final int PADDING = 0;
 	
 	/**
 	 * Sets the random number generator's seed.

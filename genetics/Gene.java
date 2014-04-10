@@ -166,6 +166,15 @@ public class Gene {
 	public Allele getDominant() {
 		return dominant;
 	}
+	
+	/**
+	 * Getter for recessive allele.
+	 * 
+	 * @return The recessive Allele not being expressed, with the lowest weight.
+	 */
+	public Allele getRecessive() {
+		return (alleles[0] == dominant ? alleles[1] : alleles[0]);
+	}
 
 	/**
 	 * Getter for this Gene's trait. The traits of the two Alleles should always
