@@ -59,6 +59,8 @@ public class Helper {
 	// Amount of padding when evaluating fitness with the physics simulation.
 	public static final float TIME_STEP = Simulator.DEFAULT_TIME_STEP;
 	public static final int PADDING = 0;
+	// Maximum permitted percentage similarity between a child and its parent.
+	public static final float MAX_SIMILAR_PERCENTAGE = 0.9f;
 	
 	/**
 	 * Sets the random number generator's seed.

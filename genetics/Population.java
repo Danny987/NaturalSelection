@@ -113,6 +113,7 @@ public class Population extends Vector<Hopper> {
 	 * @param pop2 Second Population to interbreed.
 	 */
 	public static void interbreed(Population pop1, Population pop2) {
+		System.out.println("started");
 		if (pop1 == null || pop2 == null) {
 			return;
 		} else {
@@ -195,12 +196,13 @@ public class Population extends Vector<Hopper> {
 				}
 			}
 		}
+		System.out.println("ended");
 	}
 	
 	/**
 	 * Update the population.
 	 */
-	public void update() {
+	public synchronized void update() {
 		generations++;
 		// Reseed the Population with new, random Hoppers to diversify.
 		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
@@ -372,7 +374,7 @@ public class Population extends Vector<Hopper> {
 	 * 
 	 * @param n Number of individuals to kill off.
 	 */
-	public void cull() {
+	public synchronized void cull() {
 		sort();
 		if (size() > Helper.POPULATION_SIZE) {
 			removeRange(0, size() - Helper.POPULATION_SIZE);
@@ -383,7 +385,7 @@ public class Population extends Vector<Hopper> {
 	 * Sort this Population according to its natural ordering: ascending Hopper
 	 * fitness.
 	 */
-	private void sort() {
+	private synchronized void sort() {
 		synchronized (this) {
 			Collections.sort(this);
 		}

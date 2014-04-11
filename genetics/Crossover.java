@@ -527,6 +527,8 @@ public class Crossover {
 		float childFitness = childHopper.getFitness();
 		int parentSize = parent.size();
 		int childSize = child.size();
+		// If a child is too similar to its parent, reject it.
+		int similar = 0;
 		for (int i = 0; i < childSize && i < parentSize; i++) {
 			Allele parentAllele = parent.get(i).getDominant();
 			Allele childAllele = child.get(i).getDominant();
@@ -539,7 +541,12 @@ public class Crossover {
 					childAllele.decreaseWeight();
 					parentAllele.decreaseWeight();
 				}
+			} else {
+				similar++;
 			}
+		}
+		if (similar / child.size() >= Helper.MAX_SIMILAR_PERCENTAGE) {
+			child = null;
 		}
 	}
 	
