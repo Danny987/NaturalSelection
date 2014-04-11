@@ -54,7 +54,8 @@ public class Helper {
 //	public static final float WEIGHT_STEP_UP = 0.00f;
 //	public static final float WEIGHT_STEP_DOWN = 0.0f;
 	// How many generations between seeding of new random Hoppers.
-	public static final int SEED_NEW_RANDOMS_GAP = 50;
+	public static final int SEED_NEW_RANDOMS_GAP = 10;
+	public static final float RANDOM_RESEED_PERCENTAGE = 0.1f;
 	// Amount of padding when evaluating fitness with the physics simulation.
 	public static final float TIME_STEP = Simulator.DEFAULT_TIME_STEP;
 	public static final int PADDING = 0;

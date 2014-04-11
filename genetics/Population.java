@@ -293,8 +293,7 @@ public class Population extends Vector<Hopper> {
 				// The != unary operator works here because we want to know if
 				// the two objects are, in fact, the same object.
 				if (newHotness != original) {
-					i.remove();
-					i.add(newHotness);
+					i.set(newHotness);
 					lifetimeHillClimbs++;
 				} else {
 					currentFailedHillClimbs++;
@@ -311,11 +310,9 @@ public class Population extends Vector<Hopper> {
 	
 	/**
 	 * Seed the Population with new, random Hoppers to provide fresh Alleles.
-	 * Removes Hoppers from the bottom of the Population and reseeds with newly
-	 * created Hoppers.
 	 */
 	public void seedNewRandoms() {
-		int newHopperCount = (int) (size() * Helper.BREED_PERCENTAGE);
+		int newHopperCount = (int) (size() * Helper.RANDOM_RESEED_PERCENTAGE);
 		Population newBlood = new Population(newHopperCount, false);
 		addAll(newBlood);
 	}
