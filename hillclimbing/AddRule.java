@@ -51,7 +51,11 @@ public class AddRule extends Strategy{
 			}
 		}
 
+<<<<<<< HEAD
 		System.err.println("numOfValidJoints = " + numOfValidJoints);
+=======
+		//System.out.println("numOfValidJoints = " + numOfValidJoints);
+>>>>>>> 3cfb4d3fad1674403c254897552b0cece7fa3420
 
 		//if there are no valid joints to add rules to, return original hopper
 		if(numOfValidJoints == 0){
@@ -72,12 +76,19 @@ public class AddRule extends Strategy{
 			}
 			if(counter == jointToAddRules){
 				geneIndex = i;
+<<<<<<< HEAD
+=======
+				//System.out.println(getDomAllele(hopperToClimb, geneIndex));
+>>>>>>> 3cfb4d3fad1674403c254897552b0cece7fa3420
 				break;
 			}
 		}
 
+<<<<<<< HEAD
 		System.err.println("Adding rules to this joint: " + getDomAllele(hopperToClimb, geneIndex));
 		
+=======
+>>>>>>> 3cfb4d3fad1674403c254897552b0cece7fa3420
 		//geneIndex is now at the joint that we're going to add rules to
 		//but first, we need to decide which DoF we're going to add to.
 
