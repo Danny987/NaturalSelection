@@ -60,6 +60,22 @@ public class Genotype {
 	 *             many errors accumulated during Block creation.
 	 */
 	public Genotype() throws IllegalArgumentException, GeneticsException {
+		this(true);
+	}
+	
+	/**
+	 * Instantiate a new Genotype with random Genes.
+	 * 
+	 * @param rand Boolean to determine whether Allele weights should be
+	 *            random (default) or 1.0f.
+	 * @throws IllegalArgumentException if buildBody tried to pass an invalid
+	 * 		       argument to one of the Builders' setters.
+	 * @throws GeneticsException if buildBody detected an error or if too
+	 *             many errors accumulated during Block creation.
+	 */
+	public Genotype(boolean rand) throws IllegalArgumentException,
+			GeneticsException {
+		WeightHelper helper = new WeightHelper(rand);
 		chromosome = new ArrayList<Gene>();
 		int numBlocks = random.nextInt(Helper.SEED_MAX_BLOCKS - 5) + 5;
 		
@@ -68,10 +84,8 @@ public class Genotype {
 				+ random.nextFloat() + 1;
 		chromosome.add(
 				new Gene(
-						new Allele(Trait.LENGTH, length, random.nextFloat()),
-						new Allele(Trait.LENGTH, length, random.nextFloat())
-						)
-				);
+						new Allele(Trait.LENGTH, length, helper.weight()),
+						new Allele(Trait.LENGTH, length, helper.weight())));
 		float height = random.nextInt(Helper.SEED_MAX_SIZE - 1)
 				+ random.nextFloat() + 1;
 		while (height < length / 10 || height > length * 10) {
@@ -80,10 +94,8 @@ public class Genotype {
 		}
 		chromosome.add(
 				new Gene(
-						new Allele(Trait.HEIGHT, height, random.nextFloat()),
-						new Allele(Trait.HEIGHT, height, random.nextFloat())
-						)
-				);
+						new Allele(Trait.HEIGHT, height, helper.weight()),
+						new Allele(Trait.HEIGHT, height, helper.weight())));
 		float width = random.nextInt(Helper.SEED_MAX_SIZE - 1)
 				+ random.nextFloat() + 1;
 		while (width < length / 10 || width > length * 10
@@ -93,10 +105,8 @@ public class Genotype {
 		}
 		chromosome.add(
 				new Gene(
-						new Allele(Trait.WIDTH, width, random.nextFloat()),
-						new Allele(Trait.WIDTH, width, random.nextFloat())
-						)
-				);
+						new Allele(Trait.WIDTH, width, helper.weight()),
+						new Allele(Trait.WIDTH, width, helper.weight())));
 		chromosome.add(
 				new Gene(
 						new Allele(Trait.INDEX_TO_PARENT,
@@ -115,14 +125,14 @@ public class Genotype {
 			Block testBlock = block.toBlock();
 			if (testBlock != null) {
 				try {
-					testGenotype.addBlock(testBlock, true);
+					testGenotype.addBlock(testBlock, rand);
 					Creature testCreature = buildPhenotype();
 					// If the test phenotype was valid, then we know it's safe
 					// to add the block to *this* Genotype. Short-circuits if
 					// testGenotype is null.
 					if (testCreature != null && 
 							testGenotype.buildPhenotype() != null) {
-						addBlock(testBlock, true);
+						addBlock(testBlock, rand);
 						i++;
 					}
 				} catch (IllegalArgumentException | GeneticsException ex) {

@@ -28,7 +28,7 @@ public class Population extends ArrayList<Hopper> {
 	// special handling from those in the general population.
 	private final ArrayList<Hopper> breeders;
 	// The hill-climbing Tribe brain for this Population.
-	private TribeBrain brain;
+	private final TribeBrain brain;
 	// Statistics.
 	private volatile int generations;
 	private volatile float averageFitness;
@@ -56,21 +56,28 @@ public class Population extends ArrayList<Hopper> {
 		lifetimeRejectedCreatures = 0l;
 		lifetimeFailedHillClimbs = 0l;
 		failedRandomHoppers = 0l;
-		breeders = new ArrayList<Hopper>();
 		brain = new TribeBrain();
+		breeders = new ArrayList<Hopper>();
 	}
 	
 	/**
 	 * Instantiate a new Population containing randomly generated seed Hoppers.
 	 * 
 	 * @param num Number of random Hoppers to create.
+	 * @param boolean...random Optional parameter to set new Hoppers' Allele
+	 *            weights to random (default) or 1.0f (false).
 	 */
-	public Population(int num) {
+	public Population(int num, boolean...random) {
 		this();
 		int i = 0;
 		while (i < num) {
 			try {
-				unsynchronizedAdd(new Hopper());
+				// Short-circuit.
+				if (random.length > 0 && !random[0]) {
+					add(new Hopper(false));
+				} else {
+					add(new Hopper());
+				}
 				i++;
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				// ++ isn't atomic, but it doesn't matter since this field
@@ -100,31 +107,18 @@ public class Population extends ArrayList<Hopper> {
 		ArrayList<Hopper> children2 = new ArrayList<Hopper>();
 		synchronized (pop1) {
 			pop1.moveBreeders();
-			breeders1 = new ArrayList<Hopper>(pop1.breeders);
-			int size1 = breeders1.size();
-			for (int i = 0; i < size1; i++) {
-				Hopper h = breeders1.get(i);
-				if (h != null) {
-					h.increaseBreedCount();
-				}
-			}
+			breeders1 = new ArrayList<Hopper>();
+			breeders1.addAll(pop1.breeders);
+			pop1.flushBreeders();
 		}
-		pop1.flushBreeders();
-				
 		synchronized (pop2) {
 			// Passing the size of breeders1 as an argument guarantees that
 			// both collections have the same number of Hoppers.
 			pop2.moveBreeders();
-			breeders2 = new ArrayList<Hopper>(pop2.breeders);
-			int size2 = breeders2.size();
-			for (int i = 0; i < size2; i++) {
-				Hopper h = breeders2.get(i);
-				if (h != null) {
-					h.increaseBreedCount();
-				}
-			}
+			breeders2 = new ArrayList<Hopper>();
+			breeders2.addAll(pop2.breeders);
+			pop2.flushBreeders();
 		}
-		pop2.flushBreeders();
 		
 		Collections.shuffle(breeders1);
 		Collections.shuffle(breeders2);
@@ -133,7 +127,9 @@ public class Population extends ArrayList<Hopper> {
 		
 		for (int i = 0; i < size1 && i < size2; i++) {
 			Hopper parentA = breeders1.get(i);
+			parentA.increaseBreedCount();
 			Hopper parentB = breeders2.get(i);
+			parentB.increaseBreedCount();
 
 			// Determine to which Population to send the offspring.
 			try {
@@ -143,7 +139,7 @@ public class Population extends ArrayList<Hopper> {
 					for (int j = 0; j < offspring.length; j++) {
 						Hopper child = offspring[j];
 						// Short-circuits if child is null.
-						if (j % 2 == 0) {
+						if (j == 0) {
 							children1.add(child);
 						} else {
 							children2.add(child);
@@ -156,32 +152,26 @@ public class Population extends ArrayList<Hopper> {
 				pop1.lifetimeRejectedCreatures++;
 				pop2.lifetimeRejectedCreatures++;
 //				System.out.println(
-//						"Interbreed produced offspring invalid. Continuing.");
+//						"Interbreed produced invalid offspring. Continuing.");
 			}
 		}
 		
 		// Add the children to their respective populations.
-		synchronized (pop1) {
-			for (Hopper h : children1) {
-				// Short-circuit if h is null.
-				if (h == null || h.getGenotype() == null
-						|| h.getPhenotype() == null || h.getBody() == null) {
+		for (Hopper h : children1) {
+			// Short-circuit if h is null.
+			synchronized (pop1) {
+				if (!pop1.add(h)) {
 					pop1.currentRejectedCreatures++;
-					pop1.lifetimeRejectedCreatures++;
-				} else {
-					pop1.add(h);
+					pop1.lifetimeRejectedCreatures++;					
 				}
 			}
 		}
-		synchronized (pop2) {
-			for (Hopper h : children2) {
-				// Short-circuit if h is null.
-				if (h == null || h.getGenotype() == null
-						|| h.getPhenotype() == null || h.getBody() == null) {
+		for (Hopper h : children2) {
+			// Short-circuit if h is null.
+			synchronized (pop2) {
+				if (!pop2.add(h)) {
 					pop2.currentRejectedCreatures++;
 					pop2.lifetimeRejectedCreatures++;
-				} else {
-					pop2.add(h);
 				}
 			}
 		}
@@ -202,14 +192,14 @@ public class Population extends ArrayList<Hopper> {
 			moveBreeders();
 			breed();
 		}
-		cull();
 		// Like above, breeding will change the creatures in the collection,
 		// but cull will sort them again.
 		// Every 100 generations, reseed the Population with 20% new, random
 		// Hoppers to provide new Alleles.
-//		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
-//			seedNewRandoms();
-//		}
+		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
+			seedNewRandoms();
+		}
+		cull();
 		if (size() > 0) {
 			highestFitness = get(size() - 1).getFitness();
 		}
@@ -233,10 +223,8 @@ public class Population extends ArrayList<Hopper> {
 				// Get the parents and return them to the general population.
 				Hopper parentA = breeders.get(0);
 				breeders.remove(0);
-				add(parentA);
 				Hopper parentB = breeders.get(0);
 				breeders.remove(0);
-				add(parentB);
 				
 				try {
 					Hopper[] offspring = Crossover.crossover(
@@ -257,14 +245,18 @@ public class Population extends ArrayList<Hopper> {
 			}
 		}
 		// Clear out any remaining breeders.
-		flushBreeders();
+		synchronized (this) {
+			flushBreeders();
+		}
 		int successes = 0;
 		for (Hopper h : children) {
-			if (add(h)) {
-				successes++;
-			} else {
-				currentRejectedCreatures++;
-				lifetimeRejectedCreatures++;
+			synchronized (this) {
+				if (add(h)) {
+					successes++;
+				} else {
+					currentRejectedCreatures++;
+					lifetimeRejectedCreatures++;
+				}
 			}
 		}
 		
@@ -290,7 +282,7 @@ public class Population extends ArrayList<Hopper> {
 				if (newHotness != original) {
 					synchronized (this) {
 						remove(original);
-						unsynchronizedAdd(newHotness);
+						add(newHotness);
 					}
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
@@ -309,10 +301,8 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	public void seedNewRandoms() {
 		int newHopperCount = (int) (size() * Helper.BREED_PERCENTAGE);
-		Population newBlood = new Population(newHopperCount);
+		Population newBlood = new Population(newHopperCount, false);
 		addAll(newBlood);
-		cull();
-		sort();
 	}
 	
 	/**
@@ -344,7 +334,7 @@ public class Population extends ArrayList<Hopper> {
 			
 			for (int i = size - 1; i >= stop && i > 0; i--) {
 				synchronized (breeders) {
-					breeders.add(remove(i));
+					breeders.add(get(i));
 				}
 			}
 			// Underperformers.
@@ -357,7 +347,7 @@ public class Population extends ArrayList<Hopper> {
 			for (int i = 0; i < count && i < size(); i++) {
 				int index = Helper.RANDOM.nextInt(size());
 				synchronized (breeders) {
-					breeders.add(remove(index));
+					breeders.add(get(index));
 				}
 			}
 		}
@@ -367,9 +357,6 @@ public class Population extends ArrayList<Hopper> {
 	 * Move all Hoppers in the breeders list back into the general population.
 	 */
 	private void flushBreeders() {
-		synchronized (this) {
-			addAll(breeders);
-		}
 		synchronized (breeders) {
 			breeders.clear();
 		}
@@ -380,7 +367,7 @@ public class Population extends ArrayList<Hopper> {
 	 * 
 	 * @param n Number of individuals to kill off.
 	 */
-	private void cull() {
+	public void cull() {
 		sort();
 		synchronized (this) {
 			int size = size();
@@ -466,13 +453,9 @@ public class Population extends ArrayList<Hopper> {
 	/**
 	 * Getter/setter for lifetimeOffspring.
 	 * 
-	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime offspring.
 	 */
-	public synchronized long getLifetimeOffspring(long...writeNotRead) {
-		if (writeNotRead.length > 0) {
-			lifetimeOffspring = writeNotRead[0];
-		}
+	public synchronized long getLifetimeOffspring() {
 		return lifetimeOffspring;
 	}
 	
@@ -482,7 +465,7 @@ public class Population extends ArrayList<Hopper> {
 	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime hill climbs.
 	 */
-	public synchronized long getLifetimeHillClimbs(long...writeNotRead) {
+	public long getLifetimeHillClimbs(long...writeNotRead) {
 		if (writeNotRead.length > 0) {
 			lifetimeHillClimbs = writeNotRead[0];
 		}
@@ -492,97 +475,50 @@ public class Population extends ArrayList<Hopper> {
 	/**
 	 * Getter/setter for currentRejectedCreatures.
 	 * 
-	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime failed breeds.
 	 */
-	public synchronized long getCurrentRejectedCreatures(long...writeNotRead) {
-		if (writeNotRead.length > 0) {
-			currentRejectedCreatures = writeNotRead[0];
-		} else {
-			long oldValue = currentRejectedCreatures;
-			currentRejectedCreatures = 0;
-			return oldValue;
-		}
-		return currentRejectedCreatures;
+	public long getCurrentRejectedCreatures() {
+		long oldValue = currentRejectedCreatures;
+		currentRejectedCreatures = 0;
+		return oldValue;
 	}
 	
 	/**
 	 * Getter/setter for currentFailedHillClimbs.
 	 * 
-	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Failed hill climbs this generation.
 	 */
-	public synchronized long getCurrentFailedHillClimbs(
-			long...writeNotRead) {
-		if (writeNotRead.length > 0) {
-			currentFailedHillClimbs = writeNotRead[0];
-		} else {
-			long oldValue = currentFailedHillClimbs;
-			currentFailedHillClimbs = 0;
-			return oldValue;
-		}
-		return currentFailedHillClimbs;
+	public long getCurrentFailedHillClimbs() {
+		long oldValue = currentFailedHillClimbs;
+		currentFailedHillClimbs = 0;
+		return oldValue;
 	}
 	
 	/**
 	 * Getter/setter for lifetimeRejectedCreatures.
 	 * 
-	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime failed breeds.
 	 */
-	public synchronized long getLifetimeDeadChildren(long...writeNotRead) {
-		if (writeNotRead.length > 0) {
-			lifetimeOffspring = writeNotRead[0];
-		}
+	public long getLifetimeDeadChildren(long...writeNotRead) {
 		return lifetimeRejectedCreatures;
 	}
 	
 	/**
 	 * Getter/setter for lifetimeFailedHillClimbs.
 	 * 
-	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime failed hill climbs.
 	 */
-	public synchronized long getLifetimeFailedHillClimbs(
-			long...writeNotRead) {
-		if (writeNotRead.length > 0) {
-			lifetimeOffspring = writeNotRead[0];
-		}
+	public long getLifetimeFailedHillClimbs() {
 		return lifetimeFailedHillClimbs;
 	}
 	
 	/**
 	 * Getter/setter for failedRandomHoppers.
 	 * 
-	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Number of failed random hopper creations during initialization.
 	 */
-	public synchronized long getFailedRandomHoppers(long...writeNotRead) {
-		if (writeNotRead.length > 0) {
-			lifetimeOffspring = writeNotRead[0];
-		}
+	public long getFailedRandomHoppers() {
 		return failedRandomHoppers;
-	}
-	
-	/**
-	 * Adds a copy of the requested Hopper only if that Hopper is valid (has a
-	 * valid Genotype, phenotype, and body). This is a special, private version
-	 * of add that is unsynchronized.
-	 * 
-	 * @param hopper Hopper to add to the Population.
-	 */
-	private void unsynchronizedAdd(Hopper hopper) {
-		// Short-circuits if hopper is null.
-		if (hopper == null || hopper.getGenotype() == null
-				|| hopper.getPhenotype() == null || hopper.getBody() == null) {
-			return;
-		}
-		
-		try {
-			super.add(new Hopper(hopper));
-		} catch (IllegalArgumentException | GeneticsException e) {
-			return;
-		}
 	}
 	
 	/**
@@ -598,7 +534,7 @@ public class Population extends ArrayList<Hopper> {
 	public boolean add(Hopper hopper) {
 		// Short-circuits if hopper is null.
 		if (hopper == null || hopper.getGenotype() == null
-				|| hopper.getPhenotype() == null || hopper.getBody() == null) {
+				|| hopper.getPhenotype() == null) {
 			return false;
 		}
 		
@@ -625,7 +561,7 @@ public class Population extends ArrayList<Hopper> {
 	public void add(int index, Hopper hopper) {
 		// Short-circuits if hopper is null.
 		if (hopper == null || hopper.getGenotype() == null
-				|| hopper.getPhenotype() == null || hopper.getBody() == null) {
+				|| hopper.getPhenotype() == null) {
 			return;
 		}
 		
@@ -656,21 +592,36 @@ public class Population extends ArrayList<Hopper> {
 			if (o != null && o.getClass() == this.getClass()) {
 				Hopper h = (Hopper) o;
 				if (h != null && h.getGenotype() != null
-						&& h.getPhenotype() != null && h.getBody() != null) {
-					hoppers.add(h);
+						&& h.getPhenotype() != null) {
+					synchronized (this) {
+						hoppers.add(h);
+					}
 				}
 			}
 		}
 		
 		int count = 0;
-		synchronized (this) {
-			for (Hopper h : hoppers) {
+		for (Hopper h : hoppers) {
+			synchronized (this) {
 				if (add(h)) {
 					count++;
 				}
 			}
 		}
 		return count == hoppers.size();
+	}
+	
+	/**
+	 * Override of remove by index - synchronized.
+	 * 
+	 * @param index Index of Hopper to remove.
+	 * @return Hopper at index.
+	 */
+	@Override
+	public Hopper remove(int index) {
+		synchronized (this) {
+			return super.remove(index);
+		}
 	}
 	
 	/**
@@ -688,8 +639,10 @@ public class Population extends ArrayList<Hopper> {
 			try {
 				return new Hopper(super.get(index));
 			} catch (IllegalArgumentException | GeneticsException ex) {
+				Log.error("Cloning Hopper for get failed.");
 				return null;
 			} catch (IndexOutOfBoundsException ex) {
+				Log.error("Get tried to index out of bounds.");
 				throw ex;
 			}
 		}

@@ -25,6 +25,7 @@ import creature.physics.Simulator;
 public class Helper {
 	public static final Random RANDOM = new Random();
 	public static final String NEWLINE = System.getProperty("line.separator");
+	public static final String SEPARATOR = System.getProperty("file.separator");
 	public static final int POPULATION_SIZE = Tribe.POPULATION_SIZE;
 	public static final int MAX_BLOCKS = 50;
 	// HASH_PRIME is a small prime number for Allele's hash code generation.
@@ -48,7 +49,8 @@ public class Helper {
 	public static final float MEDIAN_WEIGHT = 0.5f;
 	public static final float MAX_WEIGHT = 1.0f;
 	// Percentage by which to increase/decrease Allele weights.
-	public static final float WEIGHT_STEP = 0.025f;
+	public static final float WEIGHT_STEP_UP = 0.01f;
+	public static final float WEIGHT_STEP_DOWN = 0.1f;
 	// How many generations between seeding of new random Hoppers.
 	public static final int SEED_NEW_RANDOMS_GAP = 50;
 	// Amount of padding when evaluating fitness with the physics simulation.

@@ -25,10 +25,10 @@ public class WeightHelper {
 	
 	/**
 	 * Instantiate a new weight helper to produce Allele weights of either
-	 * random or Helper.MIN_WEIGHT.
+	 * random or Helper.MAX_WEIGHT.
 	 * 
 	 * @param random Boolean determining whether generated weights are random
-	 *            or Helper.MINWEIGHT.
+	 *            (true) or Helper.MAX_WEIGHT.
 	 */
 	public WeightHelper(boolean random) {
 		this.random = random;

@@ -50,6 +50,20 @@ public class Hopper implements Comparable<Hopper> {
 	}
 	
 	/**
+	 * Instantiate a new Hopper with random Genotype and name and 1.0f.
+	 * 
+	 * @param random Boolean to enable/disable random/1.0f Allele weights
+	 *            (defaults to true).
+	 * @throws GeneticsException if thrown by Genotype.
+	 * @throws IllegalArgumentException if there was a problem creating the
+	 *             Genotype or Phenotype.
+	 */
+	public Hopper(boolean random) throws IllegalArgumentException, 
+			GeneticsException {
+		this(new Genotype(random), randomName());
+	}
+	
+	/**
 	 * Instantiate a new Hopper with the passed Genotype and provided name.
 	 * Unique (non-cloned) Hoppers each get a unique serial number.
 	 * 

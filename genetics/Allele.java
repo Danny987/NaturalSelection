@@ -309,7 +309,7 @@ public class Allele {
 	 * Increase the Allele's weight by a constant step size.
 	 */
 	public float increaseWeight() {
-		setWeight(weight + Helper.WEIGHT_STEP);
+		setWeight(weight + Helper.WEIGHT_STEP_UP);
 		return weight;
 	}
 	
@@ -317,7 +317,7 @@ public class Allele {
 	 * Decrease the Allele's weight by a constant step size.
 	 */
 	public float decreaseWeight() {
-		setWeight(weight - Helper.WEIGHT_STEP);
+		setWeight(weight - Helper.WEIGHT_STEP_DOWN);
 		return weight;
 	}
 	
