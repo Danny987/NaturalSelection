@@ -7,11 +7,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import creature.geeksquad.genetics.Allele;
+import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Allele.Trait;
+import creature.geeksquad.genetics.WeightHelper;
+import creature.geeksquad.genetics.Genotype.*;
 import creature.phenotype.Creature;
 import creature.phenotype.EnumJointSite;
 import creature.phenotype.EnumJointType;
@@ -27,40 +30,19 @@ import creature.geeksquad.library.*;
  */
 public abstract class Strategy {
 
+	boolean mapsOn = false;
+
 	Genotype currentGenotype;
 	Genotype newGenotype;
 
-	//allele location - allele weight
-	HashMap<Integer,Integer> alleleWeights = new HashMap<Integer,Integer>();
+	WeightHelper weightHelper;
 
-	//rule neuron input maps
-	HashMap<EnumNeuronInputType, Integer> aRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> bRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> cRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> dRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> eRuleWeights1 = new HashMap<EnumNeuronInputType, Integer>();
+	MapHandler mapHandler;
 
-	HashMap<EnumNeuronInputType, Integer> aRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> bRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> cRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> dRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
-	HashMap<EnumNeuronInputType, Integer> eRuleWeights2 = new HashMap<EnumNeuronInputType, Integer>();
-
-	//binary enum maps
-	HashMap<EnumOperatorBinary, Integer> binaryOneWeights = new HashMap<EnumOperatorBinary, Integer>();
-	HashMap<EnumOperatorBinary, Integer> binaryThreeWeights = new HashMap<EnumOperatorBinary, Integer>();
-
-	//unary enum maps
-	HashMap<EnumOperatorUnary, Integer> unaryTwoWeights = new HashMap<EnumOperatorUnary, Integer>();
-	HashMap<EnumOperatorUnary, Integer> unaryFourWeights = new HashMap<EnumOperatorUnary, Integer>();
-	
-	//remove block maps
-	HashMap<Integer, Integer> removeBlockWeights = new HashMap<Integer, Integer>();
-
-
-	public Strategy(){
-		//initialize all the probability maps
-		initializeMaps();
+	public Strategy(MapHandler mapHandler){
+		//set the crossover object
+		this.weightHelper = new WeightHelper(false);
+		this.mapHandler = mapHandler;
 	}
 
 	/**
@@ -72,35 +54,34 @@ public abstract class Strategy {
 	 * @param allele - Allele to extract a trait from.
 	 * @return String - type of trait extracted from the allele.
 	 */
-	public String climbTypeChooser(Allele allele){
-		//get the trait from the allele
+	public String climbTypeChooser(Hopper clonedHopper, int geneIndex){
+
+		//get the trait of the dominant allele at the geneIndex
+		Allele allele = getDomAllele(clonedHopper, geneIndex);
 		Allele.Trait trait = allele.getTrait();
 
 		// Switch to determine what string to return based on the trait.
 		switch (trait) {
 		case HEIGHT: case WIDTH: case LENGTH:
-			return "FLOAT"; //EXCEPTION
+			return "FLOAT";
 			//return "INDEX";
 
 		case INDEX_TO_PARENT:
 			return "INDEX";
 
 		case JOINT_SITE_ON_CHILD:
-			return "JOINT_CHILD"; //EXCEPTION
-			//return "INDEX";
+			return "JOINT_CHILD";
 
 		case JOINT_SITE_ON_PARENT:
-			return "JOINT_PARENT"; //EXCEPTION
-			//return "INDEX";
+			return "JOINT_PARENT";
 
 		case JOINT_TYPE:
-			EnumJointType j = (EnumJointType) allele.getValue();
 			return "JOINT";
 			//return "INDEX";
 
 		case JOINT_ORIENTATION:
-			//return "ORIENTATION"; //EXCEPTION
-			return "INDEX";
+			return "ORIENTATION";
+			//return "INDEX";
 
 		case RULE_INPUT_A:
 			return "RULE_A";
@@ -150,54 +131,73 @@ public abstract class Strategy {
 	 * @param direction - add or subtract from value
 	 * @param stepSize - how much to add or subtract from value
 	 */
-	public void climbFloat(Genotype genotype, Allele allele, int direction, float stepSize, float max)
+	public Hopper climbFloat(Hopper hopper, int geneIndex, float step)
 			throws GeneticsException, IllegalArgumentException{
 
-		Genotype clonedGenotype = null;
+
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
 		try {
-			clonedGenotype = new Genotype(genotype);
+			hopperToClimb = new Hopper(hopper);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			//invalid creature came into climbFloat
-			return;
+			throw e;
 		}
 
-		//get allele value
-		float f = (Float) allele.getValue();
+		//get the allele
+		Allele alleleToClimb = getDomAllele(hopperToClimb, geneIndex);
 
-		//what to change the allele to
-		float newValue = f + (stepSize*direction);
 
-		//if max is 0 or if newValue less than max
-		if(max == 0 || newValue < max){
-			//add step to allele value
-			allele.setValue(newValue);
+		//get the allele value
+		float currentValue = (float)alleleToClimb.getValue();
+
+		//add the step to the current value
+		float newValue = currentValue + step;
+
+
+		/**
+		 * Before changing the value of the allele, make sure that it meets
+		 * all the criteria. If the allele is a JOINT_ORIENTATION, then we
+		 * don't care about imposing a min and max size. If the allele is
+		 * a dimension (L, W, H), then make sure the new value is within
+		 * the max and min bounds.
+		 */
+		if((alleleToClimb.getTrait().equals(Allele.Trait.JOINT_ORIENTATION))
+				|| (newValue >= getFloatMin(hopperToClimb, geneIndex) 
+				&& newValue <= getFloatMax(hopperToClimb, geneIndex))){
+			//update the allele with the new value
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					newValue,
+					alleleToClimb.getWeight());
 		}
 
-		Genotype validGenotype = null;
-		try {
-			validGenotype = new Genotype(genotype);
-		} catch (IllegalArgumentException | GeneticsException e) {
-			//the float climb invalidated the creature, undo
-			genotype = clonedGenotype;
+		//insert the allele into the genotype, if it's valid, return the hopper
+		Hopper temp = insertAllele(hopperToClimb, geneIndex, alleleToClimb);
+		if(temp != null){
+			return temp;
+		}
+		else{
+			return hopper;
 		}
 	}
 
 	/**
-	 * Performs a climb on a rule-based allele.
-	 * Takes in a neuron input, returns a different neuron input based on
-	 * probability/weight maps.
+	 * Given a neuron, returns a new one one.
 	 * 
 	 * @param neuron - starting neuron input
 	 * @param ruleType - type of neuron input, A,B,C,D,E
 	 * @param boxIndex - box index of the neuron rule allele
 	 * @return neuron - the changed neuron
 	 */
-	public NeuronInput climbRule(NeuronInput neuron, char ruleType, int boxIndex, int ruleDoF){
+	public NeuronInput replaceNeuron(NeuronInput neuron, char ruleType, int boxIndex, int ruleDoF){
 		//get a new rule from the maps based on the rule type
-		EnumNeuronInputType newRuleValue = pickRuleValue(ruleType, ruleDoF);
+		EnumNeuronInputType newRuleValue = mapHandler.pickRuleValue(ruleType, ruleDoF);
 
 		if(neuron.getType().equals(newRuleValue)){
-			newRuleValue = pickRuleValue(ruleType, ruleDoF);
+			newRuleValue = mapHandler.pickRuleValue(ruleType, ruleDoF);
 		}
 
 		//check what neuron input was obtained from the maps and return it
@@ -208,7 +208,7 @@ public abstract class Strategy {
 			return new NeuronInput(newRuleValue, boxIndex);
 		}
 		else if(newRuleValue.equals(EnumNeuronInputType.CONSTANT)){
-			//System.out.println("Can't climb rule CONSTANT yet!");
+			return new NeuronInput(newRuleValue, Helper.RANDOM.nextFloat());
 		}
 		else if(newRuleValue.equals(EnumNeuronInputType.JOINT)){
 			return new NeuronInput(newRuleValue, boxIndex, neuron.getDOF());
@@ -218,7 +218,13 @@ public abstract class Strategy {
 		return neuron;
 	}
 
-	public EnumJointSite climbJointSite(EnumJointSite clonedJointSite){
+	/**
+	 * When given a joint site, returns a different one
+	 * @param clonedJointSite
+	 * @return
+	 */
+	public EnumJointSite getNewJointSite(EnumJointSite clonedJointSite){
+		//TODO
 		EnumJointSite jointSite = clonedJointSite;
 
 		while(jointSite == clonedJointSite){
@@ -228,27 +234,65 @@ public abstract class Strategy {
 		return jointSite;
 	}
 
-	public Genotype climbJointType(Genotype genotype, Allele allele, int geneIndex){
-		EnumJointType startingJointType = (EnumJointType)allele.getValue();
-		EnumJointType jointType = startingJointType;
+	/**
+	 * When given a joint type, returns a different one
+	 * @param clonedJointType
+	 * @return
+	 */
+	public EnumJointType getNewJointType(EnumJointType clonedJointType){
+		//TODO
+		EnumJointType jointType = clonedJointType;
 
-		while(jointType == startingJointType){
+		while(jointType == clonedJointType){
 			jointType = EnumJointType.values()
 					[Helper.RANDOM.nextInt(EnumJointType.values().length)];
 		}
+		return jointType;
+	}
 
-		allele.setValue(jointType);
+	public Hopper climbJointType(Hopper hopper, int geneIndex)
+			throws GeneticsException, IllegalArgumentException{
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
+		try {
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			throw e;
+		}
 
-		ArrayList<Gene> geneList = genotype.getChromosome();
+		//get the allele at the geneIndex. This isn't necessary, but it will shorten
+		//some lines of code later on.
+		Allele alleleToClimb = getDomAllele(hopperToClimb, geneIndex);
 
-		int boxIndex = getBoxIndex(geneList, geneIndex);
+		//get the current joint type
+		EnumJointType startingJointType = (EnumJointType)alleleToClimb.getValue();
+		//send the current joint type to getNewJointType to get a new joint type
+		EnumJointType jointType = getNewJointType(startingJointType);
+
+		//change the allele to have the new joint type
+		alleleToClimb = new Allele(alleleToClimb.getTrait(), 
+				jointType, 
+				alleleToClimb.getWeight());
+
+		Allele recAllele = hopperToClimb.getChromosome().get(geneIndex).getRecessive();
+
+		Gene gene = new Gene(alleleToClimb, recAllele);
+
+		hopperToClimb.getChromosome().remove(geneIndex);
+		hopperToClimb.getChromosome().add(geneIndex, gene);
+
+		int boxIndex = getBoxIndex(hopperToClimb, geneIndex);
 
 		if(jointType.getDoF() == 0){
 			//remove rules
 			int i = geneIndex + 4; //go to first rule
-			while(i < geneList.size() && 
-					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
-				geneList.remove(i); //remove gene at index
+			while(i < hopperToClimb.getChromosome().size() && 
+					!getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.LENGTH)){
+				hopperToClimb.getChromosome().remove(i); //remove gene at index
 			}
 
 		}
@@ -257,19 +301,19 @@ public abstract class Strategy {
 
 			//index to the closest dof marker or length allele
 			int i = geneIndex;
-			while(i < geneList.size() &&
-					(!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.DOF_MARKER) ||
-							!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH))){
-				if (geneList.get(i).getDominant().getTrait().equals(Allele.Trait.DOF_MARKER)) {
+			while(i < hopperToClimb.getChromosome().size() &&
+					(!getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.DOF_MARKER)
+							|| !getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.LENGTH))){
+				if (getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.DOF_MARKER)) {
 					break;
 				}
 				i++; //go to next index
 			}
 			//at the dof marker or length
 			//remove up to the next length allele
-			while(i < geneList.size() && 
-					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
-				geneList.remove(i); //remove gene at index
+			while(i < hopperToClimb.getChromosome().size() && 
+					!getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.LENGTH)){
+				hopperToClimb.getChromosome().remove(i); //remove gene at index
 			}
 		}
 		else{
@@ -279,15 +323,15 @@ public abstract class Strategy {
 			int i = geneIndex;
 
 			//move the index to where we need to add the rules
-			while(i < geneList.size() && 
-					!geneList.get(i).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
+			while(i < hopperToClimb.getChromosome().size() && 
+					!getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.LENGTH)){
 				i++;
 			}
 
 			if(startingJointType.getDoF() == 1 && jointType.getDoF() == 2){
 				//add a DoF marker
 				Allele allele1 = new Allele(Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f);
-				geneList.add(i, new Gene(allele1));
+				hopperToClimb.getChromosome().add(i, new Gene(allele1));
 				i++;
 			}
 
@@ -296,7 +340,7 @@ public abstract class Strategy {
 				if(j != 0){ //if adding a second DoF
 					//add a dof marker
 					Allele allele1 = new Allele(Trait.DOF_MARKER, EnumJointType.DOF_2, 0.1f);
-					geneList.add(i, new Gene(allele1));
+					hopperToClimb.getChromosome().add(i, new Gene(allele1));
 					i++;
 				}
 
@@ -305,77 +349,232 @@ public abstract class Strategy {
 					Allele allele1;
 					Allele allele2;
 					//a
-					allele1 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'A', boxIndex, j+1));
-					allele2 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'A', boxIndex, j+1));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(),
+							replaceNeuron((NeuronInput)allele1.getValue(), 'A', boxIndex, j+1), 
+							weightHelper.weight());
+
+					allele2 = new Allele(Trait.RULE_INPUT_A, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(), 
+							replaceNeuron((NeuronInput)allele2.getValue(), 'A', boxIndex, j+1), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 					//b
-					allele1 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'B', boxIndex, j+1));
-					allele2 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'B', boxIndex, j+1));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(),
+							replaceNeuron((NeuronInput)allele1.getValue(), 'B', boxIndex, j+1), weightHelper.weight());
+
+					allele2 = new Allele(Trait.RULE_INPUT_B, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(), 
+							replaceNeuron((NeuronInput)allele2.getValue(), 'B', boxIndex, j+1), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 					//c
-					allele1 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'C', boxIndex, j+1));
-					allele2 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'C', boxIndex, j+1));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(),
+							replaceNeuron((NeuronInput)allele1.getValue(), 'C', boxIndex, j+1), weightHelper.weight());
+
+					allele2 = new Allele(Trait.RULE_INPUT_C, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(), 
+							replaceNeuron((NeuronInput)allele2.getValue(), 'C', boxIndex, j+1), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 					//d
-					allele1 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'D', boxIndex, j+1));
-					allele2 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'D', boxIndex, j+1));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(),
+							replaceNeuron((NeuronInput)allele1.getValue(), 'D', boxIndex, j+1), weightHelper.weight());
+
+					allele2 = new Allele(Trait.RULE_INPUT_D, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(), 
+							replaceNeuron((NeuronInput)allele2.getValue(), 'D', boxIndex, j+1), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 					//e
-					allele1 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele1.setValue(climbRule((NeuronInput)allele1.getValue(), 'E', boxIndex, j+1));
-					allele2 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), 0.5f);
-					allele2.setValue(climbRule((NeuronInput)allele2.getValue(), 'E', boxIndex, j+1));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(),
+							replaceNeuron((NeuronInput)allele1.getValue(), 'E', boxIndex, j+1), weightHelper.weight());
+
+					allele2 = new Allele(Trait.RULE_INPUT_E, new NeuronInput(EnumNeuronInputType.TIME), weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(), 
+							replaceNeuron((NeuronInput)allele2.getValue(), 'E', boxIndex, j+1), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 					//bin1
-					allele1 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0.5f);
-					allele1.setValue(pickBinaryValue('1'));
-					allele2 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, 0.5f);
-					allele2.setValue(pickBinaryValue('1'));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(), 
+							mapHandler.getNewBinary('1'), weightHelper.weight());
+
+					allele2 = new Allele(Trait.BINARY_OPERATOR_1, EnumOperatorBinary.ADD, weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(), 
+							mapHandler.getNewBinary('1'), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 					//un2
-					allele1 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, 0.3f);
-					allele1.setValue(pickUnaryValue('2'));
-					allele2 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, 0.3f);
-					allele2.setValue(pickUnaryValue('2'));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(), 
+							mapHandler.getNewUnary('2'), weightHelper.weight());
+
+					allele2 = new Allele(Trait.UNARY_OPERATOR_2, EnumOperatorUnary.ABS, weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(), 
+							mapHandler.getNewUnary('2'), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 					//bin3
-					allele1 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0.5f);
-					allele1.setValue(pickBinaryValue('3'));
-					allele2 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, 0.5f);
-					allele2.setValue(pickBinaryValue('3'));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(),
+							mapHandler.getNewBinary('3'), weightHelper.weight());
+
+					allele2 = new Allele(Trait.BINARY_OPERATOR_3, EnumOperatorBinary.ADD, weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(),
+							mapHandler.getNewBinary('3'), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 					//un4
-					allele1 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, 0.3f);
-					allele1.setValue(pickUnaryValue('4'));
-					allele2 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, 0.3f);
-					allele2.setValue(pickUnaryValue('4'));
-					geneList.add(i, new Gene(allele1, allele2));
+					allele1 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, weightHelper.weight());
+					allele1 = new Allele(allele1.getTrait(),
+							mapHandler.getNewUnary('4'), weightHelper.weight());
+
+					allele2 = new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS, weightHelper.weight());
+					allele2 = new Allele(allele2.getTrait(),
+							mapHandler.getNewUnary('4'), weightHelper.weight());
+
+					hopperToClimb.getChromosome().add(i, new Gene(allele1, allele2));
 					i++;
 				}
 			}
 		}
-		return genotype;
+		if(validHopper(hopperToClimb))
+		{
+			return hopperToClimb;
+		}
+		else{
+			return hopper;
+		}
 	}
 
-	/*public void climbInt(Allele allele){
-		int i = (Integer) allele.getValue();
-	}*/
+	/**
+	 * Given a hopper and an index to an allele of type RULE, changes
+	 * the allele to a different rule type. Returns the modified
+	 * hopper if it's valid.
+	 * 
+	 * @param hopper
+	 * @param geneIndex
+	 * @return
+	 * @throws GeneticsException
+	 * @throws IllegalArgumentException
+	 */
+	public Hopper climbRule(Hopper hopper, int geneIndex)
+			throws GeneticsException, IllegalArgumentException{
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
+		try {
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			throw e;
+		}
+
+		//get the rule allele from the cloned hopper
+		Allele alleleToClimb = getDomAllele(hopperToClimb, geneIndex);
+
+		//get box index
+		int boxIndex = getBoxIndex(hopperToClimb, geneIndex);
+
+		//get rule DoF location
+		int ruleDoF = getRuleDoF(hopperToClimb, geneIndex);
+
+		//create a new allele based on the current rule type
+		switch (alleleToClimb.getTrait()) {
+		case RULE_INPUT_A:
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'A', boxIndex, ruleDoF),
+					alleleToClimb.getWeight());
+
+			break;
+
+		case RULE_INPUT_B:
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'B', boxIndex, ruleDoF),
+					alleleToClimb.getWeight());
+
+			break;
+
+		case RULE_INPUT_C:
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'C', boxIndex, ruleDoF),
+					alleleToClimb.getWeight());
+
+			break;
+
+		case RULE_INPUT_D:
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'D', boxIndex, ruleDoF),
+					alleleToClimb.getWeight());
+
+			break;
+
+		case RULE_INPUT_E:
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'E', boxIndex, ruleDoF),
+					alleleToClimb.getWeight());
+
+			break;
+
+		default:
+			//a non-rule allele was passed in so just return the original hopper.
+			break;
+		}
+
+		//update map
+		char ruleType = 'A';
+
+		switch (alleleToClimb.getTrait()) {
+		case RULE_INPUT_A:
+			ruleType = 'A';
+			break;
+		case RULE_INPUT_B:
+			ruleType = 'B';
+			break;
+		case RULE_INPUT_C:
+			ruleType = 'C';
+			break;
+		case RULE_INPUT_D:
+			ruleType = 'D';
+			break;
+		case RULE_INPUT_E:
+			ruleType = 'E';
+			break;
+		default:
+			break;
+		}
+
+		if(mapsOn) mapHandler.updateRuleMap((NeuronInput) alleleToClimb.getValue(), 
+				ruleType, 
+				ruleDoF, 
+				1);
+
+		//insert the allele into the genotype, if it's valid, return the hopper
+		Hopper temp = insertAllele(hopperToClimb, geneIndex, alleleToClimb);
+		if(temp != null){
+			return temp;
+		}
+		else{
+			return hopper;
+		}
+	}
+
+
 
 	/**
 	 * This method compares the new and current fitness and returns
@@ -387,13 +586,20 @@ public abstract class Strategy {
 	 * @return True if fitness has improved. False if it has not improved.
 	 */
 	public boolean improved(Hopper hopper){
+		float startingFitness = hopper.getFitness();
+
+		try {
+			hopper.getGenotype().buildPhenotype();
+		} catch (IllegalArgumentException | GeneticsException e) {
+			return false;
+		}
+
 		//run simulation to get new fitness
-		float newFitness = getNewFitness(hopper);
+		float newFitness = hopper.evalFitness();
+
 		//if the fitness from the sim is greater than the current fitness
-		if(newFitness > hopper.getFitness()){
+		if(newFitness > startingFitness){
 			//update hopper current fitness
-			System.err.println("SUCCESS: " + hopper.getFitness() + " --> " + newFitness);
-			hopper.setFitness(newFitness);
 			return true;
 		}
 		return false;
@@ -410,6 +616,83 @@ public abstract class Strategy {
 	public abstract Hopper climb(Hopper startingHopper) throws 
 	IllegalArgumentException, GeneticsException;
 
+	public Hopper climbBinaryUnary(Hopper hopper, int geneIndex)
+			throws GeneticsException, IllegalArgumentException{
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
+		try {
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			throw e;
+		}
+
+		//get the allele that is going to be changed
+		Allele alleleToClimb = getDomAllele(hopperToClimb, geneIndex);
+
+		//change the allele depending on the its current trait
+		switch (alleleToClimb.getTrait()) {
+		case BINARY_OPERATOR_1: 
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					mapHandler.getNewBinary('1'),
+					alleleToClimb.getWeight());
+
+			if(mapsOn) mapHandler.updateBinaryMap((EnumOperatorBinary) alleleToClimb.getValue(), 
+					'1', 
+					1);
+
+			break;
+
+		case BINARY_OPERATOR_3:
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					mapHandler.getNewBinary('3'),
+					alleleToClimb.getWeight());
+
+			if(mapsOn) mapHandler.updateBinaryMap((EnumOperatorBinary) alleleToClimb.getValue(), 
+					'3', 
+					1);
+
+			break;
+
+		case UNARY_OPERATOR_2:
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					mapHandler.getNewUnary('2'),
+					alleleToClimb.getWeight());
+
+			if(mapsOn) mapHandler.updateUnaryMap((EnumOperatorUnary) alleleToClimb.getValue(), 
+					'2', 
+					1);
+
+			break;
+
+		case UNARY_OPERATOR_4:
+			alleleToClimb = new Allele(alleleToClimb.getTrait(),
+					mapHandler.getNewUnary('4'),
+					alleleToClimb.getWeight());
+
+			mapHandler.updateUnaryMap((EnumOperatorUnary) alleleToClimb.getValue(), 
+					'4', 
+					1);
+
+			break;
+
+		default:
+			break;
+		}
+
+		//insert the allele into the genotype, if it's valid, return the hopper
+		Hopper temp = insertAllele(hopperToClimb, geneIndex, alleleToClimb);
+		if(temp != null){
+			return temp;
+		}
+		else{
+			return hopper;
+		}
+	}
+
 	/**
 	 * Runs the simulation on a hopper.
 	 * Returns the highest fitness from the simulation.
@@ -418,6 +701,7 @@ public abstract class Strategy {
 	 * @return float - highest fitness from simulation
 	 */
 	public float getNewFitness(Hopper hopper){
+		//TODO
 		//generate a phenotype from the creature
 		Creature phenotype = hopper.getPhenotype();
 
@@ -425,196 +709,176 @@ public abstract class Strategy {
 		float highestFitness = 0;
 		//float fitness = 0;
 
-		//run the simulation
-		/*for (int i = 0; i < 20; i++) {
-			fitness = phenotype.advanceSimulation();
-			if(fitness > highestFitness){
-				highestFitness = fitness;
-			}
-		}*/
-		//return highestFitness;
+		//return highestFitness, this should also set the fitness of the hopper
 		return hopper.evalFitness();
 	}
 
 	//initialize the the weight maps
-	public void initializeMaps(){
-
-		//neuron input maps
-		aRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
-		aRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
-		aRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
-		aRuleWeights1.put(EnumNeuronInputType.TIME, 1);
-		aRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
-
-		bRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
-		bRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
-		bRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
-		bRuleWeights1.put(EnumNeuronInputType.TIME, 1);
-		bRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
-
-		cRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
-		cRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
-		cRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
-		cRuleWeights1.put(EnumNeuronInputType.TIME, 1);
-		cRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
-
-		dRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
-		dRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
-		dRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
-		dRuleWeights1.put(EnumNeuronInputType.TIME, 1);
-		dRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
-
-		eRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
-		eRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
-		eRuleWeights1.put(EnumNeuronInputType.JOINT, 1);
-		eRuleWeights1.put(EnumNeuronInputType.TIME, 1);
-		eRuleWeights1.put(EnumNeuronInputType.TOUCH, 1);
-
-		aRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
-		aRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
-		aRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
-		aRuleWeights2.put(EnumNeuronInputType.TIME, 1);
-		aRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
-
-		bRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
-		bRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
-		bRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
-		bRuleWeights2.put(EnumNeuronInputType.TIME, 1);
-		bRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
-
-		cRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
-		cRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
-		cRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
-		cRuleWeights2.put(EnumNeuronInputType.TIME, 1);
-		cRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
-
-		dRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
-		dRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
-		dRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
-		dRuleWeights2.put(EnumNeuronInputType.TIME, 1);
-		dRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
-
-		eRuleWeights2.put(EnumNeuronInputType.CONSTANT, 1);
-		eRuleWeights2.put(EnumNeuronInputType.HEIGHT, 1);
-		eRuleWeights2.put(EnumNeuronInputType.JOINT, 1);
-		eRuleWeights2.put(EnumNeuronInputType.TIME, 1);
-		eRuleWeights2.put(EnumNeuronInputType.TOUCH, 1);
-
-		//binary operator maps
-		binaryOneWeights.put(EnumOperatorBinary.ADD, 1);
-		binaryOneWeights.put(EnumOperatorBinary.SUBTRACT, 1);
-		binaryOneWeights.put(EnumOperatorBinary.MULTIPLY, 1);
-		binaryOneWeights.put(EnumOperatorBinary.POWER, 1);
-		binaryOneWeights.put(EnumOperatorBinary.MAX, 1);
-		binaryOneWeights.put(EnumOperatorBinary.MIN, 1);
-		binaryOneWeights.put(EnumOperatorBinary.ARCTAN2, 1);
-
-		binaryThreeWeights.put(EnumOperatorBinary.ADD, 1);
-		binaryThreeWeights.put(EnumOperatorBinary.SUBTRACT, 1);
-		binaryThreeWeights.put(EnumOperatorBinary.MULTIPLY, 1);
-		binaryThreeWeights.put(EnumOperatorBinary.POWER, 1);
-		binaryThreeWeights.put(EnumOperatorBinary.MAX, 1);
-		binaryThreeWeights.put(EnumOperatorBinary.MIN, 1);
-		binaryThreeWeights.put(EnumOperatorBinary.ARCTAN2, 1);
-
-		//unary operator maps
-		unaryTwoWeights.put(EnumOperatorUnary.ABS, 1);
-		unaryTwoWeights.put(EnumOperatorUnary.IDENTITY, 1);
-		unaryTwoWeights.put(EnumOperatorUnary.SIN, 1);
-		unaryTwoWeights.put(EnumOperatorUnary.SIGN, 1);
-		unaryTwoWeights.put(EnumOperatorUnary.NEGATIVE, 1);
-		unaryTwoWeights.put(EnumOperatorUnary.LOG, 1);
-		unaryTwoWeights.put(EnumOperatorUnary.EXP, 1);
-
-		unaryFourWeights.put(EnumOperatorUnary.ABS, 1);
-		unaryFourWeights.put(EnumOperatorUnary.IDENTITY, 1);
-		unaryFourWeights.put(EnumOperatorUnary.SIN, 1);
-		unaryFourWeights.put(EnumOperatorUnary.SIGN, 1);
-		unaryFourWeights.put(EnumOperatorUnary.NEGATIVE, 1);
-		unaryFourWeights.put(EnumOperatorUnary.LOG, 1);
-		unaryFourWeights.put(EnumOperatorUnary.EXP, 1);
-		
-		//remove block maps
-		for(int i = 0; i < 50; i++){
-			removeBlockWeights.put(i, 1);
-		}
-
-	}
 
 	/**
-	 * Gets the box index of a specific gene in a genotype.
+	 * Gets the box index of the geneIndex.
+	 * 
 	 * @param genotype - Genotype that contains the gene.
 	 * @param geneIndex - location of the gene to check
 	 * @return int - box index of the gene
 	 */
-	public int getBoxIndex(ArrayList<Gene> geneList, int geneIndex){
+	public int getBoxIndex(Hopper hopper, int geneIndex){
 		int blockCount = 0;
-
 		for(int i = 0; i <= geneIndex; i++){
-			if(geneList.get(i).getTrait().equals(Allele.Trait.LENGTH))
+			if(getDomAllele(hopper, i).getTrait().equals(Allele.Trait.LENGTH))
 				blockCount++;
 		}
 		return blockCount;
 	}
 
 	/** Calculates the maximum float value for a dimension of the box that
-	 * the given allele is in.
+	 * the given allele is in. Maximum is x10 the smallest dimension.
 	 * 
 	 * @param genotype
 	 * @param allele
 	 * @param geneIndex
 	 * @return
 	 */
-	public float getFloatMax(Genotype genotype, int geneIndex){
+	public float getFloatMax(Hopper hopper, int geneIndex){
 		float currentVal = 0;
 		float val1 = 0;
 		float val2 = 0;
 
-		ArrayList<Gene> geneList = genotype.getChromosome();
-
-		currentVal = (float)geneList.get(geneIndex).getDominant().getValue();
+		currentVal = (float)getDomAllele(hopper, geneIndex).getValue();
 
 		//if allele is not a dimension, return 0
-		if(geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.JOINT_ORIENTATION)){
+		if(getDomAllele(hopper, geneIndex).getTrait().equals(Allele.Trait.JOINT_ORIENTATION)){
 			return 0;
 		}
 
-
-		//length, height, width
-		if(geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
-			if(geneList.get(geneIndex+1).getDominant().getTrait().equals(Allele.Trait.WIDTH)){
-				val1 = (float)geneList.get(geneIndex+1).getDominant().getValue();
+		/**
+		 * Depending on what allele is given, get the values of the other dimensions.
+		 * Order is LENGTH -> HEIGHT -> WIDTH
+		 */
+		//at a length allele
+		if(getDomAllele(hopper, geneIndex).getTrait().equals(Allele.Trait.LENGTH)){
+			//go forward 1 allele to get width
+			if(getDomAllele(hopper, geneIndex+1).getTrait().equals(Allele.Trait.WIDTH)){
+				val1 = (float)getDomAllele(hopper, geneIndex+1).getValue();
 			}
-			if(geneList.get(geneIndex+2).getDominant().getTrait().equals(Allele.Trait.HEIGHT)){
-				val2 = (float)geneList.get(geneIndex+2).getDominant().getValue();
-			}
-		}
-		else if(geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.HEIGHT)){
-			if(geneList.get(geneIndex-1).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
-				val1 = (float)geneList.get(geneIndex-1).getDominant().getValue();
-			}
-			if(geneList.get(geneIndex+1).getDominant().getTrait().equals(Allele.Trait.WIDTH)){
-				val2 = (float)geneList.get(geneIndex+1).getDominant().getValue();
+			//go forward 2 alleles to get height
+			if(getDomAllele(hopper, geneIndex+2).getTrait().equals(Allele.Trait.HEIGHT)){
+				val2 = (float)getDomAllele(hopper, geneIndex+2).getValue();
 			}
 		}
-		else if(geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.WIDTH)){
-			if(geneList.get(geneIndex-1).getDominant().getTrait().equals(Allele.Trait.LENGTH)){
-				val1 = (float)geneList.get(geneIndex-1).getDominant().getValue();
+		//at a height allele
+		else if(getDomAllele(hopper, geneIndex).getTrait().equals(Allele.Trait.HEIGHT)){
+			//go back 1 allele to get length
+			if(getDomAllele(hopper, geneIndex-1).getTrait().equals(Allele.Trait.LENGTH)){
+				val1 = (float)getDomAllele(hopper, geneIndex-1).getValue();
 			}
-			if(geneList.get(geneIndex-2).getDominant().getTrait().equals(Allele.Trait.HEIGHT)){
-				val1 = (float)geneList.get(geneIndex-2).getDominant().getValue();
+			//go forward 1 allele to get width
+			if(getDomAllele(hopper, geneIndex+1).getTrait().equals(Allele.Trait.WIDTH)){
+				val2 = (float)getDomAllele(hopper, geneIndex+1).getValue();
+			}
+		}
+		//at a width allele
+		else if(getDomAllele(hopper, geneIndex).getTrait().equals(Allele.Trait.WIDTH)){
+			//go back 1 allele to get length
+			if(getDomAllele(hopper, geneIndex-1).getTrait().equals(Allele.Trait.HEIGHT)){
+				val1 = (float)getDomAllele(hopper, geneIndex-1).getValue();
+			}
+			//go back 2 alleles to get height
+			if(getDomAllele(hopper, geneIndex-2).getTrait().equals(Allele.Trait.LENGTH)){
+				val2 = (float)getDomAllele(hopper, geneIndex-2).getValue();
 			}
 		}
 
 		//return the smallest value
 		if(currentVal < val1 && currentVal < val2){
-			return 0;
+			return currentVal*10;
 		}
 		else if(val1 < currentVal && val1 < val2){
 			return val1*10;
 		}
 		else if(val2 < currentVal && val2 < val1){
 			return val2*10;
+		}
+
+		return 0;
+	}
+
+	/** Calculates the minimum float value for a dimension of the box that
+	 * the given allele is in. Minimum is 1/10th the largest dimension.
+	 * 
+	 * @param genotype
+	 * @param allele
+	 * @param geneIndex
+	 * @return
+	 */
+	public float getFloatMin(Hopper hopper, int geneIndex){
+		float currentVal = 0;
+		float val1 = 0;
+		float val2 = 0;
+
+		currentVal = (float)getDomAllele(hopper, geneIndex).getValue();
+
+		//if allele is not a dimension, return 0
+		if(getDomAllele(hopper, geneIndex).getTrait().equals(Allele.Trait.JOINT_ORIENTATION)){
+			return 0;
+		}
+
+		/**
+		 * Depending on what allele is given, get the values of the other dimensions.
+		 * Order is LENGTH -> HEIGHT -> WIDTH
+		 */
+		//at a length allele
+		if(getDomAllele(hopper, geneIndex).getTrait().equals(Allele.Trait.LENGTH)){
+			//go forward 1 allele to get width
+			if(getDomAllele(hopper, geneIndex+1).getTrait().equals(Allele.Trait.WIDTH)){
+				val1 = (float)getDomAllele(hopper, geneIndex+1).getValue();
+			}
+			//go forward 2 alleles to get height
+			if(getDomAllele(hopper, geneIndex+2).getTrait().equals(Allele.Trait.HEIGHT)){
+				val2 = (float)getDomAllele(hopper, geneIndex+2).getValue();
+			}
+		}
+		//at a height allele
+		else if(getDomAllele(hopper, geneIndex).getTrait().equals(Allele.Trait.HEIGHT)){
+			//go back 1 allele to get length
+			if(getDomAllele(hopper, geneIndex-1).getTrait().equals(Allele.Trait.LENGTH)){
+				val1 = (float)getDomAllele(hopper, geneIndex-1).getValue();
+			}
+			//go forward 1 allele to get width
+			if(getDomAllele(hopper, geneIndex+1).getTrait().equals(Allele.Trait.WIDTH)){
+				val2 = (float)getDomAllele(hopper, geneIndex+1).getValue();
+			}
+		}
+		//at a width allele
+		else if(getDomAllele(hopper, geneIndex).getTrait().equals(Allele.Trait.WIDTH)){
+			//go back 1 allele to get length
+			if(getDomAllele(hopper, geneIndex-1).getTrait().equals(Allele.Trait.HEIGHT)){
+				val1 = (float)getDomAllele(hopper, geneIndex-1).getValue();
+			}
+			//go back 2 alleles to get height
+			if(getDomAllele(hopper, geneIndex-2).getTrait().equals(Allele.Trait.LENGTH)){
+				val2 = (float)getDomAllele(hopper, geneIndex-2).getValue();
+			}
+		}
+
+		//return the largest value times 1/10
+		if(currentVal > val1 && currentVal > val2){
+			if(currentVal*0.1f >= 1.0f)
+				return currentVal*0.1f;
+			else
+				return 1.0f;
+		}
+		else if(val1 > currentVal && val1 > val2){
+			if(val1*0.1f >= 1.0f)
+				return val1*0.1f;
+			else
+				return 1.0f;
+		}
+		else if(val2 > currentVal && val2 > val1){
+			if(val2*0.1f >= 1.0f)
+				return val2*0.1f;
+			else
+				return 1.0f;
 		}
 
 		return 0;
@@ -627,15 +891,16 @@ public abstract class Strategy {
 	 * @param geneIndex location of given gene
 	 * @return dof that the geneIndex is in
 	 */
-	public int getRuleDoF(ArrayList<Gene> geneList, int geneIndex){
+	public int getRuleDoF(Hopper hopper, int geneIndex){
+		//TODO
 		//go backwards through the gene list
 		for(int i = geneIndex; i >= 0; i--){
 			//if we get to a joint type allele
-			if(geneList.get(i).getTrait().equals(Allele.Trait.JOINT_TYPE)){
+			if(getDomAllele(hopper, i).getTrait().equals(Allele.Trait.JOINT_TYPE)){
 				return 1; //index was in DoF 1
 			}
 			//if we get to a DoF marker
-			if(geneList.get(i).getTrait().equals(Allele.Trait.DOF_MARKER)){
+			if(getDomAllele(hopper, i).getTrait().equals(Allele.Trait.DOF_MARKER)){
 				return 2; //index was in DoF 2
 			}
 		}
@@ -643,241 +908,68 @@ public abstract class Strategy {
 	}
 
 	/**
-	 * Given a rule type (A,B,C,D,E), return a neuron input that might
-	 * work for that rule type (using probability maps).
+	 * Given a hopper and a gene index, returns the allele at that index in the
+	 * hoppers genotype.
 	 * 
-	 * @param ruleType - type of rule, A,B,C,D,E
-	 * @return EnumNeuronInputType - neuron input gotten from the maps
+	 * @param hopper - Hopper to extract allele from.
+	 * @param geneIndex - Location of the allele in the genotype.
+	 * @return Allele - The allele at the gene index in the genotype.
 	 */
-	public EnumNeuronInputType pickRuleValue(char ruleType, int ruleDoF){
-		//initialize the map that will be used to get the neuron input
-		HashMap<EnumNeuronInputType, Integer> weightMap = null;
-
-		//set the weight map to the appropriate rule type map based on the
-		//rule type based in.
-		if(ruleType == 'A'){
-			if(ruleDoF == 1) weightMap = aRuleWeights1;
-			else if(ruleDoF == 2) weightMap = aRuleWeights2;
-		}
-		else if(ruleType == 'B'){
-			if(ruleDoF == 1) weightMap = bRuleWeights1;
-			else if(ruleDoF == 2) weightMap = bRuleWeights2;
-		}
-		else if(ruleType == 'C'){
-			if(ruleDoF == 1 ) weightMap = cRuleWeights1;
-			else if(ruleDoF == 2) weightMap = cRuleWeights2;
-		}
-		else if(ruleType == 'D'){
-			if(ruleDoF == 1) weightMap = dRuleWeights1;
-			else if(ruleDoF == 2) weightMap = dRuleWeights2;
-		}
-		else if(ruleType == 'E'){
-			if(ruleDoF == 1) weightMap = eRuleWeights1;
-			else if(ruleDoF == 2) weightMap = eRuleWeights2;
-		}
-
-		//pick a neuron type based on weights
-		int weightSum = 0;
-
-		//get sum of weights in map
-		weightSum += weightMap.get(EnumNeuronInputType.CONSTANT);
-		weightSum += weightMap.get(EnumNeuronInputType.HEIGHT);
-		weightSum += weightMap.get(EnumNeuronInputType.JOINT);
-		weightSum += weightMap.get(EnumNeuronInputType.TIME);
-		weightSum += weightMap.get(EnumNeuronInputType.TOUCH);
-
-		int choice = Helper.RANDOM.nextInt(weightSum);
-		int subTotal = 0;
-
-		//pick strategy based on weight
-		subTotal += weightMap.get(EnumNeuronInputType.CONSTANT);
-		if(choice < subTotal)
-			return EnumNeuronInputType.CONSTANT;
-		subTotal += weightMap.get(EnumNeuronInputType.HEIGHT);
-		if(choice < subTotal)
-			return EnumNeuronInputType.HEIGHT;
-		subTotal += weightMap.get(EnumNeuronInputType.JOINT);
-		if(choice < subTotal)
-			return EnumNeuronInputType.JOINT;
-		subTotal += weightMap.get(EnumNeuronInputType.TIME);
-		if(choice < subTotal)
-			return EnumNeuronInputType.TIME;
-		subTotal += weightMap.get(EnumNeuronInputType.TOUCH);
-		if(choice < subTotal)
-			return EnumNeuronInputType.TOUCH;
-
-		//if we got here, I broke it
-		return null;
+	public Allele getDomAllele(Hopper hopper, int geneIndex){
+		return hopper.getChromosome().get(geneIndex).getDominant();
 	}
 
-	public EnumOperatorBinary pickBinaryValue(char opType){
-		HashMap<EnumOperatorBinary, Integer> weightMap = null;
 
-		if(opType == '1') weightMap = binaryOneWeights;
-		else if(opType == '3') weightMap = binaryThreeWeights;
-
-		int weightSum = 0;
-
-		weightSum += weightMap.get(EnumOperatorBinary.ADD);
-		weightSum += weightMap.get(EnumOperatorBinary.SUBTRACT);
-		weightSum += weightMap.get(EnumOperatorBinary.MULTIPLY);
-		weightSum += weightMap.get(EnumOperatorBinary.POWER);
-		weightSum += weightMap.get(EnumOperatorBinary.MAX);
-		weightSum += weightMap.get(EnumOperatorBinary.MIN);
-		weightSum += weightMap.get(EnumOperatorBinary.ARCTAN2);
-
-		int choice = Helper.RANDOM.nextInt(weightSum);
-		int subTotal = 0;
-
-		subTotal += weightMap.get(EnumOperatorBinary.ADD);
-		if(choice < subTotal)
-			return EnumOperatorBinary.ADD;
-		subTotal += weightMap.get(EnumOperatorBinary.SUBTRACT);
-		if(choice < subTotal)
-			return EnumOperatorBinary.SUBTRACT;
-		subTotal += weightMap.get(EnumOperatorBinary.MULTIPLY);
-		if(choice < subTotal)
-			return EnumOperatorBinary.MULTIPLY;
-		subTotal += weightMap.get(EnumOperatorBinary.POWER);
-		if(choice < subTotal)
-			return EnumOperatorBinary.POWER;
-		subTotal += weightMap.get(EnumOperatorBinary.MAX);
-		if(choice < subTotal)
-			return EnumOperatorBinary.MAX;
-		subTotal += weightMap.get(EnumOperatorBinary.MIN);
-		if(choice < subTotal)
-			return EnumOperatorBinary.MIN;
-		subTotal += weightMap.get(EnumOperatorBinary.ARCTAN2);
-		if(choice < subTotal)
-			return EnumOperatorBinary.ARCTAN2;
-
-		//if we got here, it's broken
-		return null;
-	}
-
-	public EnumOperatorUnary pickUnaryValue(char opType){
-		HashMap<EnumOperatorUnary, Integer> weightMap = null;
-
-		if(opType == '2') weightMap = unaryTwoWeights;
-		else if(opType == '4') weightMap = unaryFourWeights;
-
-		int weightSum = 0;
-
-		weightSum += weightMap.get(EnumOperatorUnary.ABS);
-		weightSum += weightMap.get(EnumOperatorUnary.EXP);
-		weightSum += weightMap.get(EnumOperatorUnary.IDENTITY);
-		weightSum += weightMap.get(EnumOperatorUnary.LOG);
-		weightSum += weightMap.get(EnumOperatorUnary.NEGATIVE);
-		weightSum += weightMap.get(EnumOperatorUnary.SIGN);
-		weightSum += weightMap.get(EnumOperatorUnary.SIN);
-
-		int choice = Helper.RANDOM.nextInt(weightSum);
-		int subTotal = 0;
-
-		subTotal += weightMap.get(EnumOperatorUnary.ABS);
-		if(choice < subTotal)
-			return EnumOperatorUnary.ABS;
-		subTotal += weightMap.get(EnumOperatorUnary.EXP);
-		if(choice < subTotal)
-			return EnumOperatorUnary.EXP;
-		subTotal += weightMap.get(EnumOperatorUnary.IDENTITY);
-		if(choice < subTotal)
-			return EnumOperatorUnary.IDENTITY;
-		subTotal += weightMap.get(EnumOperatorUnary.LOG);
-		if(choice < subTotal)
-			return EnumOperatorUnary.LOG;
-		subTotal += weightMap.get(EnumOperatorUnary.NEGATIVE);
-		if(choice < subTotal)
-			return EnumOperatorUnary.NEGATIVE;
-		subTotal += weightMap.get(EnumOperatorUnary.SIGN);
-		if(choice < subTotal)
-			return EnumOperatorUnary.SIGN;
-		subTotal += weightMap.get(EnumOperatorUnary.SIN);
-		if(choice < subTotal)
-			return EnumOperatorUnary.SIN;
-
-		//if we got here, it's broken
-		return null;
-	}
-
-	public void updateRuleMap(NeuronInput neuron, char ruleType, int ruleDoF, int value){
-		if(ruleType == 'A'){
-			if(ruleDoF == 1){
-				value += aRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)aRuleWeights1.put(neuron.getType(), value);
-			}
-			else if(ruleDoF == 2){
-				value += aRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)aRuleWeights1.put(neuron.getType(), value);
-			}
-		}
-		else if(ruleType == 'B'){
-			if(ruleDoF == 1){
-				value += bRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)bRuleWeights1.put(neuron.getType(), value);
-			}
-			else if(ruleDoF == 2){
-				value += bRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)bRuleWeights1.put(neuron.getType(), value);
-			}
-		}
-		else if(ruleType == 'C'){
-			if(ruleDoF == 1){
-				value += cRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)cRuleWeights1.put(neuron.getType(), value);
-			}
-			else if(ruleDoF == 2){
-				value += cRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)cRuleWeights1.put(neuron.getType(), value);
-			}
-		}
-		else if(ruleType == 'D'){
-			if(ruleDoF == 1){
-				value += dRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)dRuleWeights1.put(neuron.getType(), value);
-			}
-			else if(ruleDoF == 2){
-				value += dRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)dRuleWeights1.put(neuron.getType(), value);
-			}
-		}
-		else if(ruleType == 'E'){
-			if(ruleDoF == 1){
-				value += eRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)eRuleWeights1.put(neuron.getType(), value);
-			}
-			else if(ruleDoF == 2){
-				value += eRuleWeights1.get(neuron.getType());
-				if(value >= 1 && value <= 100)eRuleWeights1.put(neuron.getType(), value);
-			}
+	/**
+	 * Takes in a hopper and determines if has a valid phenotype.
+	 * This is done by cloning the hopper and checking for any
+	 * exceptions generated. Any exception will indicate that
+	 * the hopper is invalid.
+	 * 
+	 * @param hopper - Hopper to validate.
+	 * @return true if valid hopper, false if invalid
+	 */
+	public boolean validHopper(Hopper hopper){
+		Hopper validHopper = null;
+		try {
+			validHopper = new Hopper(hopper);
+			return true;
+		} catch (IllegalArgumentException | GeneticsException e) {
+			return false;
 		}
 	}
 
-	public void updateBinaryMap(EnumOperatorBinary operator, char opType, int value){
-		if(opType == '1'){
-			value += binaryOneWeights.get(operator);
-			if(value >= 1 && value <= 100)binaryOneWeights.put(operator, value);
-		}
-		else if(opType == '3'){
-			value += binaryThreeWeights.get(operator);
-			if(value >= 1 && value <= 100)binaryThreeWeights.put(operator, value);
+	public Hopper insertAllele(Hopper hopper, int geneIndex, Allele allele)
+			throws GeneticsException, IllegalArgumentException{
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
+		try {
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			throw e;
 		}
 
-	}
+		ArrayList<Gene> geneList = hopperToClimb.getChromosome();
+		Allele recAllele = geneList.get(geneIndex).getRecessive();
 
-	public void updateUnaryMap(EnumOperatorUnary operator, char opType, int value){
-		if(opType == '2'){
-			value += unaryTwoWeights.get(operator);
-			if(value >= 1 && value <= 100)unaryTwoWeights.put(operator, value);
+		Gene gene = new Gene(allele, recAllele);
+
+		//		System.out.println(geneList.get(geneIndex));
+		//		System.out.println(gene);
+		geneList.remove(geneIndex);
+		geneList.add(geneIndex, gene);
+
+		Genotype genotype = null;
+		try{
+			genotype = new Genotype(geneList);
+			hopperToClimb = new Hopper(genotype);
+			return hopperToClimb;
+		} catch (IllegalArgumentException | GeneticsException e) {
+			return null;
 		}
-		else if(opType == '4'){
-			value += unaryFourWeights.get(operator);
-			if(value >= 1 && value <= 100)unaryFourWeights.put(operator, value);
-		}
-	}
-	
-	public void updateRemoveBlockMap(int blockIndex, int value){
-		value += removeBlockWeights.get(blockIndex);
-		if(value >= 1 && value <= 100)removeBlockWeights.put(blockIndex, value);
 	}
 }

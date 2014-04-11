@@ -2,6 +2,7 @@ package creature.geeksquad.hillclimbing;
 
 import java.util.HashMap;
 
+import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
@@ -29,7 +30,7 @@ public class TribeBrain {
 	HashMap<Integer,Integer> strategyWeights = new HashMap<Integer,Integer>();
 
 	//number of strategies
-	int numberOfStrategies = 3;
+	int numberOfStrategies = 4;
 	//starting strategy weight
 	int startingWeight = 1;
 
@@ -39,12 +40,16 @@ public class TribeBrain {
 	//object for the strategy that will be performed
 	Strategy strategy;
 
+	//create the map handler
+	MapHandler mapHandler;;
+
 	public TribeBrain(){
 		//initialize strategy map weights
+		mapHandler = new MapHandler();
 		initializeWeights();
 	}
 
-	
+
 	/**
 	 * This method takes in a hopper, performs hill climbing on it and
 	 * returns the updated hopper.
@@ -56,47 +61,69 @@ public class TribeBrain {
 	 */
 	public Hopper performHillClimbing(Hopper hopper)
 			throws IllegalArgumentException, GeneticsException {
-		
-		//get starting fitness
-		float startingFitness = hopper.evalFitness();
-		
-		//set the strategy to perform
+
+		//fitness of the hopper when it comes in
+		float startingFitness = hopper.getFitness();
+
+		/**
+		 * Pick the strategy that will be performed on the hopper.
+		 * The strategy chosen will be based on the maps of
+		 * strategy weights. Maps are updated as strategies are
+		 * performed.
+		 */
 		strategy = newStrategy();
-		//clone hopper
+
+
+		/**
+		 * Clone the original hopper. We don't want to accidently
+		 * break anything in the original hopper. Also, if the hill
+		 * climbing somehow doesn't produce a better creature, we
+		 * need to return the untampered hopper.
+		 */
 		Hopper clone = null;
 		try {
 			clone = new Hopper(hopper);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO Auto-generated catch block
-			System.err.println("Clone Hopper Exception1");
 			throw e;
 		}
-		
-		//perform the hill climbing on the clone
-		clone = strategy.climb(clone);
-		
-		
-		//TODO update maps only on improved fitness
-		
-		//check if hill climbed hopper is valid
-		Hopper testHopper = null;
-		try{
-			testHopper = new Hopper(clone);
-			//update strategy map
-			if(clone.getFitness() > startingFitness)
-				updateStrategyMap(1);
-			else
-				updateStrategyMap(-1);
-			//return climbed hopper
-			return clone;
 
-		}catch (IllegalArgumentException | GeneticsException e) {
-			//return original hopper
+
+		/**
+		 * Perform the hill climbing on the cloned hopper. The hill
+		 * climbing method returns the climbing hopper. We overwrite
+		 * the cloned hopper with the hill climbing one.
+		 */
+
+		clone = strategy.climb(clone);
+
+		/**
+		 * Make sure that the hill climbed hopper is valid. An easy 
+		 * way to do this is by cloning the hopper and checking
+		 * if an exception occurs. If an exception occurs, return
+		 * the hopper that was originally passed into the brain.
+		 */
+		if(!strategy.validHopper(clone)){
+			return hopper;
+		}
+
+		/**
+		 * Get the fitness of the hill climbed hopper and compare it
+		 * to the fitness of the original hopper. Return the hopper
+		 * with the highest fitness.
+		 */
+		if(strategy.improved(clone)){
+			return clone;
+		}
+		else if(startingFitness > clone.getFitness()){
+			return clone;
+		}
+		else{
+			mapHandler.undo();
 			return hopper;
 		}
 	}
 
-	/*
+	/**
 	 * Initialize the strategy weights in the map.
 	 */
 	private void initializeWeights() {
@@ -108,7 +135,7 @@ public class TribeBrain {
 	/**
 	 * Pick a strategy based on probabilities/weights
 	 * 
-	 * @return i Strategy number.
+	 * @return i - Strategy number.
 	 */
 	public int pickStrategy(){
 		int weightSum = 0;
@@ -134,21 +161,27 @@ public class TribeBrain {
 		//pick the strategy number based on weights
 		int strat = pickStrategy();
 
+		
+		//TODO debug
+		return new AddRule(this.mapHandler);
+		
 		//return a strategy object depending on the strategy number
 		//chosen above.
-		if(strat == 0){ //create new strategy 0
+		/*if(strat == 0){ //create new strategy 0
 			currentStrat = 0;
-			return new ChangeSingleAllele();
+			return new ChangeSingleAllele(this.mapHandler);
 		}
 		else if(strat == 1){ //strategy 1
 			currentStrat = 1;
-			return new AddBlock();
+			return new AddBlock(this.mapHandler);
 		} 
 		else if(strat == 2){ //strategy 2
-			return new RemoveBlock();
+			currentStrat = 2;
+			return new RemoveBlock(this.mapHandler);
 		}
 		else if(strat == 3){ //strategy 3
 			currentStrat = 3;
+			return new AddRule(this.mapHandler);
 		}
 		else if(strat == 4){ //strategy 4
 			currentStrat = 4;
@@ -157,9 +190,9 @@ public class TribeBrain {
 			currentStrat = -1;
 			return null;
 		}
-		return null;
+		return null;*/
 	}
-	
+
 	public void updateStrategyMap(int value){
 		value += strategyWeights.get(currentStrat);
 		if(value >= 1 && value <= 100)strategyWeights.put(currentStrat, value);

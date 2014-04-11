@@ -6,6 +6,11 @@ import creature.geeksquad.library.Helper;
 
 public class RemoveBlock extends Strategy {
 	
+	public RemoveBlock(MapHandler mapHandler) {
+		super(mapHandler);
+		// TODO Auto-generated constructor stub
+	}
+
 	public Hopper climb(Hopper originalHopper) throws IllegalArgumentException,
 	GeneticsException{
 		
@@ -27,28 +32,14 @@ public class RemoveBlock extends Strategy {
 		//remove block at index
 		hopperToClimb.getGenotype().removeBlock(boxIndex);
 		
+		if(mapsOn) mapHandler.updateRemoveBlockMap(boxIndex, 1);
+		
 		//clone hopper to make sure its valid
 		Hopper testHopper = null;
 		try {
 			testHopper = new Hopper(hopperToClimb);
+			return testHopper;
 		} catch (IllegalArgumentException | GeneticsException e) {
-			//update map
-			updateRemoveBlockMap(boxIndex, 1);
-			//return original
-			return originalHopper;
-		}
-		
-		
-		if(improved(hopperToClimb)){
-			//update map
-			updateRemoveBlockMap(boxIndex, 1);
-			//return climbed hopper
-			return hopperToClimb;
-		}
-		else
-		{
-			//update map
-			updateRemoveBlockMap(boxIndex, -1);
 			//return original
 			return originalHopper;
 		}

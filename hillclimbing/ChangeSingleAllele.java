@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import creature.geeksquad.genetics.Allele;
+import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
@@ -33,96 +34,81 @@ public class ChangeSingleAllele extends Strategy{
 	//a map to store the gene indices and their success probability
 	HashMap<Integer, Integer> geneWeights = new HashMap<Integer, Integer>();
 
-	public ChangeSingleAllele() {
-		//TODO average number of rules in genotype
+	public ChangeSingleAllele(MapHandler mapHandler){
+		super(mapHandler);
 	}
 
 	/**
-	 * @param args
+	 * Take in a hopper and returns a hill climbed hopper.
+	 * If hill climbing did not improve the hopper, returns the
+	 * original hopper.
 	 */
-	public static void main(String[] args) {
-	}
-
-	public Hopper climb(Hopper originalHopper) throws IllegalArgumentException,
+	public Hopper climb(Hopper hopper) throws IllegalArgumentException,
 	GeneticsException {
-
-		float startingFitness = originalHopper.getFitness();
-
-		//clone original hopper
+		
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
 		Hopper hopperToClimb = null;
 		try {
-			hopperToClimb = new Hopper(originalHopper);
+			hopperToClimb = new Hopper(hopper);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			System.err.println("change single allele");
 			throw e;
 		}
 
-		//get the genotype from the hopper
-		Genotype genotypeToClimb = hopperToClimb.getGenotype();
+		/**
+		 * Since this hill climbing method changes a single allele,
+		 * we need to pick one from the genotype.
+		 */
 
-		if(DEBUG)System.out.println("Starting Fitness: " + hopperToClimb.getFitness());
 
-		//pick allele based on weighted probability --------
-		ArrayList<Gene> geneList = genotypeToClimb.getChromosome();
+		/**
+		 * Get the index in the gene list of the allele that is going to be changed.
+		 * The index will make it easy to grab the allele from the genotype when it's
+		 * needed.
+		 */
+		int geneIndex = pickAllele(hopperToClimb);
+		
+		/**
+		 * Depending on what type of allele was chosen, a different type of
+		 * hill climbing occurs. climbTypeChooser returns a string that
+		 * represents the type of allele at an index.
+		 */
 
-		int geneIndex = pickAllele(genotypeToClimb); //index of the allele
-
-		Allele allele = geneList.get(geneIndex).getDominant(); //the actual allele
-		//----------------------------------------------------
-
-		if(DEBUG)System.out.println("Allele chosen to climb: " + allele);
-
-		//check what type of climbing needs to be done. int, float, enum, etc.
-		String climbType = climbTypeChooser(allele);
-
-		if(DEBUG)System.out.println("Hill Climb Type: " + climbType);
+		/**
+		 * Send a hopper and allele to climbTypeChooser.
+		 * Get a string that represents the type of allele
+		 * at the index provided.
+		 */
+		String climbType = climbTypeChooser(hopperToClimb, geneIndex);
 
 		if(climbType == null){
-			System.out.println("Sorry! Can't hill climb this type of allele yet!");
+			return hopperToClimb;
 		}
 		else if(climbType.equals("FLOAT") || climbType.equals("ORIENTATION")){
-			climbFloatAllele(hopperToClimb, genotypeToClimb, allele, geneIndex);
+			hopperToClimb = climbFloatAllele(hopperToClimb, geneIndex);
 		}
 		else if(climbType.equals("INDEX")){
-			climbIndexAllele(allele);
+			hopperToClimb = climbIndexAllele(hopperToClimb, geneIndex);
 		}
 		else if(climbType.equals("JOINT_CHILD") || climbType.equals("JOINT_PARENT")){
-			climbJointSiteAllele(hopperToClimb, genotypeToClimb, allele);
+			hopperToClimb = climbJointSiteAllele(hopperToClimb, geneIndex);
 		}
 		else if(climbType.equals("JOINT")){
-			climbJointTypeAllele(hopperToClimb, genotypeToClimb, allele, geneIndex);
+			hopperToClimb = climbJointTypeAllele(hopperToClimb, geneIndex);
 		}
 		else if(climbType.equals("RULE_A") || climbType.equals("RULE_B") || 
 				climbType.equals("RULE_C") || climbType.equals("RULE_D") ||
 				climbType.equals("RULE_E")){
 
-			//get box index
-			int boxIndex = getBoxIndex(geneList, geneIndex);
-			//get rule DoF location
-			int ruleDoF = getRuleDoF(geneList, geneIndex);
-
-			climbRuleAllele(hopperToClimb, allele, climbType, boxIndex, ruleDoF);
-
+			hopperToClimb = climbRuleAllele(hopperToClimb, geneIndex);
 		}
-		else if(climbType.equals("BINARY_1") || climbType.equals("BINARY_3")){
-			climbBinaryAllele(hopperToClimb, allele, climbType);
-		}
-		else if(climbType.equals("UNARY_2") || climbType.equals("UNARY_4")){
-			climbUnaryAllele(hopperToClimb, allele, climbType);
-		}
-
-		float newFitness = hopperToClimb.getFitness();
-
-		if(DEBUG)System.out.println("Allele after climb: " + allele);
-
-		if(DEBUG)System.out.println("New Fitness: " + hopperToClimb.getFitness());
-
-		//TODO change strategy weight map
-		Hopper testHopper = null;
-		try {
-			testHopper = new Hopper(hopperToClimb);
-		} catch (IllegalArgumentException | GeneticsException e) {
-			return originalHopper;
+		else if(climbType.equals("BINARY_1") || climbType.equals("BINARY_3")
+				|| climbType.equals("UNARY_2") || climbType.equals("UNARY_4")){
+			
+			hopperToClimb = climbBinaryUnaryAllele(hopperToClimb, geneIndex);
 		}
 
 		return hopperToClimb;
@@ -134,279 +120,243 @@ public class ChangeSingleAllele extends Strategy{
 	 * @param hopper - Hopper object to climb
 	 * @param allele - specific allele to climb in hopper
 	 */
-	private void climbFloatAllele(Hopper hopper, Genotype genotype, Allele allele, int geneIndex)throws GeneticsException,
+	private Hopper climbFloatAllele(Hopper hopper, int geneIndex)throws GeneticsException,
 	IllegalArgumentException{
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
+		try {
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			throw e;
+		}
 
 		//variable initialization
 		int initialDirection = 1; //default direction is "add"
-		int direction = initialDirection; //set direction
+		int d = initialDirection; //set direction
 
 		float initialStepSize = 0.2f; //default step size, aka how much to add to value
 		float stepSize = initialStepSize; //set step size
 
-		boolean hillClimb = true; //flag to turn on and off hill climbing
+		boolean done = false; //flag to turn on and off hill climbing
 
-		//get the largest possible value for the float
-		float max;
+		//while not done hill climbing
+		while(!done){
+			//take a step
+			hopperToClimb = climbFloat(hopperToClimb, geneIndex, d*stepSize);
 
-		while(hillClimb){ //while hillclimbing flag is set to true
-			//do 1 step of float hillclimbing
-			max = getFloatMax(genotype, geneIndex);
-			climbFloat(genotype, allele, direction, stepSize, max);
-
-			//if improvement
-			if(improved(hopper)){
-				//double step size
+			//evaluate step
+			if(improved(hopperToClimb)){
+				//if step was an improvement, increase the step size
 				stepSize *= 2;
 			}
-			//if worse
+			//step was not an improvement
 			else{
-				max = getFloatMax(genotype, geneIndex);
-				climbFloat(genotype, allele, direction, -stepSize, max);
-				//if last step improved
+				//undo the last step
+				hopperToClimb = climbFloat(hopperToClimb, geneIndex, -d*stepSize);
+				//if it wasn't the first step
 				if(stepSize > initialStepSize){
-					//set step size to midpoint
+					//set the stepSize to the middle of the current and last step
 					stepSize = (3*stepSize) / 4;
-					//try mid point
-					max = getFloatMax(genotype, geneIndex);
-					climbFloat(genotype, allele, direction, stepSize, max); //add step to allele value
-					//if mid point improves fitness
-					if(improved(hopper)){
-						//stop hillclimbing
-						hillClimb = false;
+					//take a step to the middle
+					hopperToClimb = climbFloat(hopperToClimb, geneIndex, d*stepSize);
+					//evaluate
+					if(improved(hopperToClimb)){
+						//if the middle step was an improvement, stop hill climbing
+						done = true;
 					}
-					//if midpoint is worse
+					//if the middle step was not an improvement
 					else{
-						//go back a step
-						max = getFloatMax(genotype, geneIndex);
-						climbFloat(genotype, allele, direction, -stepSize, max);
-						stepSize = (2*stepSize) / 3;
-						hillClimb = false;
+						//undo the middle step and go back to the last improved step
+						hopperToClimb = climbFloat(hopperToClimb, geneIndex, -d*stepSize);
+						done = true; //stop hill climbing
 					}
 				}
-				//if first step and changed direction already
-				else if((stepSize == initialStepSize) && (direction != 1)){
-					//undo last step
-					max = getFloatMax(genotype, geneIndex);
-					climbFloat(genotype, allele, direction, -stepSize, max);
-					//stop hillclimbing
-					hillClimb = false;
+				//if the step was the first step in the opposite direction
+				else if((stepSize == initialStepSize) && (d != 1)){
+					//undo the step and stop hillclimbing
+					hopperToClimb = climbFloat(hopperToClimb, geneIndex, -d*stepSize);
+					done = true;
 				}
-				//if first step and have not changed direction
-				else if((stepSize == initialStepSize) && (direction == 1)){
-					//undo last step
-					max = getFloatMax(genotype, geneIndex);
-					climbFloat(genotype, allele, direction, -stepSize, max);
-					//change direction
-					direction = -1;
+				//if the step was the first step
+				else if((stepSize == initialStepSize) && (d == 1)){
+					//undo step and change direction
+					hopperToClimb = climbFloat(hopperToClimb, geneIndex, -d*stepSize);
+					d = -1;
 				}
 			}
-		}//end while loop
+		}
+		return hopperToClimb;
 	}
 
 	//change the type of joint at this allele
-	public void climbJointTypeAllele(Hopper hopper, Genotype genotype, Allele allele, int geneIndex) throws GeneticsException,
+	public Hopper climbJointTypeAllele(Hopper hopper, int geneIndex) throws GeneticsException,
 	IllegalArgumentException{
-		//clone genotype
-		Genotype originalValue = null;
-		Genotype clonedValue = null;
+
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
 		try {
-			originalValue = new Genotype(genotype);
-			clonedValue = new Genotype(genotype);
-		}	catch (IllegalArgumentException | GeneticsException e) {
-			// TODO Auto-generated catch block
-			System.err.println("climbJointTypeAllele");
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
 			throw e;
 		}
-
-		genotype.getChromosome();
 
 		//perform the joint change to the genotype
-		clonedValue = climbJointType(clonedValue, allele, geneIndex);
+		hopperToClimb = climbJointType(hopperToClimb, geneIndex);
 
-		genotype = clonedValue;
-
-		if(!improved(hopper)){
-			genotype = originalValue;
+		if(validHopper(hopperToClimb)){
+			return hopperToClimb;
+		}
+		else{
+			return hopper;
 		}
 	}
 
-	public void climbIndexAllele(Allele allele){
+	public Hopper climbIndexAllele(Hopper hopper, int geneIndex){
+		return hopper;
 	}
 
-	public void climbJointSiteAllele(Hopper hopper, Genotype genotype, Allele allele) throws GeneticsException, 
+	public Hopper climbJointSiteAllele(Hopper hopper, int geneIndex) throws GeneticsException, 
 	IllegalArgumentException{
-		//original genotype clone
-		Genotype originalGenotype = null;
-		Genotype clonedGenotype = null;
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
 		try {
-			originalGenotype = new Genotype(genotype);
-			clonedGenotype = new Genotype(genotype);
-		}	catch (IllegalArgumentException | GeneticsException e) {
-			System.err.println("climbJointSiteAllele");
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
 			throw e;
 		}
-		//original value
-		EnumJointSite originalValue = (EnumJointSite)allele.getValue();
-		//cloned value
-		EnumJointSite clonedValue = (EnumJointSite)allele.getValue();
 
+		ArrayList<Gene> geneList = hopperToClimb.getChromosome();
+		
+		Allele alleleToClimb = geneList.get(geneIndex).getDominant();
+		
+		
+		//get the joint site from the cloned hopper
+		EnumJointSite clonedValue = (EnumJointSite)alleleToClimb.getValue();
+
+		/**
+		 * Picking a new joint site can be tricky. We need to make sure that the site
+		 * isn't taken or doesn't cause an invalid creature. This loop will run for
+		 * a set number of times and attempt to change the joint site. If a new valid
+		 * joint site is found, the loop ends.
+		 */
 		int attempts = 25;
 
 		for(int i = 0; i < attempts; i++){
 			//get the new joint site
-			clonedValue = climbJointSite(clonedValue);
+			clonedValue = getNewJointSite(clonedValue);
 
 			//change joint site of allele to new one
-			allele.setValue(clonedValue);
-
-			try{
-				genotype = new Genotype(genotype);
-				break;
-			}catch (IllegalArgumentException | GeneticsException e) {
-				genotype = new Genotype(originalGenotype);
+			alleleToClimb = new Allele(alleleToClimb.getTrait(), 
+					clonedValue, 
+					alleleToClimb.getWeight());
+			
+			Hopper temp = insertAllele(hopperToClimb, geneIndex, alleleToClimb);
+			if(temp != null){
+				return temp;
 			}
 		}
 
-		if(!improved(hopper)){
-			genotype = originalGenotype;
-		}
-
-
+		//no valid joint site was found, return original hopper
+		return hopper;
 	}
 
-	public void climbRuleAllele(Hopper hopper, Allele allele, String climbType, int boxIndex, int ruleDoF){
-		//starting neuron input
-		NeuronInput originalValue = (NeuronInput)allele.getValue();
-		//clone of starting neuron
-		NeuronInput clonedValue = Allele.copyNeuron(originalValue);
-
-		char ruleType = 'A';
-
-		//figure out what type of rule the allele contains
-		if(climbType.equals("RULE_A")){
-			ruleType = 'A';
-			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'A', boxIndex, ruleDoF);
-		} else if(climbType.equals("RULE_B")){
-			ruleType = 'B';
-			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'B', boxIndex, ruleDoF);
-		} else if(climbType.equals("RULE_C")){
-			ruleType = 'C';
-			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'C', boxIndex, ruleDoF);
-		} else if(climbType.equals("RULE_D")){
-			ruleType = 'D';
-			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'D', boxIndex, ruleDoF);
-		} else if(climbType.equals("RULE_E")){
-			ruleType = 'E';
-			//change the rule value based on rule type map
-			clonedValue = climbRule(clonedValue, 'E', boxIndex, ruleDoF);
+	/**
+	 * This method is for alleles of the RULE type.
+	 * Takes in a hopper and a gene index, clones the hopper,
+	 * and changes the allele of the hopper to a different rule.
+	 * Returns a valid hill climbed hopper, or the original hopper.
+	 * 
+	 * @param hopper
+	 * @param geneIndex
+	 * @return
+	 * @throws GeneticsException
+	 * @throws IllegalArgumentException
+	 */
+	public Hopper climbRuleAllele(Hopper hopper, int geneIndex) 
+			throws GeneticsException, IllegalArgumentException{
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
+		try {
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			throw e;
 		}
 
-		allele.setValue(clonedValue);
+		//change the allele of the hopper.
+		hopperToClimb = climbRule(hopperToClimb, geneIndex);
 
-		//if improved, replace neuron
-		if(improved(hopper)){
-			allele.setValue(clonedValue);
-			updateRuleMap(clonedValue, ruleType, ruleDoF, 1);
+		//make sure the hill climbed hopper is valid
+		if(validHopper(hopperToClimb)){
+			return hopperToClimb;
 		}
-		//if it doesn't improve
 		else{
-			//undo change
-			allele.setValue(originalValue);
-			updateRuleMap(clonedValue, ruleType, ruleDoF, -1);
+			return hopper;
 		}
-
 	}
 
-	public void climbBinaryAllele(Hopper hopper, Allele allele, String climbType){
-		//starting operator
-		EnumOperatorBinary originalValue = (EnumOperatorBinary) allele.getValue();
-		//cloned operator
-		EnumOperatorBinary clonedValue = (EnumOperatorBinary) allele.getValue();
-
-		char opType = '1';
-
-		if(climbType.equals("BINARY_1")){
-			opType = '1';
+	public Hopper climbBinaryUnaryAllele(Hopper hopper, int geneIndex)
+			throws GeneticsException, IllegalArgumentException{
+		/**
+		 * Clone the original hopper and perform the hill climbing
+		 * on the clone. If anything goes wrong, we can just return the
+		 * starting hopper.
+		 */
+		Hopper hopperToClimb = null;
+		try {
+			hopperToClimb = new Hopper(hopper);
+		} catch (IllegalArgumentException | GeneticsException e) {
+			throw e;
 		}
-		else if(climbType.equals("BINARY_3")){
-			opType = '3';
+		
+		//change the binary allele
+		hopperToClimb = climbBinaryUnary(hopperToClimb, geneIndex);
+
+		//check if the new hopper is valid
+		if(validHopper(hopperToClimb)){
+			return hopperToClimb;
 		}
-
-		clonedValue = pickBinaryValue(opType);
-
-		allele.setValue(clonedValue);
-
-		//if improved, replace neuron
-		if(improved(hopper)){
-			allele.setValue(clonedValue);
-			updateBinaryMap(clonedValue, opType, 1);
-		}
-		//if it doesn't improve
 		else{
-			//undo change
-			allele.setValue(originalValue);
-			updateBinaryMap(clonedValue, opType, -1);
-		}
-	}
-
-	public void climbUnaryAllele(Hopper hopper, Allele allele, String climbType){
-		//starting operator
-		EnumOperatorUnary originalValue = (EnumOperatorUnary) allele.getValue();
-		//cloned operator
-		EnumOperatorUnary clonedValue = (EnumOperatorUnary) allele.getValue();
-
-		char opType = '2';
-
-		if(climbType.equals("UNARY_2")){
-			opType = '2';
-		}
-		else if(climbType.equals("UNARY_4")){
-			opType = '4';
-		}
-
-		clonedValue = pickUnaryValue(opType);
-
-		allele.setValue(clonedValue);
-
-		//if improved, replace neuron
-		if(improved(hopper)){
-			allele.setValue(clonedValue);
-			updateUnaryMap(clonedValue, opType, 1);
-		}
-		//if it doesn't improve
-		else{
-			//undo change
-			allele.setValue(originalValue);
-			updateUnaryMap(clonedValue, opType, -1);
+			return hopper;
 		}
 	}
 
 
+	/**
+	 * Takes in a clone of a hopper, and picks an allele within the
+	 * cloned hoppers genotype. Returns the index of the allele within
+	 * the gene list so it can be modified by the hill climbing.
+	 * 
+	 * @param clonedHopper - clone of a hopper
+	 * @return The index of an allele within the genotype of the hopper
+	 */
+	private int pickAllele(Hopper clonedHopper) {
+		//get the gene list from the hopper
+		ArrayList<Gene> geneList = clonedHopper.getChromosome();
 
-
-
-
-
-
-	private int pickAllele(Genotype currentGenotype) {
-		ArrayList<Gene> geneList = currentGenotype.getChromosome();
-
-		//if gene map is empty
-		if(geneWeights.isEmpty()){
+		//pick an allele index based on the probability maps
+		if(geneWeights.isEmpty()){ //if the map is empty
 			//pick a gene at random
 			int geneIndex = (int)(Math.random()*geneList.size());
 
 			return geneIndex;
 		}
-		//check map of probabilities to pick a gene
-		//keep track of gene index for updating weights
-		//get dominant allele from gene
-		//return allele
+		//pick an allele index from the map
 		return 0;
 	}
 
