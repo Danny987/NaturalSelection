@@ -49,12 +49,12 @@ public class Helper {
 	public static final float MEDIAN_WEIGHT = 0.5f;
 	public static final float MAX_WEIGHT = 1.0f;
 	// Percentage by which to increase/decrease Allele weights.
-	public static final float WEIGHT_STEP_UP = 0.01f;
+	public static final float WEIGHT_STEP_UP = 0.005f;
 	public static final float WEIGHT_STEP_DOWN = 0.1f;
 //	public static final float WEIGHT_STEP_UP = 0.00f;
 //	public static final float WEIGHT_STEP_DOWN = 0.0f;
 	// How many generations between seeding of new random Hoppers.
-	public static final int SEED_NEW_RANDOMS_GAP = 10;
+	public static final int SEED_NEW_RANDOMS_GAP = 1;
 	public static final float RANDOM_RESEED_PERCENTAGE = 0.1f;
 	// Amount of padding when evaluating fitness with the physics simulation.
 	public static final float TIME_STEP = Simulator.DEFAULT_TIME_STEP;

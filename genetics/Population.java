@@ -202,19 +202,16 @@ public class Population extends Vector<Hopper> {
 	 */
 	public void update() {
 		generations++;
+		// Reseed the Population with new, random Hoppers to diversify.
+		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
+			seedNewRandoms();
+		}
 		// Randomly select hill climbing or breeding this generation.
 		if (Helper.choose() > 0) {
 			hillClimb();
 		} else {
 			moveBreeders();
 			breed();
-		}
-		// Like above, breeding will change the creatures in the collection,
-		// but cull will sort them again.
-		// Every 100 generations, reseed the Population with 20% new, random
-		// Hoppers to provide new Alleles.
-		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
-			seedNewRandoms();
 		}
 		cull();
 		if (size() > 0) {
@@ -227,7 +224,7 @@ public class Population extends Vector<Hopper> {
 	 * Breed, perform selection and crossover, within the population.
 	 * 
 	 * @return The number of new, valid Hoppers that were added to the
-	 * 		   population. Needed to tell how many Hoppers should be culled.
+	 * 		   population.
 	 */
 	private int breed() {
 		ArrayList<Hopper> children = new ArrayList<Hopper>();
