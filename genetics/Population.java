@@ -236,8 +236,12 @@ public class Population extends ArrayList<Hopper> {
 					Hopper[] offspring = Crossover.crossover(
 							parentA, parentB);
 					if (offspring != null) {
-						children.add(offspring[0]);
-						children.add(offspring[1]);
+						if (children.add(offspring[0])) {
+							lifetimeOffspring++;
+						}
+						if (children.add(offspring[1])) {
+							lifetimeOffspring++;
+						}
 					}
 				} catch (IllegalArgumentException | GeneticsException ex) {
 					currentRejectedCreatures++;
@@ -287,6 +291,10 @@ public class Population extends ArrayList<Hopper> {
 				if (newHotness != original) {
 					remove(original);
 					add(newHotness);
+					lifetimeHillClimbs++;
+				} else {
+					currentFailedHillClimbs++;
+					lifetimeFailedHillClimbs++;
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				currentFailedHillClimbs++;

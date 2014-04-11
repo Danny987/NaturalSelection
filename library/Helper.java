@@ -51,6 +51,8 @@ public class Helper {
 	// Percentage by which to increase/decrease Allele weights.
 	public static final float WEIGHT_STEP_UP = 0.01f;
 	public static final float WEIGHT_STEP_DOWN = 0.1f;
+//	public static final float WEIGHT_STEP_UP = 0.00f;
+//	public static final float WEIGHT_STEP_DOWN = 0.0f;
 	// How many generations between seeding of new random Hoppers.
 	public static final int SEED_NEW_RANDOMS_GAP = 50;
 	// Amount of padding when evaluating fitness with the physics simulation.
