@@ -7,7 +7,7 @@ import creature.geeksquad.genetics.Population;
  *
  * @author Marcos
  */
-public class Tribe extends Thread{
+public class Tribe extends Thread {
 
     public static final int POPULATION_SIZE = 501;
     private final Population population;
@@ -25,11 +25,12 @@ public class Tribe extends Thread{
      */
     public void nextGeneration() {
         population.update();
+//        population.hillClimb();
     }
 
     @Override
     public void run() {
-        
+
         while (running) {
             synchronized (this) {
 
@@ -40,7 +41,11 @@ public class Tribe extends Thread{
 
                 // if not paused let them mutate
                 if (!paused) {
-                    nextGeneration();
+                    try {
+                        nextGeneration();
+                    } catch (IndexOutOfBoundsException ex) {
+                        Log.error(ex.toString(), getName());
+                    }
                 }
             }
         }
@@ -61,12 +66,12 @@ public class Tribe extends Thread{
         return population.get(index);
     }
 
-    public Population getPopulation(){
-        synchronized(this){
+    public Population getPopulation() {
+        synchronized (this) {
             return population;
         }
     }
-    
+
     public void addHopper(Hopper h) {
         population.add(h);
     }
@@ -75,17 +80,18 @@ public class Tribe extends Thread{
         return population.size();
     }
 
-    public Hopper getOverachiever(){
+    public Hopper getOverachiever() {
         return population.getOverachiever();
     }
+
     /**
      * Kills the thread.
      */
     public void kill() {
         running = false;
     }
-    
-    public float getFitness(){
+
+    public float getFitness() {
         return population.getAverageFitness();
     }
 }

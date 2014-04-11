@@ -1,14 +1,20 @@
 package creature.geeksquad.gui;
 
+import com.jogamp.opengl.util.texture.Texture;
+import com.jogamp.opengl.util.texture.TextureData;
+import com.jogamp.opengl.util.texture.TextureIO;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.phenotype.Block;
 import creature.phenotype.Creature;
 import creature.phenotype.Vector3;
+import java.io.IOException;
+import java.io.InputStream;
 import javax.media.opengl.GL;
 import javax.media.opengl.GL2;
 import javax.media.opengl.GLAutoDrawable;
 import javax.media.opengl.GLEventListener;
+import javax.media.opengl.GLProfile;
 import javax.media.opengl.fixedfunc.GLLightingFunc;
 import javax.media.opengl.glu.GLU;
 
@@ -24,8 +30,12 @@ public class Renderer implements GLEventListener {
     private Block[] body;
     private final GLU glu = new GLU();
 
+    private boolean texturing = false;
     private float rotationAngle = 0;
     private float zoomAmount = 1;
+    private Texture floor;
+    private Texture sky;
+    private Texture fur;
 
     /**
      * Set the current creature to be drawn.
@@ -38,7 +48,6 @@ public class Renderer implements GLEventListener {
             this.genotype = hopper.getGenotype();
             this.phenotype = hopper.getPhenotype();
             this.body = genotype.getBody();
-//        phenotype.reset();
         }
     }
 
@@ -77,7 +86,7 @@ public class Renderer implements GLEventListener {
                 length = body[i].getLength();
                 height = body[i].getHeight();
                 width = body[i].getWidth();
-                
+
                 center = phenotype.getBlockCenter(i);
                 up = phenotype.getBlockUpVector(i);
                 forward = phenotype.getBlockForwardVector(i);
@@ -112,6 +121,26 @@ public class Renderer implements GLEventListener {
 
         // initialize lighting
         doLighting(gl);
+
+        // Load texture.
+        try {
+            InputStream stream = getClass().getResourceAsStream("grass.png");
+            TextureData data = TextureIO.newTextureData(GLProfile.get(GLProfile.GL2), stream, false, "png");
+            floor = TextureIO.newTexture(data);
+            
+            stream = getClass().getResourceAsStream("sky.png");
+            data = TextureIO.newTextureData(GLProfile.get(GLProfile.GL2), stream, false, "png");
+            sky = TextureIO.newTexture(data);
+            
+            stream = getClass().getResourceAsStream("fur.png");
+            data = TextureIO.newTextureData(GLProfile.get(GLProfile.GL2), stream, false, "png");
+            fur = TextureIO.newTexture(data);
+            
+        }catch (IOException exc) {
+            Log.popup(null, "Failed to load textures");
+            Log.error(exc.toString());
+        }
+
     }
 
     @Override
@@ -172,75 +201,86 @@ public class Renderer implements GLEventListener {
         gl.glPushMatrix();
 
         // move to the center of the block
-        gl.glTranslatef(zoomAmount*center.x, zoomAmount*center.y, zoomAmount*center.z);
+        gl.glTranslatef(zoomAmount * center.x, zoomAmount * center.y, zoomAmount * center.z);
 
         float[] rotationMatrix = new float[16];
         Vector3.vectorsToRotationMatrix(rotationMatrix, forward, up);
         gl.glMultMatrixf(rotationMatrix, 0);
 
         // scale to the size of the given block
-        gl.glScalef(zoomAmount*length, zoomAmount*height, zoomAmount*width);
+        gl.glScalef(zoomAmount * length, zoomAmount * height, zoomAmount * width);
 
-        setColor(gl, length / 10, height / 10, width / 10);
+        
 
+        if(fur != null && texturing){
+            fur.enable(gl);
+            fur.bind(gl);
+            setColor(gl, 1, 1, 1);
+        }
+        else{
+            setColor(gl, length / 10, height / 10, width / 10);
+        }
+        
         // Draw the vertecies 
         gl.glBegin(GL.GL_TRIANGLES);
 
         //Front
-        gl.glNormal3f(0, 0, .5f);
-        gl.glVertex3f(.5f, .5f, -.5f);
-        gl.glVertex3f(-.5f, .5f, -.5f);
-        gl.glVertex3f(-.5f, -.5f, -.5f);
-        gl.glVertex3f(-.5f, -.5f, -.5f);
-        gl.glVertex3f(.5f, -.5f, -.5f);
-        gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glNormal3f(0, 0, 1f);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-.5f, .5f, -.5f);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-.5f, -.5f, -.5f);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-.5f, -.5f, -.5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(.5f, -.5f, -.5f);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(.5f, .5f, -.5f);
 
         //Back
-        gl.glNormal3f(0, 0, -.5f);
-        gl.glVertex3f(.5f, .5f, .5f);
-        gl.glVertex3f(-.5f, .5f, .5f);
-        gl.glVertex3f(-.5f, -.5f, .5f);
-        gl.glVertex3f(-.5f, -.5f, .5f);
-        gl.glVertex3f(.5f, -.5f, .5f);
-        gl.glVertex3f(.5f, .5f, .5f);
+        gl.glNormal3f(0, 0, -1f);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(.5f, .5f, .5f);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-.5f, .5f, .5f);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(.5f, .5f, .5f);
 
         //Left
-        gl.glNormal3f(.5f, 0, 0);
-        gl.glVertex3f(-.5f, -.5f, -.5f);
-        gl.glVertex3f(-.5f, .5f, -.5f);
-        gl.glVertex3f(-.5f, -.5f, .5f);
-        gl.glVertex3f(-.5f, .5f, -.5f);
-        gl.glVertex3f(-.5f, -.5f, .5f);
-        gl.glVertex3f(-.5f, .5f, .5f);
+        gl.glNormal3f(1f, 0, 0);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-.5f, -.5f, -.5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(-.5f, .5f, -.5f);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(-.5f, .5f, -.5f);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(-.5f, .5f, .5f);
 
         //Right
-        gl.glNormal3f(-.5f, 0, 0);
-        gl.glVertex3f(.5f, -.5f, -.5f);
-        gl.glVertex3f(.5f, .5f, -.5f);
-        gl.glVertex3f(.5f, -.5f, .5f);
-        gl.glVertex3f(.5f, .5f, -.5f);
-        gl.glVertex3f(.5f, -.5f, .5f);
-        gl.glVertex3f(.5f, .5f, .5f);
+        gl.glNormal3f(-1f, 0, 0);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(.5f, -.5f, -.5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(.5f, .5f, .5f);
 
         //Top
-        gl.glNormal3f(0, - .5f, 0);
-        gl.glVertex3f(-.5f, .5f, .5f);
-        gl.glVertex3f(.5f, .5f, .5f);
-        gl.glVertex3f(.5f, .5f, -.5f);
-        gl.glVertex3f(-.5f, .5f, .5f);
-        gl.glVertex3f(.5f, .5f, -.5f);
-        gl.glVertex3f(-.5f, .5f, -.5f);
+        gl.glNormal3f(0, -1f, 0);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-.5f, .5f, .5f);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(.5f, .5f, .5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-.5f, .5f, .5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(.5f, .5f, -.5f);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-.5f, .5f, -.5f);
 
         //Bottom
-        gl.glNormal3f(0, .5f, 0);
-        gl.glVertex3f(-.5f, -.5f, .5f);
-        gl.glVertex3f(.5f, -.5f, .5f);
-        gl.glVertex3f(.5f, -.5f, -.5f);
-        gl.glVertex3f(-.5f, -.5f, .5f);
-        gl.glVertex3f(.5f, -.5f, -.5f);
-        gl.glVertex3f(-.5f, -.5f, -.5f);
+        gl.glNormal3f(0, 1f, 0);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(.5f, -.5f, -.5f);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-.5f, -.5f, .5f);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(.5f, -.5f, -.5f);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-.5f, -.5f, -.5f);
         gl.glEnd();
         gl.glPopMatrix();
+        
+        if(fur != null && texturing) fur.disable(gl);
     }
 
     /**
@@ -256,14 +296,15 @@ public class Renderer implements GLEventListener {
     public void rotateRight() {
         rotationAngle--;
     }
-    
-    public void zoomIn(){
-        zoomAmount+= .1;
+
+    public void zoomIn() {
+        zoomAmount += .01;
     }
-    
-    public void zoomOut(){
-        if(zoomAmount > .1)
-        zoomAmount-=.1;
+
+    public void zoomOut() {
+        if (zoomAmount > .1) {
+            zoomAmount -= .01;
+        }
     }
 
     private void setColor(GL2 gl, float r, float g, float b) {
@@ -282,6 +323,9 @@ public class Renderer implements GLEventListener {
         float height = 500;
         float width = 500;
 
+        
+        
+        
         gl.glPushMatrix();
 
         // move to the center of the block
@@ -294,66 +338,94 @@ public class Renderer implements GLEventListener {
         // scale to the size of the given block
         gl.glScalef(length, height, width);
 
+        if(sky != null){
+            sky.enable(gl);
+            sky.bind(gl);
+            setColor(gl, 1f, 1f, 1f);
+        }
+        else setColor(gl, .25f, .25f, .50f);
+        
+
         // Draw the vertecies 
         gl.glBegin(GL.GL_TRIANGLES);
 
         //Front
-        setColor(gl, .25f, .25f, .75f);
+        
         gl.glNormal3f(0, 0, 1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(-1, 1, -1);
-        gl.glVertex3f(-1, -1, -1);
-        gl.glVertex3f(-1, -1, -1);
-        gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(1, 1, -1);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(1, 1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-1, 1, -1);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-1, -1, -1);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-1, -1, -1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(1, -1, -1);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(1, 1, -1);
 
         //Back
         gl.glNormal3f(0, 0, -1);
-        gl.glVertex3f(1, 1, 1);
-        gl.glVertex3f(-1, 1, 1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(1, -1, 1);
-        gl.glVertex3f(1, 1, 1);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(1, 1, 1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-1, 1, 1);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-1, -1, 1);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-1, -1, 1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(1, -1, 1);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(1, 1, 1);
 
         //Left
         gl.glNormal3f(1, 0, 0);
-        gl.glVertex3f(-1, -1, -1);
-        gl.glVertex3f(-1, 1, -1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(-1, 1, -1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(-1, 1, 1);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-1, -1, -1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(-1, 1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-1, -1, 1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(-1, 1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-1, -1, 1);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(-1, 1, 1);
 
         //Right
         gl.glNormal3f(-1, 0, 0);
-        gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(1, -1, 1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(1, -1, 1);
-        gl.glVertex3f(1, 1, 1);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(1, -1, -1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(1, 1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(1, -1, 1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(1, 1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(1, -1, 1);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(1, 1, 1);
 
         //Top
         gl.glNormal3f(0, - 1, 0);
-        gl.glVertex3f(-1, 1, 1);
-        gl.glVertex3f(1, 1, 1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(-1, 1, 1);
-        gl.glVertex3f(1, 1, -1);
-        gl.glVertex3f(-1, 1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-1, 1, 1);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(1, 1, 1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(1, 1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-1, 1, 1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(1, 1, -1);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-1, 1, -1);
 
+        gl.glEnd();
+        
+        if(sky != null){
+            sky.disable(gl);
+        }
+        
+        if (floor != null) {
+            floor.enable(gl);
+            floor.bind(gl);
+        }
+        
+        gl.glBegin(GL.GL_TRIANGLES);
+        
         //Bottom
-        setColor(gl, .75f, .50f, .25f);
+        setColor(gl, 1f, 1f, 1f);
         gl.glNormal3f(0, 1, 0);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(1, -1, 1);
-        gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(-1, -1, 1);
-        gl.glVertex3f(1, -1, -1);
-        gl.glVertex3f(-1, -1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-1, -1, 1);
+        gl.glTexCoord2f(1, 1); gl.glVertex3f(1, -1, 1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(1, -1, -1);
+        gl.glTexCoord2f(0, 1); gl.glVertex3f(-1, -1, 1);
+        gl.glTexCoord2f(1, 0); gl.glVertex3f(1, -1, -1);
+        gl.glTexCoord2f(0, 0); gl.glVertex3f(-1, -1, -1);
         gl.glEnd();
         gl.glPopMatrix();
+        
+        if(floor != null){
+            floor.disable(gl);
+        }
     }
 
+    public void toggleTextures(){
+        texturing = !texturing;
+    }
 }

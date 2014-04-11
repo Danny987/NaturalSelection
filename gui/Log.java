@@ -17,8 +17,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 
 /**
  *
@@ -26,23 +29,40 @@ import javax.swing.JFileChooser;
  */
 public class Log {
 
-    public static final int NUMB_CORES = Runtime.getRuntime().availableProcessors();
+    public static final int NUMB_CORES = Runtime.getRuntime().availableProcessors() > 8 ? 8
+                                         : Runtime.getRuntime().availableProcessors();
 
     private static BufferedWriter writer;
     private static BufferedReader reader;
-
-    private static LoadingScreen loadingScreen;
+    private static String directory = "logfile";
 
     private static final JFileChooser fileChooser = new JFileChooser();
+    private static Map<String, File> files = new HashMap<>();
 
     /**
      * Initialize error files for all tribes and a global file for anything extra
      * All files made in a user specified folder.
      *
-     * @param numberOfTribes
      */
-    public static void initialize(int numberOfTribes) {
+    public static void initialize() {
+        String selectedDirectory = (String) JOptionPane.showInputDialog(null,
+                                                                        "Where would you like to save files?",
+                                                                        "Evolving Virtual Creatures",
+                                                                        JOptionPane.QUESTION_MESSAGE,
+                                                                        null, null, directory);
 
+        if(selectedDirectory != null) directory = selectedDirectory;
+        
+        File dir = new File(directory);
+        dir.mkdir();
+        
+        File file = new File(directory + "\\" + "ERROR");
+        try {
+            file.createNewFile();
+            files.put("ERROR", file);
+        } catch (IOException ex) {
+            Log.popup(null, "Error file creation failed");
+        }
     }
 
     /**
@@ -51,23 +71,50 @@ public class Log {
      * @param s the error string
      */
     public synchronized static void error(String s) {
-        System.out.println(s);
+        try {
+            writer = new BufferedWriter(new FileWriter(files.get("ERROR"), true));
+            writer.append(s + "\n");
+            writer.close();
+        } catch (IOException ex) {
+            Log.popup(null, "Error saving error file");
+        }
     }
 
     /**
      * Write to specific error file.
      *
      * @param s
-     * @param tribeNumber
+     * @param tribeName
      */
-    public synchronized static void error(String s, int tribeNumber) {
+    public synchronized static void error(String s, String tribeName) {
+        File file;
+        if (files.containsKey(tribeName)) {
+            file = files.get(tribeName);
+        }
+        else {
+            file = new File(directory + "\\" + tribeName);
+            try {
+                file.createNewFile();
+                files.put(tribeName, file);
+            } catch (IOException ex) {
+                Log.error(ex.toString());
+            }
+        }
 
+        try {
+            writer = new BufferedWriter(new FileWriter(file, true));
+            writer.write(s);
+            writer.close();
+        } catch (IOException ex) {
+            Log.error(ex.toString());
+        }
     }
 
     /**
      * Saves an entire population to a file.
      *
-     * @param p
+     * @param parent
+     * @param population
      * @param tribeName
      */
     public synchronized static void population(Component parent, Population population, String tribeName) {
@@ -81,7 +128,8 @@ public class Log {
                 writer.write(tribeName + Helper.NEWLINE + population.toString());
                 writer.close();
             } catch (IOException ex) {
-                Log.error(ex.toString());
+                Log.popup(parent, "An error occured while saving " + tribeName + ".");
+                Log.error(ex.toString(), tribeName);
             }
         }
     }
@@ -105,6 +153,7 @@ public class Log {
                 writer.write(hopper.toString());
                 writer.close();
             } catch (IOException ex) {
+                Log.popup(parent, "An error occured while saving " + hopper.getName() + " in " + tribeName + ".");
                 Log.error(ex.toString());
             }
         }
@@ -134,11 +183,11 @@ public class Log {
             } catch (GeneticsException |
                      FileNotFoundException |
                      IllegalArgumentException ex) {
-                Log.error(ex.toString());
                 popup(parent, "Loading Hopper Failed");
+                Log.error(ex.toString());
             } catch (IOException ex) {
-                Log.error(ex.toString());
                 popup(parent, "Loading Hopper Failed");
+                Log.error(ex.toString());
             }
         }
 
@@ -249,23 +298,21 @@ public class Log {
                 hopper = new Hopper(genotype, hopperName);
 
             } catch (GeneticsException | FileNotFoundException ex) {
+                Log.popup(parent, "Error loading population.");
                 Log.error(ex.toString());
             } catch (IOException ex) {
+                Log.popup(parent, "Error loading population.");
+                Log.error(ex.toString());
             }
         }
     }
 
     public static void popup(Component parent, String message) {
-    }
-
-    public static void updateProgress() {
-//        loadingScreen.update();
+        JOptionPane.showMessageDialog(parent, message);
     }
 
     public static void main(String arg[]) {
-
-        LoadingScreen load = new LoadingScreen(200, 100);
-        load.setVisible(true);
+        Log.initialize();
+        Log.error("test");
     }
-
 }

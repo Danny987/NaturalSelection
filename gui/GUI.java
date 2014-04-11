@@ -2,6 +2,8 @@ package creature.geeksquad.gui;
 
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
+import creature.geeksquad.genetics.Population;
+import creature.geeksquad.library.Helper;
 import creature.geeksquad.library.KeyBinds;
 import creature.geeksquad.library.PlayerControls;
 import java.awt.BorderLayout;
@@ -9,8 +11,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.ArrayList;
@@ -32,6 +33,8 @@ import javax.swing.Timer;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.TitledBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import javax.swing.tree.DefaultTreeModel;
@@ -40,7 +43,7 @@ import javax.swing.tree.DefaultTreeModel;
  *
  * @author Marcos
  */
-public class GUI extends JFrame implements ActionListener, MouseListener {
+public class GUI extends JFrame implements ActionListener, ChangeListener {
 
     //Size
     private final int WIDTH = 700;
@@ -58,6 +61,9 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     // Data structures
     private List<String> nameList = new ArrayList<>(); //names for all the generations
     private List<Tribe> tribeList = new ArrayList<>(); //tribe threafs
+    private List<Tribe> crossed = new ArrayList<>();
+    private List<Tribe> notcrossed = new ArrayList<>();
+    
     private Tribe currentTribe;                        //currently selected tribe
     private Hopper hopper = null;                      //currently selected hopper
 
@@ -103,6 +109,8 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     private DefaultMutableTreeNode root; //The first brand of the tree
     
     // Variabes
+    private float populationMergeTime = 0;
+    private final float CROSS_OVER_WAIT = 30*1000;
     private float bestFitnessValue = 0f; //Best fitness value from simulation
     private int totalGenerations = 0;    //total hillclimb + total crossover
     private long startmilis;
@@ -131,7 +139,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         try {
             changeHopper(new Hopper(currentTribe.getHopper(0)));
         } catch (IllegalArgumentException | GeneticsException ex) {
-            Log.error(ex.toString());
+            Log.error(ex.toString(), currentTribe.getName());
         }
         
         startmilis = System.currentTimeMillis();
@@ -174,25 +182,25 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 currentFitness.setText("Current Fitness: " + c);
             }
 
-            rotate();
-            zoom();
+            checkKeys();
             return;
         }
 
         if (e.getSource().equals(timer)) {
+            tribeFitness.setText("Tribe Fitness: " + String.format("%.5f", currentTribe.getFitness()));
             
             if (!paused) {
                 time.setText(" Time: " + time());
                 totalGenerations = currentTribe.getGenerations();
                 generations.setText("Total Generations: " + totalGenerations);
 
-                long div = milistime/1000;
+                float div = milistime/1000f;
+                
                 if(div != 0){
                     String f = String.format("%.5f", (float)(totalGenerations / div));
                     generationsPerSecond.setText("Generations/second: " + f);
                 }
                 
-                tribeFitness.setText("Tribe Fitness: " + String.format("%.5f", currentTribe.getFitness()));
             }
             else {
                 waittime = milistime;
@@ -269,7 +277,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                 try {
                     changeHopper(new Hopper(currentTribe.getHopper(0)));
                 } catch (GeneticsException ex) {
-                    Log.error(ex.toString());
+                    Log.error(ex.toString(), currentTribe.getName());
                 }
                 break;
 
@@ -281,7 +289,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
                         slider.setMaximum(currentTribe.getSize() - 1);
                         slider.setValue(0);
                     } catch (GeneticsException ex) {
-                        Log.error(ex.toString());
+                        Log.error(ex.toString(), currentTribe.getName());
                     }
                 }
                 break;
@@ -294,44 +302,71 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         nextGeneration.setEnabled(paused);
     }
 
+    @Override
+    public void stateChanged(ChangeEvent e) {
+        if(e.getSource().equals(mainTab)){
+            if (mainTab.getSelectedIndex() == 1) {
+                populateTree();
+            }
+        }
+
+        if (e.getSource().equals(slider)) {
+            try {
+                slider.setMaximum(currentTribe.getSize() - 1);
+                changeHopper(new Hopper(currentTribe.getHopper(slider.getValue())));
+            } catch (GeneticsException | IndexOutOfBoundsException | NullPointerException ex) {
+                Log.error(ex.toString(), currentTribe.getName());
+            }
+        }
+    }
+
     /**
      * @return string containing formated time h:m:s
      */
     private String time() {
         milistime = System.currentTimeMillis() - startmilis + waittime;
+        populationMergeTime = milistime;
+        
         long elapsedSecs = milistime / 1000;
         long elapsedMins = elapsedSecs / 60;
         long hours = elapsedMins / 60;
         long mins = elapsedMins % 60;
         long secs = elapsedSecs % 60;
         
+        if(populationMergeTime > CROSS_OVER_WAIT){
+            populationMergeTime = 0;
+            for(int i = 0; i < Log.NUMB_CORES/2; i++){
+                if(notcrossed.size() < 1){
+                    notcrossed.addAll(crossed);
+                }
+                
+                Tribe first = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
+                notcrossed.remove(first);
+                crossed.add(first);
+                
+                Tribe second = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
+                notcrossed.remove(second);
+                crossed.add(second);
+                
+                Population p1 = first.getPopulation();
+                Population p2 = second.getPopulation();
+                
+                first.interrupt();
+                second.interrupt();
+                
+                Population.interbreed(p1, p2);
+                
+                first.interrupt();
+                second.interrupt();
+            }
+            
+        }
+        
         String h = hours > 9 ? hours + "": ("0" + hours);
         String m = mins > 9 ? mins + "": ("0" + mins);
         String s = secs > 9 ? secs + "": ("0" + secs);
         
         return h + ":" + m + ":" + s;
-    }
-
-    public void mouseClicked(MouseEvent e) {}
-    public void mouseEntered(MouseEvent e) {}
-    public void mouseExited(MouseEvent e) {}
-    public void mousePressed(MouseEvent e) {}
-    
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        if (mainTab.getSelectedIndex() == 1) {
-            populateTree();
-        }
-
-        if (e.getSource().equals(slider)) {
-
-            try {
-                slider.setMaximum(currentTribe.getSize() - 1);
-                changeHopper(new Hopper(currentTribe.getHopper(slider.getValue())));
-            } catch (GeneticsException | NullPointerException ex) {
-                Log.error(ex.toString());
-            }
-        }
     }
 
     /**
@@ -349,10 +384,11 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         root.removeAllChildren();
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        
         model.reload();
 
         for (int i = 5; i < str.length; i++) {
-            if (str[i].equals("</genotype>") || str[i].equals("}")) {
+            if (str[i].contains("</genotype>") || str[i].equals("}")) {
                 break;
             }
             if (str[i].contains("LENGTH")) {
@@ -528,7 +564,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
 
         // Make slider////////////////////////////////////////////
         slider = new Slider("Creature", 0, currentTribe.getSize(), 1);
-        slider.addMouseListener(this);
+        slider.addChangeListener(this);
         ////////////////////////////////////////////////////////
 
         // Current Creature Label/////////////////////////////////
@@ -621,7 +657,7 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         //////////////////////////////////////////////
 
         // add the main panel to "this"
-        mainTab.addMouseListener(this);
+        mainTab.addChangeListener(this);
         mainTab.addTab("Main", mainPanel);
         mainTab.addTab("", scroll);
         mainTab.addTab("Stats", statsPanel);
@@ -638,8 +674,14 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         timer = new Timer(1000, this);
         keyTimer = new Timer(1000 / 30, this);
 
+        for(Tribe t: tribeList){
+            notcrossed.add(t);
+        }
+        
         graphicsPanel.requestFocus();
         KeyBinds keyBinds = new KeyBinds((JComponent) getContentPane(), controls);
+        keyBinds.addBinding(KeyEvent.VK_T, "Texture");
+        controls.addBinding("Texture");
 
         timer.start();
         keyTimer.start();
@@ -648,26 +690,12 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
     }
 
     /**
-     * respond to the keys responsible for rotation
-     * left or A rotates left
-     * right or D rotates right
-     */
-    private void rotate() {
-        if (controlMap.get("left") && graphicsPanel.animating()) {
-            renderer.rotateLeft();
-        }
-        else if (controlMap.get("right") && graphicsPanel.animating()) {
-            renderer.rotateRight();
-        }
-    }
-
-    /**
      * respond the zoom
      * up or w zooms in
      * down or s zooms out
      * space resets the timer for the simulation
      */
-    private void zoom() {
+    private void checkKeys() {
         if (controlMap.get("up")) {
             renderer.zoomIn();
         }
@@ -682,6 +710,16 @@ public class GUI extends JFrame implements ActionListener, MouseListener {
         }
         else if(controlMap.get("space")){
             hopper.getPhenotype().resetSimulation();
+        }
+        else if(controlMap.get("texture")){
+            controlMap.put("texture", false);
+            renderer.toggleTextures();
+        }
+        else if (controlMap.get("left") && graphicsPanel.animating()) {
+            renderer.rotateLeft();
+        }
+        else if (controlMap.get("right") && graphicsPanel.animating()) {
+            renderer.rotateRight();
         }
     }
 

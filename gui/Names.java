@@ -36,9 +36,11 @@ public class Names {
                 line = br.readLine();
             }
         } catch (FileNotFoundException ex) {
-            System.out.println("file not found");
+            Log.popup(null, "File not found.");
+            Log.error(ex.toString());
         } catch (IOException ex) {
-            System.out.println("io exception");
+            Log.popup(null, "File not found.");
+            Log.error(ex.toString());
         }
     }
 

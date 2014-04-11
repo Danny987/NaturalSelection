@@ -12,7 +12,7 @@ import javax.swing.JProgressBar;
  *
  * @author Marcos
  */
-public class LoadingScreen extends JFrame{
+public class LoadingScreen extends JFrame implements Runnable{
     private final Button configButton;
     private final JLabel loadingLabel;
     private final JProgressBar progressBar;
@@ -42,11 +42,20 @@ public class LoadingScreen extends JFrame{
         add(progressBar, BorderLayout.CENTER);
         add(configButton, BorderLayout.SOUTH);
         
+        setVisible(true);
+        
         pack();
     }
+
+    @Override
+    public void run() {
+        while(!Thread.interrupted()){
+            progressBar.setValue(progress);
+        }
+    }
     
-    public void update(){
-        progressBar.setValue(progress);
+    public synchronized void update(){
+        System.out.println("loading screen update: " + progress);
         progress++;
         if(progress >= Log.NUMB_CORES){
             dispose();

@@ -20,15 +20,17 @@ import javax.swing.SwingUtilities;
 public class Creatures {
 
     //Tribes names used for the different threads.
-    private static GUI gui;
 
     //main!
     public static void main(String args[]) {
         Names.loadFiles();
+        
+        Log.initialize();
+        
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
-                Log.initialize(Log.NUMB_CORES);
+                GUI gui;
                 List<Tribe> tribeList = new ArrayList<>();
                 List<String> nameList = new ArrayList<>();
                 List<Future<Population>> future = new ArrayList<>();
@@ -41,11 +43,12 @@ public class Creatures {
                 }
                 
                 Tribe tribe;
+                int i = 0;
                 for(Future<Population> f: future){
                     try {
                         String name = Names.getTribeName();
                         while(nameList.contains(name)) name = Names.getTribeName();
-                        nameList.add(name);
+                        nameList.add(i++ + ": " + name);
                         tribe = new Tribe(name, f.get());
                         tribe.start();
                         tribeList.add(tribe);
