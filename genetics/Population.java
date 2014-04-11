@@ -23,10 +23,10 @@ import creature.geeksquad.hillclimbing.TribeBrain;
  * @group Marcos Lemus
  */
 @SuppressWarnings("serial")
-public class Population extends ArrayList<Hopper> {
+public class Population extends Vector<Hopper> {
 	// Sub-collections allow the Population to separate the Hoppers that need
 	// special handling from those in the general population.
-	private final ArrayList<Hopper> breeders;
+	private final Vector<Hopper> breeders;
 	// The hill-climbing Tribe brain for this Population.
 	private final TribeBrain brain;
 	// Statistics.
@@ -57,7 +57,7 @@ public class Population extends ArrayList<Hopper> {
 		lifetimeFailedHillClimbs = 0l;
 		failedRandomHoppers = 0l;
 		brain = new TribeBrain();
-		breeders = new ArrayList<Hopper>();
+		breeders = new Vector<Hopper>();
 	}
 	
 	/**
@@ -68,7 +68,21 @@ public class Population extends ArrayList<Hopper> {
 	 *            weights to random (default) or 1.0f (false).
 	 */
 	public Population(int num, boolean...random) {
-		this();
+		super(num);
+		
+		generations = 0;
+		averageFitness = 0.0f;
+		highestFitness = 0.0f;
+		lifetimeOffspring = 0l;
+		lifetimeHillClimbs = 0l;
+		currentRejectedCreatures = 0l;
+		currentFailedHillClimbs = 0l;
+		lifetimeRejectedCreatures = 0l;
+		lifetimeFailedHillClimbs = 0l;
+		failedRandomHoppers = 0l;
+		brain = new TribeBrain();
+		breeders = new Vector<Hopper>();
+		
 		int i = 0;
 		while (i < num) {
 			try {
@@ -189,11 +203,8 @@ public class Population extends ArrayList<Hopper> {
 	public void update() {
 		generations++;
 		// Randomly select hill climbing or breeding this generation.
-		// Hill climbing the population will change the creatures, which
-		// means their sorting will no longer be valid. However,
-		// moveBreeders will sort them again, so it's fine.
 		if (Helper.choose() > 0) {
-			hillClimb();
+//			hillClimb();
 		} else {
 			moveBreeders();
 			breed();
@@ -224,7 +235,6 @@ public class Population extends ArrayList<Hopper> {
 		// list so the Hoppers within it match up semi-randomly.
 		synchronized (breeders) {
 			Collections.shuffle(breeders);
-			
 			while (breeders.size() > 1) {
 				// Get the parents and return them to the general population.
 				Hopper parentA = breeders.get(0);
@@ -246,8 +256,8 @@ public class Population extends ArrayList<Hopper> {
 				} catch (IllegalArgumentException | GeneticsException ex) {
 					currentRejectedCreatures++;
 					lifetimeRejectedCreatures++;
-//				System.out.println(
-//						"Breed offspring invalid. Continuing.");
+//					System.out.println(
+//							"Breed offspring invalid. Continuing.");
 				} finally {
 					parentA.increaseBreedCount();
 					parentB.increaseBreedCount();
@@ -255,18 +265,14 @@ public class Population extends ArrayList<Hopper> {
 			}
 		}
 		// Clear out any remaining breeders.
-		synchronized (this) {
-			flushBreeders();
-		}
+		flushBreeders();
 		int successes = 0;
 		for (Hopper h : children) {
-			synchronized (this) {
-				if (add(h)) {
-					successes++;
-				} else {
-					currentRejectedCreatures++;
-					lifetimeRejectedCreatures++;
-				}
+			if (add(h)) {
+				successes++;
+			} else {
+				currentRejectedCreatures++;
+				lifetimeRejectedCreatures++;
 			}
 		}
 		
@@ -277,20 +283,18 @@ public class Population extends ArrayList<Hopper> {
 	 * Perform hill-climbing on all members of the Population.
 	 */
 	private void hillClimb() {
-		List<Hopper> climbers = new ArrayList<Hopper>();
-		synchronized (this) {
-			climbers.addAll(this);
-		}
-		for (int i = 0; i < climbers.size(); i++) {
-			Hopper original = climbers.get(i);
+		Vector<Hopper> climbers = new Vector<Hopper>();
+		climbers.addAll(this);
+		for (ListIterator<Hopper> i = climbers.listIterator(); i.hasNext(); ) {
+			Hopper original = i.next();
 			try {
 				Hopper newHotness = brain.performHillClimbing(original);
 				newHotness.hillClimbed();
 				// The != unary operator works here because we want to know if
 				// the two objects are, in fact, the same object.
 				if (newHotness != original) {
-					remove(original);
-					add(newHotness);
+					i.remove();
+					i.add(newHotness);
 					lifetimeHillClimbs++;
 				} else {
 					currentFailedHillClimbs++;
@@ -334,7 +338,7 @@ public class Population extends ArrayList<Hopper> {
 	 *            of over.
 	 */
 	private void moveBreeders(float over, float...under) {
-		synchronized (this) {
+		synchronized (breeders) {
 			sort();
 			// Overperformers.
 			int size = size();
@@ -344,9 +348,7 @@ public class Population extends ArrayList<Hopper> {
 			}
 			
 			for (int i = size - 1; i >= stop && i > 0; i--) {
-				synchronized (breeders) {
-					breeders.add(get(i));
-				}
+				breeders.add(get(i));
 			}
 			// Underperformers.
 			int count = 0;
@@ -357,9 +359,7 @@ public class Population extends ArrayList<Hopper> {
 			}
 			for (int i = 0; i < count && i < size(); i++) {
 				int index = Helper.RANDOM.nextInt(size());
-				synchronized (breeders) {
-					breeders.add(get(index));
-				}
+				breeders.add(get(index));
 			}
 		}
 	}
@@ -380,11 +380,8 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	public void cull() {
 		sort();
-		synchronized (this) {
-			int size = size();
-			if (size > Helper.POPULATION_SIZE) {
-				removeRange(0, size - Helper.POPULATION_SIZE);
-			}
+		if (size() > Helper.POPULATION_SIZE) {
+			removeRange(0, size() - Helper.POPULATION_SIZE);
 		}
 	}
 	
@@ -403,12 +400,15 @@ public class Population extends ArrayList<Hopper> {
 	 */
 	private void calculateAverageFitness() {
 		float sum = 0.0f;
-		int size = super.size();
-		for (Hopper h : this) {
-			h.setAge(h.getAge() + 1);
-			sum += h.getFitness();
+		synchronized (this) {
+			int size = super.size();
+			for (ListIterator<Hopper> i = listIterator(); i.hasNext(); ) {
+				Hopper h = i.next();
+				h.setAge(h.getAge() + 1);
+				sum += h.getFitness();
+			}
+			averageFitness = sum / size;
 		}
-		averageFitness = sum / size;
 	}
 	
 	/**
@@ -428,11 +428,9 @@ public class Population extends ArrayList<Hopper> {
 		Hopper newGuy = null;
 		sort();
 		try {
-			synchronized (this) {
-				int size = size();
-				if (size > 0) {
-					newGuy = new Hopper(get(size - 1));
-				}
+			int size = size();
+			if (size > 0) {
+				newGuy = new Hopper(get(size - 1));
 			}
 		// Should never fail since it's cloning a Hopper that's already
 		// valid.
@@ -467,20 +465,16 @@ public class Population extends ArrayList<Hopper> {
 	 * 
 	 * @return Lifetime offspring.
 	 */
-	public synchronized long getLifetimeOffspring() {
+	public long getLifetimeOffspring() {
 		return lifetimeOffspring;
 	}
 	
 	/**
 	 * Getter/setter for lifetimeHillClimbs.
 	 * 
-	 * @param writeNotRead Optional long to assign to this field.
 	 * @return Lifetime hill climbs.
 	 */
-	public long getLifetimeHillClimbs(long...writeNotRead) {
-		if (writeNotRead.length > 0) {
-			lifetimeHillClimbs = writeNotRead[0];
-		}
+	public long getLifetimeHillClimbs() {
 		return lifetimeHillClimbs;
 	}
 	
@@ -551,13 +545,12 @@ public class Population extends ArrayList<Hopper> {
 		}
 		
 		try {
-			super.add(new Hopper(hopper));
+			return super.add(new Hopper(hopper));
 		} catch (IllegalArgumentException | GeneticsException e) {
 //			Log.error("Adding Hopper to Population failed.");
 //			System.out.println("Adding Hopper to Population failed.");
 			return false;
 		}
-		return true;
 	}
 	
 	/**
@@ -578,9 +571,7 @@ public class Population extends ArrayList<Hopper> {
 		}
 		
 		try {
-			synchronized (this) {
-				super.add(index, new Hopper(hopper));
-			}
+			super.add(index, new Hopper(hopper));
 		} catch (IllegalArgumentException | GeneticsException e) {
 //			Log.error("Adding Hopper to Population failed.");
 //			System.out.println("Adding Hopper to Population failed.");
@@ -588,89 +579,85 @@ public class Population extends ArrayList<Hopper> {
 		}
 	}
 	
-	/**
-	 * Override of addAll - individually adds all requested Hoppers to the
-	 * Population only if their Genotypes, phenotypes and bodies are valid.
-	 * 
-	 * @param collection Collection of Hoppers to add.
-	 * @return True if at all creatures were added, false if not.
-	 */
-	@SuppressWarnings("rawtypes")
-	@Override
-	public boolean addAll(Collection collection) {
-		List<Hopper> hoppers = new ArrayList<Hopper>();
-		// If an object in the collection is a Hopper, add it to the list.
-		for (Object o : collection) {
-			if (o != null && o.getClass() == this.getClass()) {
-				Hopper h = (Hopper) o;
-				if (h != null && h.getGenotype() != null
-						&& h.getPhenotype() != null) {
-					synchronized (this) {
-						hoppers.add(h);
-					}
-				}
-			}
-		}
-		
-		int count = 0;
-		for (Hopper h : hoppers) {
-			synchronized (this) {
-				if (add(h)) {
-					count++;
-				}
-			}
-		}
-		return count == hoppers.size();
-	}
+//	/**
+//	 * Override of addAll - individually adds all requested Hoppers to the
+//	 * Population only if their Genotypes, phenotypes and bodies are valid.
+//	 * 
+//	 * @param collection Collection of Hoppers to add.
+//	 * @return True if at least one Hopper was added, false if not.
+//	 */
+//	@SuppressWarnings("rawtypes")
+//	@Override
+//	public boolean addAll(Collection collection) {
+//		List<Hopper> hoppers = new ArrayList<Hopper>();
+//		// If an object in the collection is a Hopper, add it to the list.
+//		for (Object o : collection) {
+//			if (o != null && o.getClass() == this.getClass()) {
+//				Hopper h = (Hopper) o;
+//				if (h != null && h.getGenotype() != null
+//						&& h.getPhenotype() != null) {
+//					hoppers.add(h);
+//				}
+//			}
+//		}
+//		
+//		int count = 0;
+//		for (Hopper h : hoppers) {
+//			if (add(h)) {
+//				count++;
+//			}
+//		}
+//		return count > 0;
+//	}
 	
-	/**
-	 * Override of remove by index - synchronized.
-	 * 
-	 * @param index Index of Hopper to remove.
-	 * @return Hopper at index.
-	 */
-	@Override
-	public Hopper remove(int index) {
-		synchronized (this) {
-			return super.remove(index);
-		}
-	}
+//	/**
+//	 * Override of remove by index - synchronized.
+//	 * 
+//	 * @param index Index of Hopper to remove.
+//	 * @return Hopper at index.
+//	 */
+//	@Override
+//	public Hopper remove(int index) {
+//		synchronized (this) {
+//			return super.remove(index);
+//		}
+//	}
 	
-	/**
-	 * Override of get by index - returns a copy of the requested Hopper.
-	 * 
-	 * @param index Index of Hopper of which to return a copy.
-	 * @return Deep clone of the Hopper at index.
-	 */
-	@Override
-	public Hopper get(int index) {
-		if (index < 0 || index >= size()) {
-			return null;
-		}
-		synchronized (this) {
-			try {
-				return new Hopper(super.get(index));
-			} catch (IllegalArgumentException | GeneticsException ex) {
-				Log.error("Cloning Hopper for get failed.");
-				return null;
-			} catch (IndexOutOfBoundsException ex) {
-				Log.error("Get tried to index out of bounds.");
-				throw ex;
-			}
-		}
-	}
+//	/**
+//	 * Override of get by index - returns a copy of the requested Hopper.
+//	 * 
+//	 * @param index Index of Hopper of which to return a copy.
+//	 * @return Deep clone of the Hopper at index.
+//	 */
+//	@Override
+//	public Hopper get(int index) {
+//		if (index < 0 || index >= size()) {
+//			return null;
+//		}
+//		synchronized (this) {
+//			try {
+//				return new Hopper(super.get(index));
+//			} catch (IllegalArgumentException | GeneticsException ex) {
+//				Log.error("Cloning Hopper for get failed.");
+//				return null;
+//			} catch (IndexOutOfBoundsException ex) {
+//				Log.error("Get tried to index out of bounds.");
+//				throw ex;
+//			}
+//		}
+//	}
 	
-	/**
-	 * Override of size returns the current size of the Population.
-	 *
-	 * @return Size of the population.
-	 */
-	@Override
-	public int size() {
-		synchronized (this) {
-			return super.size();
-		}
-	}
+//	/**
+//	 * Override of size returns the current size of the Population.
+//	 *
+//	 * @return Size of the population.
+//	 */
+//	@Override
+//	public int size() {
+//		synchronized (this) {
+//			return super.size();
+//		}
+//	}
 	
 	/**
 	 * Override of toString: returns an exportable representation of this
@@ -686,8 +673,8 @@ public class Population extends ArrayList<Hopper> {
 		}
 		StringBuilder output = new StringBuilder("<population>"
 												 + Helper.NEWLINE);
-		for (Hopper h : hoppers) {
-			output.append(h.toString() + Helper.NEWLINE);
+		for (ListIterator<Hopper> i = hoppers.listIterator(); i.hasNext(); ) {
+			output.append(i.next().toString() + Helper.NEWLINE);
 		}
 		output.append("</population>");
 
