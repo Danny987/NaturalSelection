@@ -361,6 +361,8 @@ public class Genotype {
 		}
 		
 		if (maxDoF > 1) {
+			chromosome.add(new Gene(new Allele(
+					Trait.DOF_MARKER, EnumJointType.DOF_2, Helper.MAX_WEIGHT)));
 			for (Rule r : ruleList2) {
 				Allele ruleInputA = new Allele(Trait.RULE_INPUT_A,
 						r.getInput(0), helper.weight());

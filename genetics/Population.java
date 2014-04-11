@@ -277,13 +277,10 @@ public class Population extends ArrayList<Hopper> {
 		synchronized (this) {
 			climbers.addAll(this);
 		}
-		int size = size();
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i < climbers.size(); i++) {
 			Hopper original = climbers.get(i);
 			try {
-				System.out.println("foo");
 				Hopper newHotness = brain.performHillClimbing(original);
-				System.out.println("bar");
 				newHotness.hillClimbed();
 				// The != unary operator works here because we want to know if
 				// the two objects are, in fact, the same object.

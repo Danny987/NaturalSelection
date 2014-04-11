@@ -49,7 +49,7 @@ public class Helper {
 	public static final float MEDIAN_WEIGHT = 0.5f;
 	public static final float MAX_WEIGHT = 1.0f;
 	// Percentage by which to increase/decrease Allele weights.
-	public static final float WEIGHT_STEP_UP = 0.01f;
+	public static final float WEIGHT_STEP_UP = 0.001f;
 	public static final float WEIGHT_STEP_DOWN = 0.1f;
 	// How many generations between seeding of new random Hoppers.
 	public static final int SEED_NEW_RANDOMS_GAP = 50;
