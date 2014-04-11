@@ -52,7 +52,6 @@ public class AddRule extends Strategy{
 			}
 		}
 
-		System.err.println("numOfValidJoints = " + numOfValidJoints);
 
 		//if there are no valid joints to add rules to, return original hopper
 		if(numOfValidJoints == 0){
@@ -77,7 +76,6 @@ public class AddRule extends Strategy{
 			}
 		}
 
-		System.err.println("Adding rules to this joint: " + getDomAllele(hopperToClimb, geneIndex));
 
 		//geneIndex is now at the joint that we're going to add rules to
 		//but first, we need to decide which DoF we're going to add to.
@@ -88,8 +86,6 @@ public class AddRule extends Strategy{
 		//pick a random DoF to add the rules to
 		int dofToAddRules = Helper.RANDOM.nextInt(totalDoF)+1;
 
-		System.err.println("Joint has " + totalDoF + " DoF's");
-		System.err.println("Adding rules to DoF " + dofToAddRules);
 
 		//now we'll need the actual geneList from the hopper
 		ArrayList<Gene> geneList = hopperToClimb.getChromosome();
@@ -99,7 +95,6 @@ public class AddRule extends Strategy{
 			Gene g = i.next();
 		}*/
 		if(dofToAddRules == 1){
-			System.err.println("Moving to RULE_INPUT_A");
 			//move to rule type A
 			while(geneIndex < geneList.size()){
 				if(geneList.get(geneIndex).getTrait() != Allele.Trait.RULE_INPUT_A
@@ -110,10 +105,8 @@ public class AddRule extends Strategy{
 					break;
 				}
 			}
-			System.err.println(getDomAllele(hopperToClimb, geneIndex));
 		}
 		else if(dofToAddRules == 2){
-			System.err.println("Moving to DOF_MARKER");
 			//move to dof marker
 			while(geneIndex < geneList.size()){
 				if(geneList.get(geneIndex).getTrait() != Allele.Trait.DOF_MARKER
@@ -124,16 +117,12 @@ public class AddRule extends Strategy{
 					break;
 				}
 			}
-			System.err.println(getDomAllele(hopperToClimb, geneIndex));
-			
 			//should now be at DoF marker, move geneIndex forward by 1
 			//so that it is at the location that the rules need to be added in
 			geneIndex++;
 			
 		}
 
-		System.err.println("Adding rules before this Allele: " + getDomAllele(hopperToClimb, geneIndex));
-		
 		int boxIndex = getBoxIndex(hopperToClimb, geneIndex);
 
 
