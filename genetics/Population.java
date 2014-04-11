@@ -99,6 +99,12 @@ public class Population extends ArrayList<Hopper> {
 	 * @param pop2 Second Population to interbreed.
 	 */
 	public static void interbreed(Population pop1, Population pop2) {
+		if (pop1 == null || pop2 == null) {
+			return;
+		} else {
+			pop1.generations++;
+			pop2.generations++;
+		}
 		// Make breeder lists of the highest-fitness creatures from each
 		// Population. Also get a copy of each Population's Crossover module.
 		ArrayList<Hopper> breeders1;
@@ -187,7 +193,7 @@ public class Population extends ArrayList<Hopper> {
 		// means their sorting will no longer be valid. However,
 		// moveBreeders will sort them again, so it's fine.
 		if (Helper.choose() > 0) {
-			hillClimb();			
+			hillClimb();
 		} else {
 			moveBreeders();
 			breed();
@@ -275,15 +281,15 @@ public class Population extends ArrayList<Hopper> {
 		for (int i = 0; i < size; i++) {
 			Hopper original = climbers.get(i);
 			try {
+				System.out.println("foo");
 				Hopper newHotness = brain.performHillClimbing(original);
+				System.out.println("bar");
 				newHotness.hillClimbed();
 				// The != unary operator works here because we want to know if
 				// the two objects are, in fact, the same object.
 				if (newHotness != original) {
-					synchronized (this) {
-						remove(original);
-						add(newHotness);
-					}
+					remove(original);
+					add(newHotness);
 				}
 			} catch (IllegalArgumentException | GeneticsException ex) {
 				currentFailedHillClimbs++;
@@ -394,6 +400,7 @@ public class Population extends ArrayList<Hopper> {
 		float sum = 0.0f;
 		int size = super.size();
 		for (Hopper h : this) {
+			h.setAge(h.getAge() + 1);
 			sum += h.getFitness();
 		}
 		averageFitness = sum / size;
@@ -688,8 +695,8 @@ public class Population extends ArrayList<Hopper> {
 	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
-		Population pop1 = new Population(100);
-		Population pop2 = new Population(100);
+		Population pop1 = new Population(10000);
+		Population pop2 = new Population(10000);
 		interbreed(pop1, pop2);
 	}
 	
