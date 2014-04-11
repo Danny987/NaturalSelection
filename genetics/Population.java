@@ -204,7 +204,7 @@ public class Population extends Vector<Hopper> {
 		generations++;
 		// Randomly select hill climbing or breeding this generation.
 		if (Helper.choose() > 0) {
-//			hillClimb();
+			hillClimb();
 		} else {
 			moveBreeders();
 			breed();
