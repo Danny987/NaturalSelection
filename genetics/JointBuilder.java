@@ -150,7 +150,7 @@ public class JointBuilder implements Builder {
 		} else {
 			index = ruleTable[dof].size();
 		}
-		ruleTable[jointDoF - 1].add(index, rule);
+		ruleTable[dof].add(index, rule);
 	}
 	
 	/**

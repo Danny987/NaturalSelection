@@ -306,13 +306,11 @@ public class Genotype {
 		ArrayList<Rule> ruleList2 = new ArrayList<Rule>();
 		int maxDoF = joint.getType().getDoF();
 		for (int dof = 0; dof < maxDoF; dof++) {
-			// Since Joint has no way to get the size of the array, we have to
-			// use this annoying hack to index until we go out of bounds.
 			ArrayList<Rule> ruleList = joint.getRuleList(dof);
 			int listSize = ruleList.size();
 			for (int i = 0; i < listSize; i++) {
 				Rule rule = joint.getRule(dof, i);
-				if (dof == 0) {
+				if (dof == EnumJointType.DOF_1) {
 					ruleList1.add(rule);
 				} else {
 					ruleList2.add(rule);
@@ -1585,7 +1583,20 @@ public class Genotype {
 		} catch (IllegalArgumentException | GeneticsException ex) {
 			ex.printStackTrace();
 		}
-		// NOTE: float test for NaN -> Float.isNaN(value);
+		
+		System.out.println("---------------------------");
+		Genotype genotype4;
+		boolean g4done = false;
+		while (!g4done) {
+			try {
+				genotype4 = new Genotype();
+				g4done = true;
+				System.out.println(genotype4);
+			} catch (IllegalArgumentException | GeneticsException e) {
+				// TODO Auto-generated catch block
+				g4done = false;
+			}
+		}
 	}
 
 }
