@@ -36,13 +36,24 @@ public class MapHandler {
 
 	//remove block maps
 	HashMap<Integer, Integer> removeBlockWeights = new HashMap<Integer, Integer>();
+	
+	
+	//info about last map updated
+	String mapNameUndo = "";
+	NeuronInput neuronInputUndo = null;
+	EnumOperatorBinary opBinUndo = null;
+	EnumOperatorUnary opUnUndo = null;
+	char ruleTypeUndo;
+	char opTypeUndo;
+	int ruleDoFUndo;
+	int removedBlockUndo;
 
 	public MapHandler(){
 		initializeMaps();
 	}
 
 
-	public void initializeMaps(){
+	private void initializeMaps(){
 		//neuron input maps
 		aRuleWeights1.put(EnumNeuronInputType.CONSTANT, 1);
 		aRuleWeights1.put(EnumNeuronInputType.HEIGHT, 1);
@@ -142,6 +153,7 @@ public class MapHandler {
 		for(int i = 0; i < 50; i++){
 			removeBlockWeights.put(i, 1);
 		}
+
 	}
 
 	/**
@@ -307,6 +319,10 @@ public class MapHandler {
 
 	public void updateRuleMap(NeuronInput neuron, char ruleType, int ruleDoF, int value){
 		//TODO
+		this.mapNameUndo = "updateRuleMap";
+		this.neuronInputUndo = neuron;
+		this.ruleTypeUndo = ruleType;
+		this.ruleDoFUndo = ruleDoF;
 		if(ruleType == 'A'){
 			if(ruleDoF == 1){
 				value += aRuleWeights1.get(neuron.getType());
@@ -357,10 +373,15 @@ public class MapHandler {
 				if(value >= 1 && value <= 100)eRuleWeights1.put(neuron.getType(), value);
 			}
 		}
+		
 	}
 
 	public void updateBinaryMap(EnumOperatorBinary operator, char opType, int value){
 		//TODO
+		this.mapNameUndo = "updateBinaryMap";
+		this.opBinUndo = operator;
+		this.opTypeUndo = opType;
+		
 		if(opType == '1'){
 			value += binaryOneWeights.get(operator);
 			if(value >= 1 && value <= 100)binaryOneWeights.put(operator, value);
@@ -374,6 +395,11 @@ public class MapHandler {
 
 	public void updateUnaryMap(EnumOperatorUnary operator, char opType, int value){
 		//TODO
+		this.mapNameUndo = "updateUnaryMap";
+		this.opUnUndo = operator;
+		this.opTypeUndo = opType;
+		
+		
 		if(opType == '2'){
 			value += unaryTwoWeights.get(operator);
 			if(value >= 1 && value <= 100)unaryTwoWeights.put(operator, value);
@@ -382,12 +408,34 @@ public class MapHandler {
 			value += unaryFourWeights.get(operator);
 			if(value >= 1 && value <= 100)unaryFourWeights.put(operator, value);
 		}
+		
 	}
 
 	public void updateRemoveBlockMap(int blockIndex, int value){
 		//TODO
+		this.mapNameUndo = "updateRemoveBlockMap";
+		this.removedBlockUndo = blockIndex;
+		
 		value += removeBlockWeights.get(blockIndex);
 		if(value >= 1 && value <= 100)removeBlockWeights.put(blockIndex, value);
+		
 	}
-
+	
+	public void undo(){
+		if(mapNameUndo.equals("updateBinaryMap")){
+			updateBinaryMap(opBinUndo, opTypeUndo, -2);
+		}
+		else if(mapNameUndo.equals("updateRemoveBlockMap")){
+			updateRemoveBlockMap(removedBlockUndo, -2);
+		}
+		else if(mapNameUndo.equals("updateRuleMap")){
+			updateRuleMap(neuronInputUndo, ruleTypeUndo, ruleDoFUndo, -2);
+		}
+		else if(mapNameUndo.equals("updateUnaryMap")){
+			updateUnaryMap(opUnUndo, opTypeUndo, -2);
+		}
+		else{
+			//no map was changed in the last hill climb
+		}
+	}
 }

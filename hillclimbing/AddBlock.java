@@ -28,7 +28,7 @@ public class AddBlock extends Strategy{
 	}
 
 	@Override
-	public Hopper climb(Hopper originalHopper) throws IllegalArgumentException,
+	public Hopper climb(Hopper hopper) throws IllegalArgumentException,
 	GeneticsException {
 
 		boolean validBlock = false;
@@ -37,7 +37,7 @@ public class AddBlock extends Strategy{
 		//clone original hopper
 		Hopper hopperToClimb = null;
 		try {
-			hopperToClimb = new Hopper(originalHopper);
+			hopperToClimb = new Hopper(hopper);
 		} catch (IllegalArgumentException | GeneticsException e) {
 			System.err.println("add block");
 			throw e;
@@ -149,7 +149,7 @@ public class AddBlock extends Strategy{
 			} catch (IllegalArgumentException | GeneticsException e) {
 				validBlock = false;
 				attempts++;
-				hopperToClimb = new Hopper(originalHopper);
+				hopperToClimb = new Hopper(hopper);
 			}
 		}
 
@@ -157,7 +157,7 @@ public class AddBlock extends Strategy{
 			return hopperToClimb;
 		}
 
-		return originalHopper;
+		return hopper;
 	}
 
 	public NeuronInput getNeuronInput(char ruleType, int ruleDoF, int jointDoF, int boxIndex){

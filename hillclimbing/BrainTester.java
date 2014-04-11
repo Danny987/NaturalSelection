@@ -9,6 +9,7 @@ import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Allele.Trait;
 import creature.geeksquad.genetics.Hopper;
+import creature.geeksquad.genetics.Population;
 import creature.phenotype.Block;
 import creature.phenotype.EnumJointSite;
 import creature.phenotype.EnumJointType;
@@ -28,8 +29,8 @@ public class BrainTester {
 	 */
 	public static void main(String[] args) {
 
-		ArrayList<Allele> alleles = new ArrayList<Allele>();
-		
+		/*ArrayList<Allele> alleles = new ArrayList<Allele>();
+
 		ArrayList<Gene> genes;
 		// Adding some dummy Alleles to the list.
 		alleles.add(new Allele(Trait.LENGTH, 35.4f, 0.3f));
@@ -139,17 +140,17 @@ public class BrainTester {
 		alleles.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.ABS,
 				0.3f));
 		alleles.add(new Allele(Trait.UNARY_OPERATOR_4, EnumOperatorUnary.EXP,
-				0.2f));*/
+				0.2f));
 
 		genes = Gene.allelesToGenes(alleles);
 
-		
+
 		//initialize hopper to hill climb
 		Hopper hopper = null;
 		//initialize genotype used to create the hopper
 		Genotype genotype = null;
-		
-		
+
+
 		//create genotype and hoper
 		try {
 			genotype = new Genotype(genes);
@@ -160,21 +161,28 @@ public class BrainTester {
 		} catch (GeneticsException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
-		
+		}*/
+
+		Population population = new Population(100);
+
 		//create a new brain for this tribe
 		TribeBrain brain = new TribeBrain();
 		
+		Hopper hopper = null;
+		
 		//send hopper to hill climbing
 		//returns a hill climbed hopper
-		for(int i = 0; i < 10000; i++){
-		try {
-			hopper = brain.performHillClimbing(hopper);
-		} catch (IllegalArgumentException | GeneticsException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+		for(int i = 0; i < 500; i++){
+			System.out.println(i);
+			for(int j = 0; j < population.size(); j++){
+				try {
+					hopper = brain.performHillClimbing(population.get(j));
+				} catch (IllegalArgumentException | GeneticsException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
-		}
-		
+		System.out.println("done");
 	}
 }

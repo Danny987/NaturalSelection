@@ -32,6 +32,8 @@ public class RemoveBlock extends Strategy {
 		//remove block at index
 		hopperToClimb.getGenotype().removeBlock(boxIndex);
 		
+		if(mapsOn) mapHandler.updateRemoveBlockMap(boxIndex, 1);
+		
 		//clone hopper to make sure its valid
 		Hopper testHopper = null;
 		try {

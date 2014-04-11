@@ -41,10 +41,11 @@ public class TribeBrain {
 	Strategy strategy;
 
 	//create the map handler
-	MapHandler mapHandler = new MapHandler();
+	MapHandler mapHandler;;
 
 	public TribeBrain(){
 		//initialize strategy map weights
+		mapHandler = new MapHandler();
 		initializeWeights();
 	}
 
@@ -111,14 +112,13 @@ public class TribeBrain {
 		 * with the highest fitness.
 		 */
 		if(strategy.improved(clone)){
-			System.err.println("Success!");
 			return clone;
 		}
 		else if(startingFitness > clone.getFitness()){
-			System.err.println("Success!");
 			return clone;
 		}
 		else{
+			mapHandler.undo();
 			return hopper;
 		}
 	}

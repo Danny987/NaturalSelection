@@ -17,90 +17,78 @@ public class AddRule extends Strategy{
 	}
 
 	@Override
-	public Hopper climb(Hopper originalHopper) throws IllegalArgumentException,
+	public Hopper climb(Hopper hopper) throws IllegalArgumentException,
 	GeneticsException {
-		
-		//its broken
-		return originalHopper;
-		/*
+
 		//clone original hopper
 		Hopper hopperToClimb = null;
 		try {
-			hopperToClimb = new Hopper(originalHopper);
+			hopperToClimb = new Hopper(hopper);
 		} catch (IllegalArgumentException | GeneticsException e) {
-			System.err.println("add rule");
+			System.err.println("add block");
 			throw e;
 		}
 
-		//System.out.println(2);
-		
-		int attempts = 0;
-		int DoF = 0;
-		int geneIndex = 0;
-		int boxIndex = 0;
+		//go through the genotype and make sure that there are joints
+		//that can accept new rules. Only non-rigid joints can have rules
+		//added to them.
 
-		while(attempts < 10 && DoF <= 0){
-			//System.out.println(3);
-			//current gene we're at
-			geneIndex = 0;
+		int numOfValidJoints = 0;
 
-			//get box
-			boxIndex = Helper.RANDOM.nextInt(hopperToClimb.getGenotype().size()-1)+1;
-
-			//move to the joint at the box index-------------------------------------
-
-			//get gene list
-			ArrayList<Gene> geneList = hopperToClimb.getGenotype().getChromosome();
-
-			//move to the correct box
-			geneIndex = hopperToClimb.getGenotype().findBlock(boxIndex);
-
-			//geneIndex is now at the length allele of the correct block
-
-			//-----------------------------------------------------------------------
-
-			//System.out.println(4);
-			
-			//get DoF
-			//move geneIndex to the joint type allele
-			while(!geneList.get(geneIndex).getDominant().getTrait().equals(Allele.Trait.JOINT_TYPE)){
-				geneIndex++;
+		for(int i = 0; i < hopperToClimb.getChromosome().size(); i++){
+			if(getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.JOINT_TYPE)){
+				if(!getDomAllele(hopperToClimb, i).getValue().equals(EnumJointType.RIGID)){
+					numOfValidJoints++;
+				}
 			}
-			
-			//System.out.println(5);
+		}
 
-			//geneIndex is now at the joint type of the block
-			//get DoF
-			EnumJointType joint = (EnumJointType)geneList.get(geneIndex).getDominant().getValue();
-			DoF = joint.getDoF();
-			
-			//System.out.println(6);
+		//System.out.println("numOfValidJoints = " + numOfValidJoints);
+
+		//if there are no valid joints to add rules to, return original hopper
+		if(numOfValidJoints == 0){
+			return hopper;
+		}
+
+		//pick a random valid joint to add rules to
+		int jointToAddRules = Helper.RANDOM.nextInt(numOfValidJoints)+1;
+
+		//get the geneIndex of the joint
+		int counter = 0;
+		int geneIndex = 0;
+		for(int i = 0; i < hopperToClimb.getChromosome().size(); i++){
+			if(getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.JOINT_TYPE)){
+				if(!getDomAllele(hopperToClimb, i).getValue().equals(EnumJointType.RIGID)){
+					counter++;
+				}
+			}
+			if(counter == jointToAddRules){
+				geneIndex = i;
+				//System.out.println(getDomAllele(hopperToClimb, geneIndex));
+				break;
+			}
 		}
 		
-		//if reached max attempts
-		if(attempts > 10){
-			return originalHopper;
+		//geneIndex is now at the joint that we're going to add rules to
+		//but first, we need to decide which DoF we're going to add to.
+		
+		EnumJointType jointType = (EnumJointType) getDomAllele(hopperToClimb, geneIndex).getValue();
+		int totalDoF = jointType.getDoF();
+		
+		//pick a random DoF to add the rules to
+		int dofToAddRules = Helper.RANDOM.nextInt(totalDoF)+1;
+		
+		//now we'll need the actual geneList from the hopper
+		//ArrayList<Genes> geneList
+		
+		//move to the correct spot
+		if(dofToAddRules == 1){
+			//move to rule type A
+			
 		}
-		
-		//System.out.println(7);
-
-		//build rule
-		
-
-		//add n rules to start of DoF or joint
-		
-
-		//if improvement
-
-		//keep change
-
-		//else return original hopper
 
 
-
-
-
-		return originalHopper;*/
+		return hopper;
 	}
 
 }

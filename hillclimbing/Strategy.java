@@ -30,7 +30,7 @@ import creature.geeksquad.library.*;
  */
 public abstract class Strategy {
 
-	//TODO clean up initializations
+	boolean mapsOn = false;
 
 	Genotype currentGenotype;
 	Genotype newGenotype;
@@ -39,11 +39,10 @@ public abstract class Strategy {
 
 	MapHandler mapHandler;
 
-
 	public Strategy(MapHandler mapHandler){
 		//set the crossover object
 		this.weightHelper = new WeightHelper(false);
-		this.mapHandler = new MapHandler();
+		this.mapHandler = mapHandler;
 	}
 
 	/**
@@ -134,6 +133,7 @@ public abstract class Strategy {
 	public Hopper climbFloat(Hopper hopper, int geneIndex, float step)
 			throws GeneticsException, IllegalArgumentException{
 
+
 		/**
 		 * Clone the original hopper and perform the hill climbing
 		 * on the clone. If anything goes wrong, we can just return the
@@ -207,6 +207,7 @@ public abstract class Strategy {
 			return new NeuronInput(newRuleValue, boxIndex);
 		}
 		else if(newRuleValue.equals(EnumNeuronInputType.CONSTANT)){
+			return new NeuronInput(newRuleValue, Helper.RANDOM.nextFloat());
 		}
 		else if(newRuleValue.equals(EnumNeuronInputType.JOINT)){
 			return new NeuronInput(newRuleValue, boxIndex, neuron.getDOF());
@@ -275,11 +276,11 @@ public abstract class Strategy {
 		alleleToClimb = new Allele(alleleToClimb.getTrait(), 
 				jointType, 
 				alleleToClimb.getWeight());
-		
+
 		Allele recAllele = hopperToClimb.getChromosome().get(geneIndex).getRecessive();
-		
+
 		Gene gene = new Gene(alleleToClimb, recAllele);
-		
+
 		hopperToClimb.getChromosome().remove(geneIndex);
 		hopperToClimb.getChromosome().add(geneIndex, gene);
 
@@ -499,30 +500,68 @@ public abstract class Strategy {
 					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'A', boxIndex, ruleDoF),
 					alleleToClimb.getWeight());
 
+			break;
+
 		case RULE_INPUT_B:
 			alleleToClimb = new Allele(alleleToClimb.getTrait(),
 					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'B', boxIndex, ruleDoF),
 					alleleToClimb.getWeight());
+
+			break;
 
 		case RULE_INPUT_C:
 			alleleToClimb = new Allele(alleleToClimb.getTrait(),
 					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'C', boxIndex, ruleDoF),
 					alleleToClimb.getWeight());
 
+			break;
+
 		case RULE_INPUT_D:
 			alleleToClimb = new Allele(alleleToClimb.getTrait(),
 					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'D', boxIndex, ruleDoF),
 					alleleToClimb.getWeight());
+
+			break;
 
 		case RULE_INPUT_E:
 			alleleToClimb = new Allele(alleleToClimb.getTrait(),
 					replaceNeuron((NeuronInput)alleleToClimb.getValue(), 'E', boxIndex, ruleDoF),
 					alleleToClimb.getWeight());
 
+			break;
+
 		default:
 			//a non-rule allele was passed in so just return the original hopper.
 			break;
 		}
+
+		//update map
+		char ruleType = 'A';
+
+		switch (alleleToClimb.getTrait()) {
+		case RULE_INPUT_A:
+			ruleType = 'A';
+			break;
+		case RULE_INPUT_B:
+			ruleType = 'B';
+			break;
+		case RULE_INPUT_C:
+			ruleType = 'C';
+			break;
+		case RULE_INPUT_D:
+			ruleType = 'D';
+			break;
+		case RULE_INPUT_E:
+			ruleType = 'E';
+			break;
+		default:
+			break;
+		}
+
+		if(mapsOn) mapHandler.updateRuleMap((NeuronInput) alleleToClimb.getValue(), 
+				ruleType, 
+				ruleDoF, 
+				1);
 
 		//insert the allele into the genotype, if it's valid, return the hopper
 		Hopper temp = insertAllele(hopperToClimb, geneIndex, alleleToClimb);
@@ -553,7 +592,7 @@ public abstract class Strategy {
 		} catch (IllegalArgumentException | GeneticsException e) {
 			return false;
 		}
-		
+
 		//run simulation to get new fitness
 		float newFitness = hopper.evalFitness();
 
@@ -600,20 +639,44 @@ public abstract class Strategy {
 					mapHandler.getNewBinary('1'),
 					alleleToClimb.getWeight());
 
+			if(mapsOn) mapHandler.updateBinaryMap((EnumOperatorBinary) alleleToClimb.getValue(), 
+					'1', 
+					1);
+
+			break;
+
 		case BINARY_OPERATOR_3:
 			alleleToClimb = new Allele(alleleToClimb.getTrait(),
 					mapHandler.getNewBinary('3'),
 					alleleToClimb.getWeight());
+
+			if(mapsOn) mapHandler.updateBinaryMap((EnumOperatorBinary) alleleToClimb.getValue(), 
+					'3', 
+					1);
+
+			break;
 
 		case UNARY_OPERATOR_2:
 			alleleToClimb = new Allele(alleleToClimb.getTrait(),
 					mapHandler.getNewUnary('2'),
 					alleleToClimb.getWeight());
 
+			if(mapsOn) mapHandler.updateUnaryMap((EnumOperatorUnary) alleleToClimb.getValue(), 
+					'2', 
+					1);
+
+			break;
+
 		case UNARY_OPERATOR_4:
 			alleleToClimb = new Allele(alleleToClimb.getTrait(),
 					mapHandler.getNewUnary('4'),
 					alleleToClimb.getWeight());
+
+			mapHandler.updateUnaryMap((EnumOperatorUnary) alleleToClimb.getValue(), 
+					'4', 
+					1);
+
+			break;
 
 		default:
 			break;
@@ -799,13 +862,22 @@ public abstract class Strategy {
 
 		//return the largest value times 1/10
 		if(currentVal > val1 && currentVal > val2){
-			return currentVal*0.1f;
+			if(currentVal*0.1f >= 1.0f)
+				return currentVal*0.1f;
+			else
+				return 1.0f;
 		}
 		else if(val1 > currentVal && val1 > val2){
-			return val1*0.1f;
+			if(val1*0.1f >= 1.0f)
+				return val1*0.1f;
+			else
+				return 1.0f;
 		}
 		else if(val2 > currentVal && val2 > val1){
-			return val2*0.1f;
+			if(val2*0.1f >= 1.0f)
+				return val2*0.1f;
+			else
+				return 1.0f;
 		}
 
 		return 0;
@@ -823,11 +895,11 @@ public abstract class Strategy {
 		//go backwards through the gene list
 		for(int i = geneIndex; i >= 0; i--){
 			//if we get to a joint type allele
-			if(getDomAllele(hopper, 1).getTrait().equals(Allele.Trait.JOINT_TYPE)){
+			if(getDomAllele(hopper, i).getTrait().equals(Allele.Trait.JOINT_TYPE)){
 				return 1; //index was in DoF 1
 			}
 			//if we get to a DoF marker
-			if(getDomAllele(hopper, 1).getTrait().equals(Allele.Trait.DOF_MARKER)){
+			if(getDomAllele(hopper, i).getTrait().equals(Allele.Trait.DOF_MARKER)){
 				return 2; //index was in DoF 2
 			}
 		}
@@ -885,6 +957,8 @@ public abstract class Strategy {
 
 		Gene gene = new Gene(allele, recAllele);
 
+		//		System.out.println(geneList.get(geneIndex));
+		//		System.out.println(gene);
 		geneList.remove(geneIndex);
 		geneList.add(geneIndex, gene);
 
