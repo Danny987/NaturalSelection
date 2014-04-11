@@ -29,21 +29,22 @@ public class BrainTester {
 	 */
 	public static void main(String[] args) {
 
-		Population population = new Population(1);
+		Population population = new Population(100);
 
 		//create a new brrain for this tribe
 		TribeBrain brain = new TribeBrain();
 		
-		Hopper hopper = population.get(0);
+		//Hopper hopper = population.get(0);
+		Hopper hopper = null;
 		
 		//send hopper to hill climbing
 		//returns a hill climbed hopper
-		for(int i = 0; i < 1; i++){
+		for(int i = 0; i < 999; i++){
 			System.out.println(i);
 			for(int j = 0; j < population.size(); j++){
 				try {
 
-					Genotype.printChromosome(hopper.getChromosome());
+					//Genotype.printChromosome(hopper.getChromosome());
 					
 					hopper = brain.performHillClimbing(population.get(j));
 				} catch (IllegalArgumentException | GeneticsException e) {

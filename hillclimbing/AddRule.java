@@ -2,6 +2,7 @@ package creature.geeksquad.hillclimbing;
 
 
 import java.util.ArrayList;
+import java.util.ListIterator;
 
 import creature.geeksquad.genetics.Allele;
 import creature.geeksquad.genetics.Crossover;
@@ -77,7 +78,7 @@ public class AddRule extends Strategy{
 		}
 
 		System.err.println("Adding rules to this joint: " + getDomAllele(hopperToClimb, geneIndex));
-		
+
 		//geneIndex is now at the joint that we're going to add rules to
 		//but first, we need to decide which DoF we're going to add to.
 
@@ -87,28 +88,52 @@ public class AddRule extends Strategy{
 		//pick a random DoF to add the rules to
 		int dofToAddRules = Helper.RANDOM.nextInt(totalDoF)+1;
 
+		System.err.println("Joint has " + totalDoF + " DoF's");
+		System.err.println("Adding rules to DoF " + dofToAddRules);
+
 		//now we'll need the actual geneList from the hopper
 		ArrayList<Gene> geneList = hopperToClimb.getChromosome();
 
 		//move to the correct spot
+		/*for (ListIterator<Gene> i =  geneList.listIterator(); i.hasNext(); ) {
+			Gene g = i.next();
+		}*/
 		if(dofToAddRules == 1){
+			System.err.println("Moving to RULE_INPUT_A");
 			//move to rule type A
-			while(!geneList.get(geneIndex).getTrait().equals(Allele.Trait.RULE_INPUT_A)
-					&& !geneList.get(geneIndex).getTrait().equals(Allele.Trait.LENGTH)
-					&& geneIndex < geneList.size()){
-				geneIndex++;
+			while(geneIndex < geneList.size()){
+				if(geneList.get(geneIndex).getTrait() != Allele.Trait.RULE_INPUT_A
+						&& geneList.get(geneIndex).getTrait() != Allele.Trait.LENGTH){
+					geneIndex++;
+				}
+				else{
+					break;
+				}
 			}
+			System.err.println(getDomAllele(hopperToClimb, geneIndex));
 		}
 		else if(dofToAddRules == 2){
+			System.err.println("Moving to DOF_MARKER");
 			//move to dof marker
-			while(!geneList.get(geneIndex).getTrait().equals(Allele.Trait.DOF_MARKER)){
-				//System.out.println(geneList.get(geneIndex).getDominant());
-				geneIndex++;
+			while(geneIndex < geneList.size()){
+				if(geneList.get(geneIndex).getTrait() != Allele.Trait.DOF_MARKER
+						&& geneList.get(geneIndex).getTrait() != Allele.Trait.LENGTH){
+					geneIndex++;
+				}
+				else{
+					break;
+				}
 			}
-			//System.out.println(geneList.get(geneIndex).getDominant());
+			System.err.println(getDomAllele(hopperToClimb, geneIndex));
+			
+			//should now be at DoF marker, move geneIndex forward by 1
+			//so that it is at the location that the rules need to be added in
 			geneIndex++;
+			
 		}
 
+		System.err.println("Adding rules before this Allele: " + getDomAllele(hopperToClimb, geneIndex));
+		
 		int boxIndex = getBoxIndex(hopperToClimb, geneIndex);
 
 
