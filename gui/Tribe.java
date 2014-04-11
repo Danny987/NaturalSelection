@@ -12,7 +12,7 @@ public class Tribe extends Thread {
     public static final int POPULATION_SIZE = 501;
     private final Population population;
 
-    private boolean paused = true;
+    private volatile boolean paused = true;
     private boolean running = true;
 
     public Tribe(String name, Population population) {
@@ -32,8 +32,6 @@ public class Tribe extends Thread {
     public void run() {
 
         while (running) {
-            synchronized (this) {
-
                 // if the thread is interupted pause or unpause
                 if (Thread.interrupted()) {
                     paused = !paused;
@@ -41,13 +39,8 @@ public class Tribe extends Thread {
 
                 // if not paused let them mutate
                 if (!paused) {
-                    try {
                         nextGeneration();
-                    } catch (IndexOutOfBoundsException ex) {
-                        Log.error(ex.toString(), getName());
-                    }
                 }
-            }
         }
     }
 
@@ -93,5 +86,21 @@ public class Tribe extends Thread {
 
     public float getFitness() {
         return population.getAverageFitness();
+    }
+    
+    public long getFails(){
+        return population.getLifetimeDeadChildren();
+    }
+    
+    public long gethillFails(){
+        return population.getLifetimeFailedHillClimbs();
+    }
+    
+    public long gethills(){
+        return population.getLifetimeHillClimbs();
+    }
+    
+    public long getcross(){
+        return population.getLifetimeOffspring();
     }
 }

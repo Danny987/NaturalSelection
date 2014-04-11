@@ -8,10 +8,21 @@ import java.util.concurrent.Callable;
  *
  * @author Marcos
  */
-public class CallMe implements Callable<Population>{
+public class CallMe extends Thread {
+
+    private Population population;
 
     @Override
-    public Population call() throws Exception {
-        return new Population(Tribe.POPULATION_SIZE);
+    public void run() {
+        synchronized (this) {
+            population = new Population(Tribe.POPULATION_SIZE);
+        }
     }
+    
+    public Population getPopulation(){
+        synchronized(this){
+            return population;
+        }
+    }
+
 }

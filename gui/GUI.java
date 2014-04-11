@@ -49,21 +49,21 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private final int WIDTH = 700;
     private final int HEIGHT = 600;
     private Dimension size; //temp variable 
-    
+
     //Controls
     private final PlayerControls controls = new PlayerControls();
     private final Map<String, Boolean> controlMap = controls.getInputs();
 
     //Colors
-    private final Color FONTCOLOR = new Color(205, 205, 205);     
-    private final Color BACKGROUND_COLOR = new Color(55, 55, 55); 
+    private final Color FONTCOLOR = new Color(205, 205, 205);
+    private final Color BACKGROUND_COLOR = new Color(55, 55, 55);
 
     // Data structures
     private List<String> nameList = new ArrayList<>(); //names for all the generations
     private List<Tribe> tribeList = new ArrayList<>(); //tribe threafs
     private List<Tribe> crossed = new ArrayList<>();
     private List<Tribe> notcrossed = new ArrayList<>();
-    
+
     private Tribe currentTribe;                        //currently selected tribe
     private Hopper hopper = null;                      //currently selected hopper
 
@@ -72,7 +72,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private Panel mainPanel;     // contains tribe info, buttons, slider, jcombobox
     private JScrollPane scroll;  // contains the tree
     private Panel statsPanel;    // contains the accumulated statistics 
-    
+
     // Inner panels
     private Panel buttonsPanel;          // contains all buttons 
     private Panel bottomPanel;           // contains time and generation statistic
@@ -90,7 +90,13 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private JLabel generations;          // number of hillclimb + crossover
     private JLabel generationsPerSecond; // generations / time
     private JLabel currentCreature;      // current creature label
-    
+    private JLabel allhills;
+    private JLabel allcross;
+    private JLabel allFails;
+    private JLabel allhillFails;
+    private JLabel overallfitness;
+    private JLabel bestbestfitness;
+
     // Buttons!
     private Button pause;           // Pause/Start threads
     private Button animate;         // Pause/Start opengl graphics
@@ -101,16 +107,16 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private Button loadPopulation;  // load saved population
     private Button getBest;         // get the current populations overachiever
     private Button reset;           // reset the current creatures simulation
-    
+
     //Misc Components
     private Slider slider;               //JSlider used to select hopper in the current population
     private JComboBox tribes;            //JComboBox, select different threads
     private JTree tree;                  //JTree, populated with current creatures phenotype
     private DefaultMutableTreeNode root; //The first brand of the tree
-    
+
     // Variabes
     private float populationMergeTime = 0;
-    private final float CROSS_OVER_WAIT = 30*1000;
+    private final float CROSS_OVER_WAIT = 60 * 1000;
     private float bestFitnessValue = 0f; //Best fitness value from simulation
     private int totalGenerations = 0;    //total hillclimb + total crossover
     private long startmilis;
@@ -141,7 +147,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         } catch (IllegalArgumentException | GeneticsException ex) {
             Log.error(ex.toString(), currentTribe.getName());
         }
-        
+
         startmilis = System.currentTimeMillis();
         milistime = 0;
     }
@@ -150,21 +156,21 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
      * Listens for buttons, slider, timers, and JComboBox
      * Events:
      * keyTimer: advances the simulation, bestFitness and currentFitness values,
-     *           if a key was pressed the corresponding action will take place.
-     * 
+     * if a key was pressed the corresponding action will take place.
+     *
      * timer: updated timer running crossover + hill climbing.
-     * 
+     *
      * actionCommand: Each button has an actionCommand associated with it.
-     *                Animation On : toggles opengl animation
-     *                Pause: toggles the tribes to life.
-     *                Write Genome: Saves genome to user selected file
-     *                Load Genome: Loads user selected file
-     *                Write Population: Writes population to user selected file
-     *                Load Population: Loads user selected population
-     *                Overachiever: polls the population for the best creature
-     *                Next Generation: Runs one instance of crossover and hill climbing
-     *                Change Tribe: Listens for changes to JComboBox
-     *                Reset: Resets the current hopper simulation
+     * Animation On : toggles opengl animation
+     * Pause: toggles the tribes to life.
+     * Write Genome: Saves genome to user selected file
+     * Load Genome: Loads user selected file
+     * Write Population: Writes population to user selected file
+     * Load Population: Loads user selected population
+     * Overachiever: polls the population for the best creature
+     * Next Generation: Runs one instance of crossover and hill climbing
+     * Change Tribe: Listens for changes to JComboBox
+     * Reset: Resets the current hopper simulation
      *
      * @param e ActionEvent
      */
@@ -175,7 +181,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
 
                 float hf = hopper.getPhenotype().advanceSimulation();
                 bestFitnessValue = hf > bestFitnessValue ? hf : bestFitnessValue;
-                
+
                 String b = String.format("%.5f", bestFitnessValue);
                 String c = String.format("%.5f", hf);
                 bestFitness.setText("Best Fitness: " + b);
@@ -188,39 +194,70 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
 
         if (e.getSource().equals(timer)) {
             tribeFitness.setText("Tribe Fitness: " + String.format("%.5f", currentTribe.getFitness()));
-            
+
             if (!paused) {
                 time.setText(" Time: " + time());
                 totalGenerations = currentTribe.getGenerations();
                 generations.setText("Total Generations: " + totalGenerations);
 
-                float div = milistime/1000f;
-                
-                if(div != 0){
-                    String f = String.format("%.5f", (float)(totalGenerations / div));
-                    generationsPerSecond.setText("Generations/second: " + f);
+                float div = milistime / 1000f;
+
+                if (div != 0) {
+                    String f = String.format("%.5f", (float) (totalGenerations / div));
+                    generationsPerSecond.setText("Generations/Second: " + f);
                 }
-                
+
             }
             else {
                 waittime = milistime;
                 startmilis = System.currentTimeMillis();
             }
 
+            if (mainTab.getSelectedIndex() == 2) {
+                float best = 0;
+                float f = 0;
+                int i = 0;
+                long c = 0;
+                long h = 0;
+                long cf = 0;
+                long hf = 0;
+
+                for (Tribe t : tribeList) {
+                    float foo = t.getOverachiever().getFitness();
+                    if (best < foo) {
+                        best = foo;
+                    }
+                    f += t.getFitness();
+
+                    c += t.getcross();
+                    h += t.gethills();
+
+                    cf += t.getFails();
+                    hf += t.gethillFails();
+                    i++;
+                }
+
+                allhills.setText("Total Hillclimbs: " + h);
+                allcross.setText("Total Crossover: " + c);
+                allhillFails.setText("Total Hillclimb Fails: " + hf);
+                allFails.setText("Total Crossover Fails: " + cf);
+                overallfitness.setText("Overall Fitness: " + f / i);
+                bestbestfitness.setText("Best Fitness: " + best);
+            }
+
             return;
         }
 
-        mainTab.getSelectedIndex();
         switch (e.getActionCommand()) {
 
             // Animate Crature
-            case "Animate On":
+            case "Animate Off":
                 if (!graphicsPanel.animating()) {
-                    animate.setText("Animator On");
+                    animate.setText("Animator Off");
                     graphicsPanel.startAnimator();
                 }
                 else {
-                    animate.setText("Animator Off");
+                    animate.setText("Animator On");
                     graphicsPanel.stopAnimator();
                 }
                 break;
@@ -240,6 +277,18 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                     pause.setText("Pause");
                 }
 
+                getBest.setEnabled(paused);
+                reset.setEnabled(paused);
+                animate.setEnabled(paused);
+                scroll.setEnabled(paused);
+                statsPanel.setEnabled(paused);
+                loadPopulation.setEnabled(paused);
+                loadFile.setEnabled(paused);
+                writePopulation.setEnabled(paused);
+                writeFile.setEnabled(paused);
+                tribes.setEnabled(paused);
+                slider.setEnabled(paused);
+                nextGeneration.setEnabled(paused);
                 break;
 
             // Write the currently selected genome to use selected file.
@@ -283,6 +332,8 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
 
             case "Change Tribe":
                 currentTribe = tribeList.get(tribes.getSelectedIndex());
+                totalGenerations = currentTribe.getGenerations();
+                generations.setText("Total Generations: " + totalGenerations);
                 if (hopper != null) {
                     try {
                         changeHopper(new Hopper(currentTribe.getHopper(0)));
@@ -298,16 +349,15 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                 break;
         }
 
-        // if pause unpause the next generation button
-        nextGeneration.setEnabled(paused);
     }
 
     @Override
     public void stateChanged(ChangeEvent e) {
-        if(e.getSource().equals(mainTab)){
+        if (e.getSource().equals(mainTab)) {
             if (mainTab.getSelectedIndex() == 1) {
                 populateTree();
             }
+
         }
 
         if (e.getSource().equals(slider)) {
@@ -326,46 +376,39 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private String time() {
         milistime = System.currentTimeMillis() - startmilis + waittime;
         populationMergeTime = milistime;
-        
+
         long elapsedSecs = milistime / 1000;
         long elapsedMins = elapsedSecs / 60;
         long hours = elapsedMins / 60;
         long mins = elapsedMins % 60;
         long secs = elapsedSecs % 60;
-        
-        if(populationMergeTime > CROSS_OVER_WAIT){
-            populationMergeTime = 0;
-            for(int i = 0; i < Log.NUMB_CORES/2; i++){
-                if(notcrossed.size() < 1){
-                    notcrossed.addAll(crossed);
-                }
-                
-                Tribe first = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
-                notcrossed.remove(first);
-                crossed.add(first);
-                
-                Tribe second = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
-                notcrossed.remove(second);
-                crossed.add(second);
-                
-                Population p1 = first.getPopulation();
-                Population p2 = second.getPopulation();
-                
-                first.interrupt();
-                second.interrupt();
-                
-                Population.interbreed(p1, p2);
-                
-                first.interrupt();
-                second.interrupt();
-            }
-            
-        }
-        
-        String h = hours > 9 ? hours + "": ("0" + hours);
-        String m = mins > 9 ? mins + "": ("0" + mins);
-        String s = secs > 9 ? secs + "": ("0" + secs);
-        
+
+//        if(populationMergeTime > CROSS_OVER_WAIT || true){
+//            populationMergeTime = 0;
+//            for(int i = 0; i < Log.NUMB_CORES/2; i++){
+//                if(notcrossed.size() < 1){
+//                    notcrossed.addAll(crossed);
+//                }
+//                
+//                Tribe first = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
+//                notcrossed.remove(first);
+//                crossed.add(first);
+//                
+//                Tribe second = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
+//                notcrossed.remove(second);
+//                crossed.add(second);
+//                
+//                Population p1 = first.getPopulation();
+//                Population p2 = second.getPopulation();
+//                
+//                Population.interbreed(p1, p2);
+//            }
+//            
+//        }
+        String h = hours > 9 ? hours + "" : ("0" + hours);
+        String m = mins > 9 ? mins + "" : ("0" + mins);
+        String s = secs > 9 ? secs + "" : ("0" + secs);
+
         return h + ":" + m + ":" + s;
     }
 
@@ -384,7 +427,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
 
         root.removeAllChildren();
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        
+
         model.reload();
 
         for (int i = 5; i < str.length; i++) {
@@ -435,13 +478,13 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
      * Initializes and setup the GUI
      */
     private void init() {
-        
+
         try {
             UIManager.setLookAndFeel(UIManager.getCrossPlatformLookAndFeelClassName());
         } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
             Log.error(ex.toString());
         }
-        
+
         // Setup JFrame
         size = new Dimension(WIDTH + 8, HEIGHT + 50);
         setSize(size);
@@ -451,7 +494,6 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         setPreferredSize(size);
         setResizable(false);
         setLayout(new BoxLayout(getContentPane(), BoxLayout.Y_AXIS));
-        
 
         // Used to set specification for closing the window
         addWindowListener(new WindowAdapter() {
@@ -491,16 +533,10 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         statsPanel.setBackground(BACKGROUND_COLOR);
         statsPanel.setLayout(new BoxLayout(statsPanel, BoxLayout.Y_AXIS));
 
-        totalHillclimbs = new JLabel("Total Hill Climb Generations: 0");
-        totalHillclimbs.setForeground(FONTCOLOR);
-        totalBreed = new JLabel("Total Breed Generations: 0");
-        totalBreed.setForeground(FONTCOLOR);
-        bestFitness = new JLabel("Best Fitness: 0");
-        bestFitness.setForeground(FONTCOLOR);
+        bestbestfitness = new JLabel("Best Fitness: 0");
+        bestbestfitness.setForeground(FONTCOLOR);
 
-        statsPanel.add(totalHillclimbs);
-        statsPanel.add(totalBreed);
-        statsPanel.add(bestFitness);
+        statsPanel.add(bestbestfitness);
 
         ///////////////////////////////////////////////////////////////////////////////////////////////////////
         size = new Dimension(WIDTH - graphicsPanel.getWidth(), HEIGHT);
@@ -534,20 +570,20 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         pause = new Button(size, "Pause");
         pause.setText("Start");
 
-        animate = new Button(size, "Animate On");
-        
+        animate = new Button(size, "Animate Off");
+
         nextGeneration = new Button(size, "Next Generation");
-        
+
         writeFile = new Button(size, "Write Genome");
-        
+
         loadFile = new Button(size, "Load Genome");
-        
+
         writePopulation = new Button(size, "Write Population");
-        
+
         loadPopulation = new Button(size, "Load Population");
-        
+
         getBest = new Button(size, "Overachiever");
-        
+
         reset = new Button(size, "Reset");
         //////////////////////////////////////////////////////////
 
@@ -620,13 +656,33 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         ///////////////////////////////////////////////
         tribeFitness = new JLabel("Tribe Fitness: 0.00000");
         tribeFitness.setForeground(FONTCOLOR);
-        
-        
+
         currentFitness = new JLabel("Creature Fitness: 0.00000");
         currentFitness.setForeground(FONTCOLOR);
 
         bestFitness = new JLabel("Best Fitness: 0.00000");
         bestFitness.setForeground(FONTCOLOR);
+
+        allFails = new JLabel("Dead Children: 0");
+        allFails.setForeground(FONTCOLOR);
+
+        allhillFails = new JLabel("Failed Climbs: 0");
+        allhillFails.setForeground(FONTCOLOR);
+
+        allcross = new JLabel("Children Born: 0");
+        allcross.setForeground(FONTCOLOR);
+
+        allhills = new JLabel("All Climbs: 0");
+        allhills.setForeground(FONTCOLOR);
+
+        overallfitness = new JLabel("Overall Fitness: 0");
+        overallfitness.setForeground(FONTCOLOR);
+
+        statsPanel.add(allcross);
+        statsPanel.add(allhills);
+        statsPanel.add(overallfitness);
+        statsPanel.add(allFails);
+        statsPanel.add(allhillFails);
 
         // Add things to the buttons panel
         buttonsPanel.add(tribeFitness);
@@ -674,10 +730,10 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         timer = new Timer(1000, this);
         keyTimer = new Timer(1000 / 30, this);
 
-        for(Tribe t: tribeList){
+        for (Tribe t : tribeList) {
             notcrossed.add(t);
         }
-        
+
         graphicsPanel.requestFocus();
         KeyBinds keyBinds = new KeyBinds((JComponent) getContentPane(), controls);
         keyBinds.addBinding(KeyEvent.VK_T, "Texture");
@@ -685,8 +741,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
 
         timer.start();
         keyTimer.start();
-        
-        
+
     }
 
     /**
@@ -708,10 +763,10 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         else if (controlMap.get("right")) {
             renderer.rotateRight();
         }
-        else if(controlMap.get("space")){
+        else if (controlMap.get("space")) {
             hopper.getPhenotype().resetSimulation();
         }
-        else if(controlMap.get("texture")){
+        else if (controlMap.get("texture")) {
             controlMap.put("texture", false);
             renderer.toggleTextures();
         }
@@ -725,12 +780,13 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
 
     /**
      * Helper class to change the current hopper.
+     *
      * @param hopper the hopper to change to.
      */
     private void changeHopper(Hopper hopper) {
         bestFitnessValue = 0f;
         this.hopper = hopper;
         renderer.setHopper(hopper);
-        mainTab.setTitleAt(1, hopper.getName());
+        mainTab.setTitleAt(1, hopper.getName() + " Age: " + hopper.getAge());
     }
 }

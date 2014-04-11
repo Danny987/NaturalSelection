@@ -5,13 +5,8 @@
  */
 package creature.geeksquad.gui;
 
-import creature.geeksquad.genetics.Population;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import javax.swing.SwingUtilities;
 
 /**
@@ -20,48 +15,51 @@ import javax.swing.SwingUtilities;
 public class Creatures {
 
     //Tribes names used for the different threads.
-
     //main!
     public static void main(String args[]) {
-        Names.loadFiles();
-        
-        Log.initialize();
-        
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                GUI gui;
-                List<Tribe> tribeList = new ArrayList<>();
-                List<String> nameList = new ArrayList<>();
-                List<Future<Population>> future = new ArrayList<>();
+        try {
+            Names.loadFiles();
+            Log.initialize();
+
+            final List<Tribe> tribeList = new ArrayList<>();
+            final List<String> nameList = new ArrayList<>();
+            List<CallMe> populations = new ArrayList<>();
+            
+            for(int i = 0; i < Log.NUMB_CORES; i++){
+                CallMe c = new CallMe();
+                c.start();
                 
-                ExecutorService executor = Executors.newFixedThreadPool(Log.NUMB_CORES);
-                
-                CallMe call = new CallMe();
-                for(int i = 0; i < Log.NUMB_CORES; i++){
-                    future.add(executor.submit(call));
-                }
-                
-                Tribe tribe;
-                int i = 0;
-                for(Future<Population> f: future){
-                    try {
-                        String name = Names.getTribeName();
-                        while(nameList.contains(name)) name = Names.getTribeName();
-                        nameList.add(i++ + ": " + name);
-                        tribe = new Tribe(name, f.get());
-                        tribe.start();
-                        tribeList.add(tribe);
-                    } catch (InterruptedException | ExecutionException ex) {
-                        Log.error(ex.toString());
-                    }
-                }
-                
-                executor.shutdown();
-                
-                gui = new GUI(tribeList, nameList);
-                gui.setVisible(true);
+                populations.add(c);
             }
-        });
+            
+            
+            Tribe tribe;
+            int i = 0;
+            for (CallMe p : populations) {
+                String name = Names.getTribeName();
+                while (nameList.contains(name)) {
+                    name = Names.getTribeName();
+                }
+                nameList.add(i++ + ": " + name);
+                tribe = new Tribe(name, p.getPopulation());
+                tribe.start();
+                tribeList.add(tribe);
+            }
+
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    GUI gui;
+
+                    gui = new GUI(tribeList, nameList);
+                    gui.setVisible(true);
+                }
+            });
+        } catch (Exception ex) {
+            Log.error(ex.toString());
+            Log.popup(null, "Something went terribly wrong.");
+            System.exit(0);
+        }
+
     }
 }
