@@ -172,11 +172,13 @@ public class BrainTester {
 		
 		//send hopper to hill climbing
 		//returns a hill climbed hopper
-		for(int i = 0; i < 500; i++){
+		for(int i = 0; i < 999; i++){
 			System.out.println(i);
 			for(int j = 0; j < population.size(); j++){
 				try {
+
 					hopper = brain.performHillClimbing(population.get(j));
+					//Genotype.printChromosome(hopper.getChromosome());
 				} catch (IllegalArgumentException | GeneticsException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

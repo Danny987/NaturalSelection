@@ -85,7 +85,7 @@ public class ChangeSingleAllele extends Strategy{
 		String climbType = climbTypeChooser(hopperToClimb, geneIndex);
 
 		if(climbType == null){
-			System.out.println("Sorry! Can't hill climb this type of allele yet!");
+			return hopperToClimb;
 		}
 		else if(climbType.equals("FLOAT") || climbType.equals("ORIENTATION")){
 			hopperToClimb = climbFloatAllele(hopperToClimb, geneIndex);
@@ -122,7 +122,6 @@ public class ChangeSingleAllele extends Strategy{
 	 */
 	private Hopper climbFloatAllele(Hopper hopper, int geneIndex)throws GeneticsException,
 	IllegalArgumentException{
-
 		/**
 		 * Clone the original hopper and perform the hill climbing
 		 * on the clone. If anything goes wrong, we can just return the

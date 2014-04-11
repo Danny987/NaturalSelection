@@ -64,6 +64,7 @@ public abstract class Strategy {
 		switch (trait) {
 		case HEIGHT: case WIDTH: case LENGTH:
 			return "FLOAT";
+			//return "INDEX";
 
 		case INDEX_TO_PARENT:
 			return "INDEX";
