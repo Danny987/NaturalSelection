@@ -69,10 +69,6 @@ public class Hopper implements Comparable<Hopper> {
 			this.phenotype = null;
 			throw ex;
 		}
-		if (genotype == null || phenotype == null) {
-			System.err.println(
-					"Error: Hopper genotype/phenotype instantiation was null.");
-		}
 		if (name != null) {
 			this.name = name;
 		} else {

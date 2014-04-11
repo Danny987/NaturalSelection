@@ -101,32 +101,41 @@ public class Population extends ArrayList<Hopper> {
 		synchronized (pop1) {
 			pop1.moveBreeders();
 			breeders1 = new ArrayList<Hopper>(pop1.breeders);
-			for (Hopper h : breeders1) {
-				h.increaseBreedCount();
+			int size1 = breeders1.size();
+			for (int i = 0; i < size1; i++) {
+				Hopper h = breeders1.get(i);
+				if (h != null) {
+					h.increaseBreedCount();
+				}
 			}
-			pop1.flushBreeders();
 		}
-		
-		int size = breeders1.size();
+		pop1.flushBreeders();
 				
 		synchronized (pop2) {
 			// Passing the size of breeders1 as an argument guarantees that
 			// both collections have the same number of Hoppers.
-			pop2.moveBreeders(size);
+			pop2.moveBreeders();
 			breeders2 = new ArrayList<Hopper>(pop2.breeders);
-			for (Hopper h : breeders2) {
-				h.increaseBreedCount();
+			int size2 = breeders2.size();
+			for (int i = 0; i < size2; i++) {
+				Hopper h = breeders2.get(i);
+				if (h != null) {
+					h.increaseBreedCount();
+				}
 			}
-			pop2.flushBreeders();
 		}
+		pop2.flushBreeders();
+		
 		Collections.shuffle(breeders1);
 		Collections.shuffle(breeders2);
+		int size1 = breeders1.size();
+		int size2 = breeders2.size();
 		
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i < size1 && i < size2; i++) {
 			Hopper parentA = breeders1.get(i);
 			Hopper parentB = breeders2.get(i);
 
-			// Determine which Population the offspring
+			// Determine to which Population to send the offspring.
 			try {
 				Hopper[] offspring = Crossover.crossover(
 						parentA, parentB);
@@ -162,7 +171,6 @@ public class Population extends ArrayList<Hopper> {
 				} else {
 					pop1.add(h);
 				}
-				pop1.cull();
 			}
 		}
 		synchronized (pop2) {
@@ -175,7 +183,6 @@ public class Population extends ArrayList<Hopper> {
 				} else {
 					pop2.add(h);
 				}
-				pop2.cull();
 			}
 		}
 	}
@@ -219,32 +226,34 @@ public class Population extends ArrayList<Hopper> {
 		ArrayList<Hopper> children = new ArrayList<Hopper>();
 		// In the interest of preserving diversity, shuffle the breeders
 		// list so the Hoppers within it match up semi-randomly.
-		Collections.shuffle(breeders);
-		
-		while (breeders.size() > 1) {
-			// Get the parents and return them to the general population.
-			Hopper parentA = breeders.get(0);
-			breeders.remove(0);
-			add(parentA);
-			Hopper parentB = breeders.get(0);
-			breeders.remove(0);
-			add(parentB);
+		synchronized (breeders) {
+			Collections.shuffle(breeders);
 			
-			try {
-				Hopper[] offspring = Crossover.crossover(
-						parentA, parentB);
-				if (offspring != null) {
-					children.add(offspring[0]);
-					children.add(offspring[1]);
-				}
-			} catch (IllegalArgumentException | GeneticsException ex) {
-				currentRejectedCreatures++;
-				lifetimeRejectedCreatures++;
+			while (breeders.size() > 1) {
+				// Get the parents and return them to the general population.
+				Hopper parentA = breeders.get(0);
+				breeders.remove(0);
+				add(parentA);
+				Hopper parentB = breeders.get(0);
+				breeders.remove(0);
+				add(parentB);
+				
+				try {
+					Hopper[] offspring = Crossover.crossover(
+							parentA, parentB);
+					if (offspring != null) {
+						children.add(offspring[0]);
+						children.add(offspring[1]);
+					}
+				} catch (IllegalArgumentException | GeneticsException ex) {
+					currentRejectedCreatures++;
+					lifetimeRejectedCreatures++;
 //				System.out.println(
 //						"Breed offspring invalid. Continuing.");
-			} finally {
-				parentA.increaseBreedCount();
-				parentB.increaseBreedCount();
+				} finally {
+					parentA.increaseBreedCount();
+					parentB.increaseBreedCount();
+				}
 			}
 		}
 		// Clear out any remaining breeders.
@@ -324,8 +333,9 @@ public class Population extends ArrayList<Hopper> {
 	 *            of over.
 	 */
 	private void moveBreeders(float over, float...under) {
-		sort();
 		synchronized (this) {
+			sort();
+			// Overperformers.
 			int size = size();
 			int stop = (int) (size - (over * size));
 			if (stop >= size) {
@@ -333,17 +343,22 @@ public class Population extends ArrayList<Hopper> {
 			}
 			
 			for (int i = size - 1; i >= stop && i > 0; i--) {
-				breeders.add(remove(i));
+				synchronized (breeders) {
+					breeders.add(remove(i));
+				}
 			}
+			// Underperformers.
 			int count = 0;
 			if (under.length > 0) {
 				count = (int) (size * under[0]);
 			} else {
 				count = (int) (size * (over / 2));
 			}
-			for (int i = 0; i < count && i < size(); ) {
+			for (int i = 0; i < count && i < size(); i++) {
 				int index = Helper.RANDOM.nextInt(size());
-				breeders.add(remove(index));
+				synchronized (breeders) {
+					breeders.add(remove(index));
+				}
 			}
 		}
 	}
@@ -355,7 +370,9 @@ public class Population extends ArrayList<Hopper> {
 		synchronized (this) {
 			addAll(breeders);
 		}
-		breeders.clear();
+		synchronized (breeders) {
+			breeders.clear();
+		}
 	}
 	
 	/**
@@ -628,7 +645,7 @@ public class Population extends ArrayList<Hopper> {
 	 * Population only if their Genotypes, phenotypes and bodies are valid.
 	 * 
 	 * @param collection Collection of Hoppers to add.
-	 * @return True if at least one creature was added, false if not.
+	 * @return True if at all creatures were added, false if not.
 	 */
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -636,7 +653,7 @@ public class Population extends ArrayList<Hopper> {
 		List<Hopper> hoppers = new ArrayList<Hopper>();
 		// If an object in the collection is a Hopper, add it to the list.
 		for (Object o : collection) {
-			if (o != null && o instanceof Hopper) {
+			if (o != null && o.getClass() == this.getClass()) {
 				Hopper h = (Hopper) o;
 				if (h != null && h.getGenotype() != null
 						&& h.getPhenotype() != null && h.getBody() != null) {
@@ -645,9 +662,15 @@ public class Population extends ArrayList<Hopper> {
 			}
 		}
 		
+		int count = 0;
 		synchronized (this) {
-			return super.addAll(hoppers);
+			for (Hopper h : hoppers) {
+				if (add(h)) {
+					count++;
+				}
+			}
 		}
+		return count == hoppers.size();
 	}
 	
 	/**
@@ -712,8 +735,9 @@ public class Population extends ArrayList<Hopper> {
 	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
-		Population pop = new Population(10);
-		System.out.println(pop);
+		Population pop1 = new Population(100);
+		Population pop2 = new Population(100);
+		interbreed(pop1, pop2);
 	}
 	
 }
