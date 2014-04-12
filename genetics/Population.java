@@ -389,9 +389,8 @@ public class Population extends Vector<Hopper> {
 		for (ListIterator<Hopper> i = listIterator(); i.hasNext()
 				&& size() > minSize; ) {
 			Hopper h1 = i.next();
-			for (ListIterator<Hopper> j = listIterator(); j.hasNext()
-					&& size() > minSize; ) {
-				Hopper h2 = j.next();
+			for (int j = 0; j < size(); j++) {
+				Hopper h2 = get(j);
 				if (h1 != h2 && Genotype.tooSimilar(h1.getGenotype(),
 						h2.getGenotype())) {
 					trash.add(h2);
