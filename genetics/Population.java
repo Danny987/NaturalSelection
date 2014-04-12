@@ -196,12 +196,18 @@ public class Population extends Vector<Hopper> {
 		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
 			seedNewRandoms();
 		}
-		// Select hill climbing or breeding this generation.
-		if (Helper.choose() > 0) {
-			hillClimb();
+		
+		// Check for excess duplicates and call diversify as needed.
+		if (generations % Helper.SIMILAR_CHECK_INTERVAL == 0) {
+			diversify();
 		} else {
-			moveBreeders();
-			breed();
+			// Select hill climbing or breeding this generation.
+			if (Helper.choose() > 0) {
+				hillClimb();
+			} else {
+				moveBreeders();
+				breed();
+			}
 		}
 		
 		cull();
@@ -368,6 +374,42 @@ public class Population extends Vector<Hopper> {
 		sort();
 		if (size() > Helper.POPULATION_SIZE) {
 			removeRange(0, size() - Helper.POPULATION_SIZE);
+		}
+	}
+	
+	/**
+	 * Diversify the population by removing Hoppers that are too similar and
+	 * replacing them with new, randomly generated Hoppers.
+	 * 
+	 * Note: this is extremely slow, so use it sparingly.
+	 */
+	public void diversify() {
+		int count = 0;
+		int minSize = (int) (size() * Helper.BREED_PERCENTAGE);
+		for (ListIterator<Hopper> i = listIterator(); i.hasNext()
+				&& size() > minSize; ) {
+			Hopper h1 = i.next();
+			for (ListIterator<Hopper> j = listIterator(); j.hasNext()
+					&& size() > minSize; ) {
+				Hopper h2 = j.next();
+				if (h1 != h2 && Genotype.tooSimilar(h1.getGenotype(),
+						h2.getGenotype())) {
+					count++;
+					j.remove();
+					Genotype.nerfWeights(h1.getGenotype());
+				}
+			}
+		}
+		while (count >= 0) {
+			try {
+				Hopper h = new Hopper();
+				if (h != null) {
+					add(h);
+					count--;
+				}
+			} catch (GeneticsException | IllegalArgumentException ex) {
+				failedRandomHoppers++;
+			}
 		}
 	}
 	
