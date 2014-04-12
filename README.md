@@ -1,4 +1,0 @@
-NaturalSelection
-================
-
-Genetic Algorithm Project
