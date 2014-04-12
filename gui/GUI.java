@@ -229,15 +229,17 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
 
                 for (Tribe t : tribeList) {
                     Hopper overachiever = t.getOverachiever();
-                    float foo = overachiever.getFitness();
+                    if (overachiever != null) {
+                        float foo = overachiever.getFitness();
 
-                    if (bestHopper == null) {
-                        bestHopper = overachiever;
-                    }
+                        if (bestHopper == null) {
+                            bestHopper = overachiever;
+                        }
 
-                    if (best < foo) {
-                        bestHopper = overachiever;
-                        best = foo;
+                        if (best < foo) {
+                            bestHopper = overachiever;
+                            best = foo;
+                        }
                     }
                     f += t.getFitness();
 
@@ -355,7 +357,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                     try {
                         changeHopper(new Hopper(currentTribe.getHopper(0)));
                         slider.setMaximum(currentTribe.getSize() - 1);
-                        slider.setMajorTickSpacing(slider.getMaximum()/5);
+                        slider.setMajorTickSpacing(slider.getMaximum() / 5);
                         slider.setValue(0);
                     } catch (GeneticsException ex) {
                         Log.error(ex.toString(), currentTribe.getName());
@@ -810,8 +812,10 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
      */
     private void changeHopper(Hopper hopper) {
         bestFitnessValue = 0f;
-        this.hopper = hopper;
-        renderer.setHopper(hopper);
-        mainTab.setTitleAt(1, hopper.getName() + " Age: " + hopper.getAge());
+        if (hopper != null) {
+            this.hopper = hopper;
+            renderer.setHopper(hopper);
+            mainTab.setTitleAt(1, hopper.getName() + " Age: " + hopper.getAge());
+        }
     }
 }
