@@ -1,8 +1,11 @@
 package creature.geeksquad.gui;
 
+import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Population;
 import creature.geeksquad.library.Helper;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -33,6 +36,7 @@ public class Tribe extends Thread {
     public void run() {
 
         while (running) {
+            synchronized (this) {
                 // if the thread is interupted pause or unpause
                 if (Thread.interrupted()) {
                     paused = !paused;
@@ -40,8 +44,9 @@ public class Tribe extends Thread {
 
                 // if not paused let them mutate
                 if (!paused) {
-                        nextGeneration();
+                    nextGeneration();
                 }
+            }
         }
     }
 
@@ -57,19 +62,24 @@ public class Tribe extends Thread {
      * @return hopper at index
      */
     public Hopper getHopper(int index) {
-        synchronized(population){
-            return population.get(index);
+        return population.get(index);
+    }
+
+    public Hopper randomHopper() {
+        synchronized (population) {
+            Hopper hooper = null;
+            try {
+                hooper = new Hopper(population.get(Helper.RANDOM.nextInt(population.size() - 1)));
+            } catch (IllegalArgumentException | GeneticsException ex) {
+                Log.error(ex.toString());
+            }
+            
+            return hooper;
         }
     }
 
-    public Hopper randomHopper(){
-        synchronized(population){
-            return population.get(Helper.RANDOM.nextInt(population.size()-1));
-        }
-    }
-    
     public Population getPopulation() {
-            return population;
+        return population;
     }
 
     public void addHopper(Hopper h) {
@@ -94,20 +104,20 @@ public class Tribe extends Thread {
     public float getFitness() {
         return population.getAverageFitness();
     }
-    
-    public long getFails(){
+
+    public long getFails() {
         return population.getLifetimeDeadChildren();
     }
-    
-    public long gethillFails(){
+
+    public long gethillFails() {
         return population.getLifetimeFailedHillClimbs();
     }
-    
-    public long gethills(){
+
+    public long gethills() {
         return population.getLifetimeHillClimbs();
     }
-    
-    public long getcross(){
+
+    public long getcross() {
         return population.getLifetimeOffspring();
     }
 }

@@ -2,7 +2,6 @@ package creature.geeksquad.gui;
 
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
-import creature.geeksquad.genetics.Population;
 import creature.geeksquad.library.Helper;
 import creature.geeksquad.library.KeyBinds;
 import creature.geeksquad.library.PlayerControls;
@@ -411,12 +410,12 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         long mins = elapsedMins % 60;
         long secs = elapsedSecs % 60;
 
-        
-        Tribe t = tribeList.get(Helper.RANDOM.nextInt(tribeList.size()-1));
-        Hopper hooper = t.randomHopper();
-        tribeList.get(Helper.RANDOM.nextInt(tribeList.size()-1)).addHopper(hooper);
+//        Tribe t = tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1));
+//        Hopper hooper = t.randomHopper();
+//        if (hooper != null) {
+//            tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1)).addHopper(hooper);
+//        }
 
-        
         String h = hours > 9 ? hours + "" : ("0" + hours);
         String m = mins > 9 ? mins + "" : ("0" + mins);
         String s = secs > 9 ? secs + "" : ("0" + secs);
