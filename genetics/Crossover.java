@@ -534,6 +534,7 @@ public class Crossover {
 			Allele parentRecessive = parent.get(i).getRecessive();
 			Allele childDominant = child.get(i).getDominant();
 			Allele childRecessive = parent.get(i).getRecessive();
+			
 			if (!childDominant.equals(parentDominant)) {
 				// Weight decreases are substantially larger than increases.
 				if (childFitness > parentFitness) {
@@ -550,6 +551,10 @@ public class Crossover {
 			} else {
 				similar++;
 			}
+		}
+		if (child.size() < 1) {
+			child = null;
+			return;
 		}
 		if (similar / child.size() >= Helper.MAX_SIMILAR_PERCENTAGE) {
 			child = null;

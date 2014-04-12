@@ -260,48 +260,48 @@ public class Genotype {
 		return genotype;
 	}
 	
-//	/**
-//	 * A static method to compare too Genotypes and determine if they're too
-//	 * similar, as determined by the value Helper.MAX_SIMILAR_PERCENTAGE.
-//	 * 
-//	 * @param g1 Genotype 1 to compare.
-//	 * @param g2 Genotype 2 to compare.
-//	 * @return True if g1 and g2 are too similar as determined by the value
-//	 *             Helper.MAX_SIMILAR_PERCENTAGE.
-//	 */
-//	public static boolean tooSimilar(Genotype g1, Genotype g2) {
-//		ArrayList<Gene> c1 = g1.getChromosome();
-//		ArrayList<Gene> c2 = new ArrayList<Gene>(g2.getChromosome());
-//		int similar = 0;
-//		int size1 = c1.size();
-//		int size2 = c2.size();
-//		// Prevent divide by zero.
-//		if (size1 == 0 || size2 == 0) {
-//			return false;
-//		}
-//		int maxSize = (size1 > size2 ? size1 : size2);
-//		for (Gene g : c1) {
-//			if (c2.contains(g)) {
-//				similar++;
-//				c2.remove(g);
-//			}
-//		}
-//		return (similar/maxSize) >= Helper.MAX_SIMILAR_PERCENTAGE;
-//	}
+	/**
+	 * A static method to compare too Genotypes and determine if they're too
+	 * similar, as determined by the value Helper.MAX_SIMILAR_PERCENTAGE.
+	 * 
+	 * @param g1 Genotype 1 to compare.
+	 * @param g2 Genotype 2 to compare.
+	 * @return True if g1 and g2 are too similar as determined by the value
+	 *             Helper.MAX_SIMILAR_PERCENTAGE.
+	 */
+	public static boolean tooSimilar(Genotype g1, Genotype g2) {
+		ArrayList<Gene> c1 = g1.getChromosome();
+		ArrayList<Gene> c2 = g2.getChromosome();
+		int similar = 0;
+		int size1 = c1.size();
+		int size2 = c2.size();
+		// Prevent divide by zero.
+		if (size1 == 0 || size2 == 0) {
+			return false;
+		}
+		int maxSize = (size1 > size2 ? size1 : size2);
+		for (Gene g : c1) {
+			if (c2.contains(g)) {
+				similar++;
+				c2.remove(g);
+			}
+		}
+		return (similar/maxSize) >= Helper.MAX_SIMILAR_PERCENTAGE;
+	}
 	
-//	/**
-//	 * A static method that reduces the weights of ALL Alleles in the passed
-//	 * Genotype to Helper.MIN_WEIGHT.
-//	 * 
-//	 * @param genotype Genotype whose Allele weights should be nerfed.
-//	 */
-//	public static void nerfWeights(Genotype genotype) {
-//		ArrayList<Gene> chromosome = genotype.getChromosome();
-//		for (Gene g : chromosome) {
-//			g.getDominant().setWeight(Helper.MIN_WEIGHT + 0.1f);
-//			g.getRecessive().setWeight(Helper.MIN_WEIGHT);
-//		}
-//	}
+	/**
+	 * A static method that reduces the weights of ALL Alleles in the passed
+	 * Genotype to Helper.MIN_WEIGHT.
+	 * 
+	 * @param genotype Genotype whose Allele weights should be nerfed.
+	 */
+	public static void nerfWeights(Genotype genotype) {
+		ArrayList<Gene> chromosome = genotype.getChromosome();
+		for (Gene g : chromosome) {
+			g.getDominant().setWeight(Helper.MIN_WEIGHT + 0.1f);
+			g.getRecessive().setWeight(Helper.MIN_WEIGHT);
+		}
+	}
 	
 	/**
 	 * Adds a new Block with associated Joint to the end of the Genotype. It

@@ -33,8 +33,8 @@ public class Helper {
 	// Use the top 20% of the Population for breeding each generation. This
 	// mirrors the portion used in the original Karl Sims experiment.
 	public static final float BREED_PERCENTAGE = 0.2f;
-	// Number of errors allowed to accrue during random Genotype generation
-	// before giving up.
+	// Allow up to 50 errors to accrue during random Genotype generation before
+	// giving up.
 	public static final int FAULT_TOLERENCE = 50;
 	// Seed constants.
 	public static final int SEED_MAX_BLOCKS = 12;
@@ -45,7 +45,7 @@ public class Helper {
 	public static final float MIN_WEIGHT = 0.0f;
 	public static final float MEDIAN_WEIGHT = 0.5f;
 	public static final float MAX_WEIGHT = 1.0f;
-	// Amount by which to increase/decrease Allele weights.
+	// Percentage by which to increase/decrease Allele weights.
 	public static final float WEIGHT_STEP_UP = 0.001f;
 	public static final float WEIGHT_STEP_DOWN = 0.01f;
 	// How many generations between seeding of new random Hoppers.
@@ -56,8 +56,8 @@ public class Helper {
 	public static final int PADDING = 0;
 	// Maximum permitted percentage similarity between a child and its parent.
 	public static final float MAX_SIMILAR_PERCENTAGE = 0.8f;
-//	// How often to check the whole Population and eliminate excess duplicates.
-//	public static final float SIMILAR_CHECK_INTERVAL = 50;
+	// How often to check the whole Population and eliminate excess duplicates.
+	public static final float SIMILAR_CHECK_INTERVAL = 50;
 	
 	/**
 	 * Sets the random number generator's seed.
