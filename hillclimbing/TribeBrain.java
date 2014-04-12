@@ -25,7 +25,7 @@ public class TribeBrain {
 	HashMap<Integer,Integer> strategyWeights = new HashMap<Integer,Integer>();
 
 	//number of strategies
-	int numberOfStrategies = 4;
+	int numberOfStrategies = 5;
 	//starting strategy weight
 	int startingWeight = 1;
 
@@ -177,12 +177,12 @@ public class TribeBrain {
 		}
 		else if(strat == 4){ //strategy 4
 			currentStrat = 4;
+			return new RandomHopper(this.mapHandler);
 		}
 		else{ //something went wrong
 			currentStrat = -1;
 			return null;
 		}
-		return null;
 	}
 
 	public void updateStrategyMap(int value){
