@@ -411,27 +411,12 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         long mins = elapsedMins % 60;
         long secs = elapsedSecs % 60;
 
-        if (populationMergeTime > CROSS_OVER_WAIT) {
-            populationMergeTime = 0;
-            if (notcrossed.size() < 2) {
-                notcrossed.addAll(crossed);
-                crossed.clear();
-            }
+        
+        Tribe t = tribeList.get(Helper.RANDOM.nextInt(tribeList.size()-1));
+        Hopper hooper = t.randomHopper();
+        tribeList.get(Helper.RANDOM.nextInt(tribeList.size()-1)).addHopper(hooper);
 
-            Tribe first = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
-            notcrossed.remove(first);
-            crossed.add(first);
-
-            Tribe second = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
-            notcrossed.remove(second);
-            crossed.add(second);
-
-            Population p1 = first.getPopulation();
-            Population p2 = second.getPopulation();
-
-            Population.interbreed(p1, p2);
-
-        }
+        
         String h = hours > 9 ? hours + "" : ("0" + hours);
         String m = mins > 9 ? mins + "" : ("0" + mins);
         String s = secs > 9 ? secs + "" : ("0" + secs);

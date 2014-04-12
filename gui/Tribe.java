@@ -2,6 +2,7 @@ package creature.geeksquad.gui;
 
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Population;
+import creature.geeksquad.library.Helper;
 
 /**
  *
@@ -56,9 +57,17 @@ public class Tribe extends Thread {
      * @return hopper at index
      */
     public Hopper getHopper(int index) {
-        return population.get(index);
+        synchronized(population){
+            return population.get(index);
+        }
     }
 
+    public Hopper randomHopper(){
+        synchronized(population){
+            return population.get(Helper.RANDOM.nextInt(population.size()-1));
+        }
+    }
+    
     public Population getPopulation() {
             return population;
     }
