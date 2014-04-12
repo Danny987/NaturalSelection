@@ -40,7 +40,8 @@ public class Creatures {
                 while (nameList.contains(name)) {
                     name = Names.getTribeName();
                 }
-                nameList.add(i++ + ": " + name);
+                name = i++ +": " + name;
+                nameList.add(name);
                 tribe = new Tribe(name, p.getPopulation());
                 tribe.start();
                 tribeList.add(tribe);
@@ -49,8 +50,8 @@ public class Creatures {
             SwingUtilities.invokeLater(new Runnable() {
                 @Override
                 public void run() {
+                    Thread.currentThread().setPriority(Thread.MAX_PRIORITY);
                     GUI gui;
-
                     gui = new GUI(tribeList, nameList);
                     gui.setVisible(true);
                 }

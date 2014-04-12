@@ -28,7 +28,9 @@ public class Tribe extends Thread {
      * Call things to run hill climbing and cross over.
      */
     public void nextGeneration() {
-        population.update();
+        synchronized (this) {
+            population.update();
+        }
 //        population.hillClimb();
     }
 
@@ -39,6 +41,7 @@ public class Tribe extends Thread {
             synchronized (this) {
                 // if the thread is interupted pause or unpause
                 if (Thread.interrupted()) {
+                    System.out.println(this.getName());
                     paused = !paused;
                 }
 
@@ -73,7 +76,7 @@ public class Tribe extends Thread {
             } catch (IllegalArgumentException | GeneticsException ex) {
                 Log.error(ex.toString());
             }
-            
+
             return hooper;
         }
     }
