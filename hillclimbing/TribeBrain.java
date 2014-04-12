@@ -162,12 +162,9 @@ public class TribeBrain {
 		int strat = pickStrategy();
 
 		
-		//TODO debug
-		return new AddRule(this.mapHandler);
-		
 		//return a strategy object depending on the strategy number
 		//chosen above.
-		/*if(strat == 0){ //create new strategy 0
+		if(strat == 0){ //create new strategy 0
 			currentStrat = 0;
 			return new ChangeSingleAllele(this.mapHandler);
 		}
@@ -190,7 +187,7 @@ public class TribeBrain {
 			currentStrat = -1;
 			return null;
 		}
-		return null;*/
+		return null;
 	}
 
 	public void updateStrategyMap(int value){

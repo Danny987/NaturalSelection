@@ -96,7 +96,7 @@ public class AddRule extends Strategy{
 		}*/
 		if(dofToAddRules == 1){
 			//move to rule type A
-			while(geneIndex < geneList.size()){
+			while(geneIndex < geneList.size() - 1){
 				if(geneList.get(geneIndex).getTrait() != Allele.Trait.RULE_INPUT_A
 						&& geneList.get(geneIndex).getTrait() != Allele.Trait.LENGTH){
 					geneIndex++;
@@ -108,7 +108,7 @@ public class AddRule extends Strategy{
 		}
 		else if(dofToAddRules == 2){
 			//move to dof marker
-			while(geneIndex < geneList.size()){
+			while(geneIndex < geneList.size() - 1){
 				if(geneList.get(geneIndex).getTrait() != Allele.Trait.DOF_MARKER
 						&& geneList.get(geneIndex).getTrait() != Allele.Trait.LENGTH){
 					geneIndex++;
@@ -119,8 +119,8 @@ public class AddRule extends Strategy{
 			}
 			//should now be at DoF marker, move geneIndex forward by 1
 			//so that it is at the location that the rules need to be added in
-			geneIndex++;
-			
+			if(geneList.get(geneIndex).getTrait() == Allele.Trait.DOF_MARKER) geneIndex++;
+
 		}
 
 		int boxIndex = getBoxIndex(hopperToClimb, geneIndex);

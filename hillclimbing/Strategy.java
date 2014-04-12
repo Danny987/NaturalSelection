@@ -30,7 +30,7 @@ import creature.geeksquad.library.*;
  */
 public abstract class Strategy {
 
-	boolean mapsOn = false;
+	boolean mapsOn = true;
 
 	Genotype currentGenotype;
 	Genotype newGenotype;
@@ -724,7 +724,7 @@ public abstract class Strategy {
 	 */
 	public int getBoxIndex(Hopper hopper, int geneIndex){
 		int blockCount = 0;
-		for(int i = 0; i <= geneIndex; i++){
+		for(int i = 0; i < geneIndex; i++){
 			if(getDomAllele(hopper, i).getTrait().equals(Allele.Trait.LENGTH))
 				blockCount++;
 		}
