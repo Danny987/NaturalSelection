@@ -33,8 +33,8 @@ public class Helper {
 	// Use the top 20% of the Population for breeding each generation. This
 	// mirrors the portion used in the original Karl Sims experiment.
 	public static final float BREED_PERCENTAGE = 0.2f;
-	// Allow up to 50 errors to accrue during random Genotype generation before
-	// giving up.
+	// Number of errors allowed to accrue during random Genotype generation
+	// before giving up.
 	public static final int FAULT_TOLERENCE = 50;
 	// Seed constants.
 	public static final int SEED_MAX_BLOCKS = 12;

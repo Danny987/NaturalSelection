@@ -557,57 +557,57 @@ public class Population extends Vector<Hopper> {
 		return failedRandomHoppers;
 	}
 	
-	/**
-	 * Override of add - adds a copy of the requested Hopper only if that
-	 * Hopper is valid (has a valid Genotype, phenotype, and body). Since this
-	 * always adds the Hopper to the end of the list, it doesn't need to be
-	 * synchronized.
-	 * 
-	 * @param hopper Hopper to add to the Population.
-	 * @return True if add succeeded, else false.
-	 */
-	@Override
-	public boolean add(Hopper hopper) {
-		// Short-circuits if hopper is null.
-		if (hopper == null || hopper.getGenotype() == null
-				|| hopper.getPhenotype() == null) {
-			return false;
-		}
-		
-		try {
-			return super.add(new Hopper(hopper));
-		} catch (IllegalArgumentException | GeneticsException e) {
-//			Log.error("Adding Hopper to Population failed.");
-//			System.out.println("Adding Hopper to Population failed.");
-			return false;
-		}
-	}
-	
-	/**
-	 * Override of add by index - adds a copy of the requested Hopper only if
-	 * that Hopper is valid (has a valid Genotype, phenotype, and body). Since
-	 * this always inserts the Hopper into the middle of the collection, it
-	 * does need to be synchronized.
-	 * 
-	 * @param index Index at which to insert the Hopper.
-	 * @param hopper Hopper to add to the Population.
-	 */
-	@Override
-	public void add(int index, Hopper hopper) {
-		// Short-circuits if hopper is null.
-		if (hopper == null || hopper.getGenotype() == null
-				|| hopper.getPhenotype() == null) {
-			return;
-		}
-		
-		try {
-			super.add(index, new Hopper(hopper));
-		} catch (IllegalArgumentException | GeneticsException e) {
-//			Log.error("Adding Hopper to Population failed.");
-//			System.out.println("Adding Hopper to Population failed.");
-			return;
-		}
-	}
+//	/**
+//	 * Override of add - adds a copy of the requested Hopper only if that
+//	 * Hopper is valid (has a valid Genotype, phenotype, and body). Since this
+//	 * always adds the Hopper to the end of the list, it doesn't need to be
+//	 * synchronized.
+//	 * 
+//	 * @param hopper Hopper to add to the Population.
+//	 * @return True if add succeeded, else false.
+//	 */
+//	@Override
+//	public boolean add(Hopper hopper) {
+//		// Short-circuits if hopper is null.
+//		if (hopper == null || hopper.getGenotype() == null
+//				|| hopper.getPhenotype() == null) {
+//			return false;
+//		}
+//		
+//		try {
+//			return super.add(new Hopper(hopper));
+//		} catch (IllegalArgumentException | GeneticsException e) {
+////			Log.error("Adding Hopper to Population failed.");
+////			System.out.println("Adding Hopper to Population failed.");
+//			return false;
+//		}
+//	}
+//	
+//	/**
+//	 * Override of add by index - adds a copy of the requested Hopper only if
+//	 * that Hopper is valid (has a valid Genotype, phenotype, and body). Since
+//	 * this always inserts the Hopper into the middle of the collection, it
+//	 * does need to be synchronized.
+//	 * 
+//	 * @param index Index at which to insert the Hopper.
+//	 * @param hopper Hopper to add to the Population.
+//	 */
+//	@Override
+//	public void add(int index, Hopper hopper) {
+//		// Short-circuits if hopper is null.
+//		if (hopper == null || hopper.getGenotype() == null
+//				|| hopper.getPhenotype() == null) {
+//			return;
+//		}
+//		
+//		try {
+//			super.add(index, new Hopper(hopper));
+//		} catch (IllegalArgumentException | GeneticsException e) {
+////			Log.error("Adding Hopper to Population failed.");
+////			System.out.println("Adding Hopper to Population failed.");
+//			return;
+//		}
+//	}
 	
 	/**
 	 * Override of toString: returns an exportable representation of this
