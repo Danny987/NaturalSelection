@@ -60,9 +60,7 @@ public class Tribe extends Thread {
     }
 
     public Population getPopulation() {
-        synchronized (this) {
             return population;
-        }
     }
 
     public void addHopper(Hopper h) {
