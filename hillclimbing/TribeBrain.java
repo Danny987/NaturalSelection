@@ -25,7 +25,7 @@ public class TribeBrain {
 	HashMap<Integer,Integer> strategyWeights = new HashMap<Integer,Integer>();
 
 	//number of strategies
-	int numberOfStrategies = 5;
+	int numberOfStrategies = 4;
 	//starting strategy weight
 	int startingWeight = 1;
 
