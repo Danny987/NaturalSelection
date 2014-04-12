@@ -66,6 +66,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
 
     private Tribe currentTribe;                        //currently selected tribe
     private Hopper hopper = null;                      //currently selected hopper
+    private Hopper bestHopper = null;
 
     //Maintabs
     private JTabbedPane mainTab; // contains other tabs
@@ -107,6 +108,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private Button loadPopulation;  // load saved population
     private Button getBest;         // get the current populations overachiever
     private Button reset;           // reset the current creatures simulation
+    private Button worldChampion;
 
     //Misc Components
     private Slider slider;               //JSlider used to select hopper in the current population
@@ -177,23 +179,24 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource().equals(keyTimer)) {
-            if (hopper != null && graphicsPanel.animating()) {
+            if (paused) {
+                if (hopper != null && graphicsPanel.animating()) {
 
-                float hf = hopper.getPhenotype().advanceSimulation();
-                bestFitnessValue = hf > bestFitnessValue ? hf : bestFitnessValue;
+                    float hf = hopper.getPhenotype().advanceSimulation();
+                    bestFitnessValue = hf > bestFitnessValue ? hf : bestFitnessValue;
 
-                String b = String.format("%.5f", bestFitnessValue);
-                String c = String.format("%.5f", hf);
-                bestFitness.setText("Best Fitness: " + b);
-                currentFitness.setText("Current Fitness: " + c);
+                    String b = String.format("%.5f", bestFitnessValue);
+                    String c = String.format("%.5f", hf);
+                    bestFitness.setText("Best Fitness: " + b);
+                    currentFitness.setText("Current Fitness: " + c);
+                }
+
+                checkKeys();
             }
-
-            checkKeys();
             return;
         }
 
         if (e.getSource().equals(timer)) {
-            tribeFitness.setText("Tribe Fitness: " + String.format("%.5f", currentTribe.getFitness()));
 
             if (!paused) {
                 time.setText(" Time: " + time());
@@ -213,7 +216,9 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                 startmilis = System.currentTimeMillis();
             }
 
-            if (mainTab.getSelectedIndex() == 2) {
+            if (paused) {
+                tribeFitness.setText("Tribe Fitness: " + String.format("%.5f", currentTribe.getFitness()));
+
                 float best = 0;
                 float f = 0;
                 int i = 0;
@@ -223,8 +228,15 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                 long hf = 0;
 
                 for (Tribe t : tribeList) {
-                    float foo = t.getOverachiever().getFitness();
+                    Hopper overachiever = t.getOverachiever();
+                    float foo = overachiever.getFitness();
+
+                    if (bestHopper == null) {
+                        bestHopper = overachiever;
+                    }
+
                     if (best < foo) {
+                        bestHopper = overachiever;
                         best = foo;
                     }
                     f += t.getFitness();
@@ -244,7 +256,6 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                 overallfitness.setText("Overall Fitness: " + f / i);
                 bestbestfitness.setText("Best Fitness: " + best);
             }
-
             return;
         }
 
@@ -277,6 +288,12 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                     pause.setText("Pause");
                 }
 
+                if (graphicsPanel.animating()) {
+                    animate.setText("Animator On");
+                    graphicsPanel.stopAnimator();
+                }
+
+                worldChampion.setEnabled(paused);
                 getBest.setEnabled(paused);
                 reset.setEnabled(paused);
                 animate.setEnabled(paused);
@@ -338,6 +355,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                     try {
                         changeHopper(new Hopper(currentTribe.getHopper(0)));
                         slider.setMaximum(currentTribe.getSize() - 1);
+                        slider.setMajorTickSpacing(slider.getMaximum()/5);
                         slider.setValue(0);
                     } catch (GeneticsException ex) {
                         Log.error(ex.toString(), currentTribe.getName());
@@ -346,6 +364,14 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                 break;
             case "Reset":
                 hopper.getPhenotype().resetSimulation();
+                break;
+            case "Champion":
+                if (bestHopper != null) {
+                    changeHopper(bestHopper);
+                }
+                break;
+            default:
+                Log.popup(this, "Something went wrong with buttons.");
                 break;
         }
 
@@ -383,28 +409,27 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         long mins = elapsedMins % 60;
         long secs = elapsedSecs % 60;
 
-//        if(populationMergeTime > CROSS_OVER_WAIT || true){
-//            populationMergeTime = 0;
-//            for(int i = 0; i < Log.NUMB_CORES/2; i++){
-//                if(notcrossed.size() < 1){
-//                    notcrossed.addAll(crossed);
-//                }
-//                
-//                Tribe first = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
-//                notcrossed.remove(first);
-//                crossed.add(first);
-//                
-//                Tribe second = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
-//                notcrossed.remove(second);
-//                crossed.add(second);
-//                
-//                Population p1 = first.getPopulation();
-//                Population p2 = second.getPopulation();
-//                
-//                Population.interbreed(p1, p2);
-//            }
-//            
-//        }
+        if (populationMergeTime > CROSS_OVER_WAIT) {
+            populationMergeTime = 0;
+            if (notcrossed.size() < 2) {
+                notcrossed.addAll(crossed);
+                crossed.clear();
+            }
+
+            Tribe first = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
+            notcrossed.remove(first);
+            crossed.add(first);
+
+            Tribe second = notcrossed.get(Helper.RANDOM.nextInt(notcrossed.size()));
+            notcrossed.remove(second);
+            crossed.add(second);
+
+            Population p1 = first.getPopulation();
+            Population p2 = second.getPopulation();
+
+            Population.interbreed(p1, p2);
+
+        }
         String h = hours > 9 ? hours + "" : ("0" + hours);
         String m = mins > 9 ? mins + "" : ("0" + mins);
         String s = secs > 9 ? secs + "" : ("0" + secs);
@@ -585,6 +610,8 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         getBest = new Button(size, "Overachiever");
 
         reset = new Button(size, "Reset");
+
+        worldChampion = new Button(size, "Champion");
         //////////////////////////////////////////////////////////
 
         statsPanel.add(getBest);
@@ -653,6 +680,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         getBest.addActionListener(this);
         reset.addActionListener(this);
         tribes.addActionListener(this);
+        worldChampion.addActionListener(this);
         ///////////////////////////////////////////////
         tribeFitness = new JLabel("Tribe Fitness: 0.00000");
         tribeFitness.setForeground(FONTCOLOR);
@@ -696,10 +724,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         buttonsPanel.add(currentFitness);
         buttonsPanel.add(reset);
         buttonsPanel.add(getBest);
-        buttonsPanel.add(Box.createHorizontalStrut(100));
-        buttonsPanel.add(Box.createHorizontalStrut(100));
-        buttonsPanel.add(Box.createHorizontalStrut(100));
-        buttonsPanel.add(Box.createHorizontalStrut(100));
+        buttonsPanel.add(worldChampion);
 
         buttonsPanel.add(writeFile);
         buttonsPanel.add(loadFile);
