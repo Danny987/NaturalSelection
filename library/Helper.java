@@ -55,7 +55,7 @@ public class Helper {
 	public static final float TIME_STEP = Simulator.DEFAULT_TIME_STEP;
 	public static final int PADDING = 0;
 	// Maximum permitted percentage similarity between a child and its parent.
-	public static final float MAX_SIMILAR_PERCENTAGE = 0.8f;
+	public static final float MAX_SIMILAR_PERCENTAGE = 0.7f;
 	// How often to check the whole Population and eliminate excess duplicates.
 	public static final float SIMILAR_CHECK_INTERVAL = 50;
 	

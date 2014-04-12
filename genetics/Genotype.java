@@ -298,12 +298,8 @@ public class Genotype {
 	public static void nerfWeights(Genotype genotype) {
 		ArrayList<Gene> chromosome = genotype.getChromosome();
 		for (Gene g : chromosome) {
-			Allele[] alleles = g.getAlleles();
-			for (Allele a : alleles) {
-				if (a != null && a.getTrait() != Trait.DOF_MARKER) {
-					a.setWeight(Helper.MIN_WEIGHT);
-				}
-			}
+			g.getDominant().setWeight(Helper.MIN_WEIGHT + 0.1f);
+			g.getRecessive().setWeight(Helper.MIN_WEIGHT);
 		}
 	}
 	

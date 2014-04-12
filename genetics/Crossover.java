@@ -534,7 +534,11 @@ public class Crossover {
 			Allele parentRecessive = parent.get(i).getRecessive();
 			Allele childDominant = child.get(i).getDominant();
 			Allele childRecessive = parent.get(i).getRecessive();
-
+			// In an attempt to curb the dominance of Alleles that breed
+			// generation after generation, all Alleles that enter crossover
+			// have their weights decreased.
+			parentDominant.decreaseWeight();
+			parentRecessive.decreaseWeight();
 			if (!childDominant.equals(parentDominant)) {
 				// Weight decreases are substantially larger than increases.
 				if (childFitness > parentFitness) {

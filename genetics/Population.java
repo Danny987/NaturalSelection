@@ -126,14 +126,18 @@ public class Population extends Vector<Hopper> {
 		ArrayList<Hopper> children1 = new ArrayList<Hopper>();
 		ArrayList<Hopper> children2 = new ArrayList<Hopper>();
 		breeders1 = new ArrayList<Hopper>();
-		for (int i = 0; i < pop1.size() * Helper.BREED_PERCENTAGE; i++) {
-			breeders1.add(pop1.get(pop1.size() - 1));
+		synchronized(pop1) {
+			for (int i = 0; i < pop1.size() * Helper.BREED_PERCENTAGE; i++) {
+				breeders1.add(pop1.get(pop1.size() - 1));
+			}
 		}
 		// Passing the size of breeders1 as an argument guarantees that
 		// both collections have the same number of Hoppers.
 		breeders2 = new ArrayList<Hopper>();
-		for (int i = 0; i < pop2.size() * Helper.BREED_PERCENTAGE; i++) {
-			breeders2.add(pop2.get(pop2.size() - 1));
+		synchronized (pop2) {
+			for (int i = 0; i < pop2.size() * Helper.BREED_PERCENTAGE; i++) {
+				breeders2.add(pop2.get(pop2.size() - 1));
+			}
 		}
 		Collections.shuffle(breeders1);
 		Collections.shuffle(breeders2);
@@ -394,13 +398,16 @@ public class Population extends Vector<Hopper> {
 				if (h1 != h2 && Genotype.tooSimilar(h1.getGenotype(),
 						h2.getGenotype())) {
 					trash.add(h2);
-					Genotype.nerfWeights(h1.getGenotype());
 				}
 			}
 		}
 		// Remove the trash hoppers from the general Population.
 		for (Hopper h : trash) {
 			remove(h);
+		}
+		// Nerf all remaining weights.
+		for (Hopper h : this) {
+			Genotype.nerfWeights(h.getGenotype());
 		}
 		while (size() < Helper.POPULATION_SIZE) {
 			try {
