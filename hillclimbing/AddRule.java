@@ -2,10 +2,8 @@ package creature.geeksquad.hillclimbing;
 
 
 import java.util.ArrayList;
-import java.util.ListIterator;
 
 import creature.geeksquad.genetics.Allele;
-import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
@@ -17,8 +15,14 @@ import creature.phenotype.EnumNeuronInputType;
 import creature.phenotype.EnumOperatorBinary;
 import creature.phenotype.EnumOperatorUnary;
 import creature.phenotype.NeuronInput;
-import creature.phenotype.Rule;
 
+/**
+ * Hill Climbing strategy that adds rules to a genotype.
+ * 
+ * @author Danny Gomez
+ * @group Ramon A. Lovato
+ * @group Marcos Lemus
+ */
 public class AddRule extends Strategy{
 
 	public AddRule(MapHandler mapHandler) {
@@ -38,12 +42,14 @@ public class AddRule extends Strategy{
 			throw e;
 		}
 
-		//go through the genotype and make sure that there are joints
-		//that can accept new rules. Only non-rigid joints can have rules
-		//added to them.
-
+		/**
+		 * go through the genotype and make sure that there are joints
+		 * that can accept new rules. Only non-rigid joints can have rules
+		 * added to them.
+		 */
 		int numOfValidJoints = 0;
 
+		//get all the valid joints. any non-rigid joint is valid.
 		for(int i = 0; i < hopperToClimb.getChromosome().size(); i++){
 			if(getDomAllele(hopperToClimb, i).getTrait().equals(Allele.Trait.JOINT_TYPE)){
 				if(!getDomAllele(hopperToClimb, i).getValue().equals(EnumJointType.RIGID)){
@@ -51,7 +57,6 @@ public class AddRule extends Strategy{
 				}
 			}
 		}
-
 
 		//if there are no valid joints to add rules to, return original hopper
 		if(numOfValidJoints == 0){
@@ -91,9 +96,6 @@ public class AddRule extends Strategy{
 		ArrayList<Gene> geneList = hopperToClimb.getChromosome();
 
 		//move to the correct spot
-		/*for (ListIterator<Gene> i =  geneList.listIterator(); i.hasNext(); ) {
-			Gene g = i.next();
-		}*/
 		if(dofToAddRules == 1){
 			//move to rule type A
 			while(geneIndex < geneList.size() - 1){
@@ -126,7 +128,8 @@ public class AddRule extends Strategy{
 		int boxIndex = getBoxIndex(hopperToClimb, geneIndex);
 
 
-		//geneIndex is now at the location to add rules in
+		//geneIndex is now at the correct position.
+		//begin adding rules.
 		int rulesLength = Helper.RANDOM.nextInt(Helper.SEED_MAX_CONSTANT+1);
 		for(int k = 0; k < rulesLength; k++){
 			Allele allele1;
@@ -232,14 +235,16 @@ public class AddRule extends Strategy{
 			geneList.add(geneIndex, new Gene(allele1, allele2));
 		}
 
+
+		//verify that the hopper is still valid
 		Hopper temp = null;
 		Genotype genotype = null;
 		try{
 			genotype = new Genotype(geneList);
 			temp = new Hopper(genotype);
-			return temp;
+			return temp; //new hopper is valid
 		}catch (IllegalArgumentException | GeneticsException e) {
-			return hopper;
+			return hopper; //hopper was invalid, return original
 		}
 	}
 }

@@ -7,25 +7,19 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import creature.geeksquad.genetics.Allele;
-import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
-import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.phenotype.EnumJointSite;
-import creature.phenotype.EnumOperatorBinary;
-import creature.phenotype.EnumOperatorUnary;
-import creature.phenotype.NeuronInput;
-import creature.phenotype.Rule;
+
 
 /**
+ * Hill Climbing strategy that targets a single allele and
+ * changes its value or trait.
+ * 
  * @author Danny Gomez
- * 
- * This strategy performs a hill climb on a single allele at a time.
- * 
- * A dominant allele is chosen, and a climb is performed on it depending
- * on the type of allele.
- *
+ * @group Ramon A. Lovato
+ * @group Marcos Lemus
  */
 public class ChangeSingleAllele extends Strategy{
 
@@ -241,7 +235,6 @@ public class ChangeSingleAllele extends Strategy{
 		
 		Allele alleleToClimb = geneList.get(geneIndex).getDominant();
 		
-		
 		//get the joint site from the cloned hopper
 		EnumJointSite clonedValue = (EnumJointSite)alleleToClimb.getValue();
 
@@ -359,25 +352,4 @@ public class ChangeSingleAllele extends Strategy{
 		//pick an allele index from the map
 		return 0;
 	}
-
-	/*
-	 *  EMPTY, // E (empty Allele) 
-		done LENGTH, // L (length) - float
-		done WIDTH, // W (width) - float
-		done HEIGHT, // H (height) - float
-		INDEX_TO_PARENT, // I (index to parent) - int
-		JOINT_TYPE, // T (joint Type)
-		done JOINT_ORIENTATION, // O (joint orientation)
-		done JOINT_SITE_ON_PARENT, // P (joint site on Parent)
-		done JOINT_SITE_ON_CHILD, // C (joint site on Child)
-		done RULE_INPUT_A, // a (the five inputs to a rule)
-		done RULE_INPUT_B, // b (the five inputs to a rule)
-		done RULE_INPUT_C, // c (the five inputs to a rule)
-		done RULE_INPUT_D, // d (the five inputs to a rule)
-		done RULE_INPUT_E, // e (the five inputs to a rule)
-		done BINARY_OPERATOR_1, // 1 (binary operator in the 1st neuron of a rule)
-		done UNARY_OPERATOR_2, // 2 (unary operator in the 1st neuron of a rule)
-		done BINARY_OPERATOR_3, // 3 (binary operator in the 2nd neuron of a rule)
-		done UNARY_OPERATOR_4; // 4 (unary operator in the 2nd neuron of a rule)
-	 */
 }

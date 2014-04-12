@@ -1,23 +1,18 @@
 package creature.geeksquad.hillclimbing;
 
-import java.util.ArrayList;
 
-import creature.geeksquad.genetics.Allele;
-import creature.geeksquad.genetics.Crossover;
-import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
-import creature.geeksquad.genetics.Genotype;
-import creature.geeksquad.genetics.Allele.Trait;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Population;
-import creature.phenotype.Block;
-import creature.phenotype.EnumJointSite;
-import creature.phenotype.EnumJointType;
-import creature.phenotype.EnumNeuronInputType;
-import creature.phenotype.EnumOperatorBinary;
-import creature.phenotype.EnumOperatorUnary;
-import creature.phenotype.NeuronInput;
 
+/**
+ * Hill Climbing tester. Performs hill climbing for a number of time
+ * on a randomly generated population.
+ * 
+ * @author Danny Gomez
+ * @group Ramon A. Lovato
+ * @group Marcos Lemus
+ */
 public class BrainTester {
 
 	public BrainTester(){
@@ -35,6 +30,7 @@ public class BrainTester {
 		TribeBrain brain = new TribeBrain();
 		
 		//Hopper hopper = population.get(0);
+		@SuppressWarnings("unused")
 		Hopper hopper = null;
 		
 		//send hopper to hill climbing
@@ -48,7 +44,6 @@ public class BrainTester {
 					
 					hopper = brain.performHillClimbing(population.get(j));
 				} catch (IllegalArgumentException | GeneticsException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}

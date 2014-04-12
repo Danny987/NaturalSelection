@@ -2,7 +2,6 @@ package creature.geeksquad.hillclimbing;
 
 
 import creature.geeksquad.genetics.BlockBuilder;
-import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.JointBuilder;
@@ -17,9 +16,11 @@ import creature.phenotype.NeuronInput;
 import creature.phenotype.Rule;
 
 /**
- * @author Daniel
+ * Hill Climbing strategy that adds a block to a genotype.
  * 
- *
+ * @author Danny Gomez
+ * @group Ramon A. Lovato
+ * @group Marcos Lemus
  */
 public class AddBlock extends Strategy{
 
@@ -31,8 +32,8 @@ public class AddBlock extends Strategy{
 	public Hopper climb(Hopper hopper) throws IllegalArgumentException,
 	GeneticsException {
 
-		boolean validBlock = false;
-		int attempts = 0;
+		boolean validBlock = false; //checks if block generated is valid
+		int attempts = 0; //num of times attempted to make a valid block
 
 		//clone original hopper
 		Hopper hopperToClimb = null;
@@ -43,11 +44,19 @@ public class AddBlock extends Strategy{
 			throw e;
 		}
 
+		/**
+		 * 
+		 * Attempt to generate a valid block. The number of attempts is
+		 * defaulted to 10. If a random block is created, or the # of
+		 * attempts is exceeded, the loop ends.
+		 */
 		while(!validBlock && attempts < 10){
 			//create the block builder
 			BlockBuilder blockBuilder = new BlockBuilder();
 
-			//set block dimension
+			//Set random dimensions for the block. Hopefully the use of
+			//random will produce some diversity in the tribe. These dimensions
+			//will be hill climbed in the next generation.
 			blockBuilder.setLength(Helper.RANDOM.nextFloat()*9 + 1);
 			blockBuilder.setHeight(Helper.RANDOM.nextFloat()*9 + 1);
 			blockBuilder.setWidth(Helper.RANDOM.nextFloat()*9 + 1);
@@ -142,6 +151,7 @@ public class AddBlock extends Strategy{
 			hopperToClimb.getGenotype().addBlock(block, false);
 
 			//clone hopper to see if block is valid
+			@SuppressWarnings("unused")
 			Hopper testHopper = null;
 			try {
 				testHopper = new Hopper(hopperToClimb);
@@ -153,13 +163,27 @@ public class AddBlock extends Strategy{
 			}
 		}
 
+		//if a valid block was add to the hopper.
 		if(validBlock){
-			return hopperToClimb;
+			return hopperToClimb; //return new hopper
 		}
 
+		//no valid block added, return original hopper
 		return hopper;
 	}
 
+	
+	/**
+	 * Given a rule type and some information about the hopper, returns
+	 * a NeuronInput. Mainly used for generating new rules when adding 
+	 * new blocks.
+	 * 
+	 * @param ruleType - 'A', 'B', 'C', 'D', 'E'
+	 * @param ruleDoF - DoF of the rule location
+	 * @param jointDoF - DoFs of the joint the rule is being added to
+	 * @param boxIndex -  index of the box the rule will be added to
+	 * @return A new NeuronInput
+	 */
 	public NeuronInput getNeuronInput(char ruleType, int ruleDoF, int jointDoF, int boxIndex){
 		//get a new rule from the maps based on the rule type
 		EnumNeuronInputType newRuleValue = mapHandler.pickRuleValue(ruleType, ruleDoF);

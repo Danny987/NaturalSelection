@@ -4,18 +4,14 @@
 package creature.geeksquad.hillclimbing;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 import creature.geeksquad.genetics.Allele;
-import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.Gene;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Allele.Trait;
 import creature.geeksquad.genetics.WeightHelper;
-import creature.geeksquad.genetics.Genotype.*;
-import creature.phenotype.Creature;
 import creature.phenotype.EnumJointSite;
 import creature.phenotype.EnumJointType;
 import creature.phenotype.EnumNeuronInputType;
@@ -25,8 +21,12 @@ import creature.phenotype.NeuronInput;
 import creature.geeksquad.library.*;
 
 /**
- * @author Daniel
- *
+ * Main hill Climbing class. Contains all the methods required by
+ * the hill climbing strategies.
+ * 
+ * @author Danny Gomez
+ * @group Ramon A. Lovato
+ * @group Marcos Lemus
  */
 public abstract class Strategy {
 
@@ -46,7 +46,7 @@ public abstract class Strategy {
 	}
 
 	/**
-	 * This methods takes in an allele, gets its trait value
+	 * This method takes in an allele, gets its trait value
 	 * and returns it as a string.
 	 * 
 	 * Used to determine which hill climbing to perform.
@@ -64,7 +64,6 @@ public abstract class Strategy {
 		switch (trait) {
 		case HEIGHT: case WIDTH: case LENGTH:
 			return "FLOAT";
-			//return "INDEX";
 
 		case INDEX_TO_PARENT:
 			return "INDEX";
@@ -77,47 +76,36 @@ public abstract class Strategy {
 
 		case JOINT_TYPE:
 			return "JOINT";
-			//return "INDEX";
 
 		case JOINT_ORIENTATION:
 			return "ORIENTATION";
-			//return "INDEX";
 
 		case RULE_INPUT_A:
 			return "RULE_A";
-			//return "INDEX";
 
 		case RULE_INPUT_B:
 			return "RULE_B";
-			//return "INDEX";
 
 		case RULE_INPUT_C:
 			return "RULE_C";
-			//return "INDEX";
 
 		case RULE_INPUT_D:
 			return "RULE_D";
-			//return "INDEX";
 
 		case RULE_INPUT_E:
 			return "RULE_E";
-			//return "INDEX";
 
 		case BINARY_OPERATOR_1: 
 			return "BINARY_1";
-			//return "INDEX";
 
 		case BINARY_OPERATOR_3:
 			return "BINARY_3";
-			//return "INDEX";
 
 		case UNARY_OPERATOR_2:
 			return "UNARY_2";
-			//return "INDEX";
 
 		case UNARY_OPERATOR_4:
 			return "UNARY_4";
-			//return "INDEX";
 
 		default:
 			return null;
@@ -185,7 +173,7 @@ public abstract class Strategy {
 	}
 
 	/**
-	 * Given a neuron, returns a new one one.
+	 * Given a neuron, returns a new different one.
 	 * 
 	 * @param neuron - starting neuron input
 	 * @param ruleType - type of neuron input, A,B,C,D,E
@@ -224,7 +212,6 @@ public abstract class Strategy {
 	 * @return
 	 */
 	public EnumJointSite getNewJointSite(EnumJointSite clonedJointSite){
-		//TODO
 		EnumJointSite jointSite = clonedJointSite;
 
 		while(jointSite == clonedJointSite){
@@ -240,7 +227,6 @@ public abstract class Strategy {
 	 * @return
 	 */
 	public EnumJointType getNewJointType(EnumJointType clonedJointType){
-		//TODO
 		EnumJointType jointType = clonedJointType;
 
 		while(jointType == clonedJointType){
@@ -694,28 +680,6 @@ public abstract class Strategy {
 	}
 
 	/**
-	 * Runs the simulation on a hopper.
-	 * Returns the highest fitness from the simulation.
-	 * 
-	 * @param hopper - hopper to run fitness test on
-	 * @return float - highest fitness from simulation
-	 */
-	public float getNewFitness(Hopper hopper){
-		//TODO
-		//generate a phenotype from the creature
-		Creature phenotype = hopper.getPhenotype();
-
-		//initialize fitness
-		float highestFitness = 0;
-		//float fitness = 0;
-
-		//return highestFitness, this should also set the fitness of the hopper
-		return hopper.evalFitness();
-	}
-
-	//initialize the the weight maps
-
-	/**
 	 * Gets the box index of the geneIndex.
 	 * 
 	 * @param genotype - Genotype that contains the gene.
@@ -892,7 +856,6 @@ public abstract class Strategy {
 	 * @return dof that the geneIndex is in
 	 */
 	public int getRuleDoF(Hopper hopper, int geneIndex){
-		//TODO
 		//go backwards through the gene list
 		for(int i = geneIndex; i >= 0; i--){
 			//if we get to a joint type allele
@@ -930,6 +893,7 @@ public abstract class Strategy {
 	 * @return true if valid hopper, false if invalid
 	 */
 	public boolean validHopper(Hopper hopper){
+		@SuppressWarnings("unused")
 		Hopper validHopper = null;
 		try {
 			validHopper = new Hopper(hopper);

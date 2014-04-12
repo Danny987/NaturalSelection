@@ -2,30 +2,25 @@ package creature.geeksquad.hillclimbing;
 
 import java.util.HashMap;
 
-import creature.geeksquad.genetics.Crossover;
 import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Genotype;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.library.*;
 
 /**
+ * TribeBrain is responsible for choosing the hill climbing
+ * strategy performed on a creature in a tribe. Maps dictating
+ * the success of each strategy are stored here.
  * 
- * @author Daniel
- * 
- * The tribe brain object contains a map of hill climbing strategies that
- * can be performed to a hopper.
- * 
- * Strategies are chosen based on weights. Weights are manipulated based on
- * success rates of each strategy.
- * 
- * performHillClimbing method performs hill climbing on a hopper, returns 
- * an improved hopper.
- *
+ * @author Danny Gomez
+ * @group Ramon A. Lovato
+ * @group Marcos Lemus
  */
+
 public class TribeBrain {
 	Genotype newGenotype; //genotype that leaves the brain
 
-	//map that stores the probability of each strategy occuring.
+	//map that stores the probability of each strategy occurring.
 	//strategy number - strategy weight
 	HashMap<Integer,Integer> strategyWeights = new HashMap<Integer,Integer>();
 
