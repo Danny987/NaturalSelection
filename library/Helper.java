@@ -45,9 +45,9 @@ public class Helper {
 	public static final float MIN_WEIGHT = 0.0f;
 	public static final float MEDIAN_WEIGHT = 0.5f;
 	public static final float MAX_WEIGHT = 1.0f;
-	// Percentage by which to increase/decrease Allele weights.
-	public static final float WEIGHT_STEP_UP = 0.01f;
-	public static final float WEIGHT_STEP_DOWN = 0.1f;
+	// Amount by which to increase/decrease Allele weights.
+	public static final float WEIGHT_STEP_UP = 0.001f;
+	public static final float WEIGHT_STEP_DOWN = 0.01f;
 	// How many generations between seeding of new random Hoppers.
 	public static final int SEED_NEW_RANDOMS_GAP = 10;
 	public static final float RANDOM_RESEED_PERCENTAGE = 0.2f;
@@ -55,9 +55,9 @@ public class Helper {
 	public static final float TIME_STEP = Simulator.DEFAULT_TIME_STEP;
 	public static final int PADDING = 0;
 	// Maximum permitted percentage similarity between a child and its parent.
-	public static final float MAX_SIMILAR_PERCENTAGE = 0.7f;
-	// How often to check the whole Population and eliminate excess duplicates.
-	public static final float SIMILAR_CHECK_INTERVAL = 50;
+	public static final float MAX_SIMILAR_PERCENTAGE = 0.8f;
+//	// How often to check the whole Population and eliminate excess duplicates.
+//	public static final float SIMILAR_CHECK_INTERVAL = 50;
 	
 	/**
 	 * Sets the random number generator's seed.
