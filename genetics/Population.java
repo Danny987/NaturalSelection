@@ -113,7 +113,6 @@ public class Population extends Vector<Hopper> {
 	 * @param pop2 Second Population to interbreed.
 	 */
 	public static void interbreed(Population pop1, Population pop2) {
-		System.out.println("started");
 		if (pop1 == null || pop2 == null) {
 			return;
 		} else {
@@ -126,26 +125,20 @@ public class Population extends Vector<Hopper> {
 		ArrayList<Hopper> breeders2;
 		ArrayList<Hopper> children1 = new ArrayList<Hopper>();
 		ArrayList<Hopper> children2 = new ArrayList<Hopper>();
-		synchronized (pop1) {
-			pop1.moveBreeders();
-			breeders1 = new ArrayList<Hopper>();
-			breeders1.addAll(pop1.breeders);
-			pop1.flushBreeders();
+		breeders1 = new ArrayList<Hopper>();
+		for (int i = 0; i < pop1.size() * Helper.BREED_PERCENTAGE; i++) {
+			breeders1.add(pop1.get(pop1.size() - 1));
 		}
-		synchronized (pop2) {
-			// Passing the size of breeders1 as an argument guarantees that
-			// both collections have the same number of Hoppers.
-			pop2.moveBreeders();
-			breeders2 = new ArrayList<Hopper>();
-			breeders2.addAll(pop2.breeders);
-			pop2.flushBreeders();
+		// Passing the size of breeders1 as an argument guarantees that
+		// both collections have the same number of Hoppers.
+		breeders2 = new ArrayList<Hopper>();
+		for (int i = 0; i < pop2.size() * Helper.BREED_PERCENTAGE; i++) {
+			breeders2.add(pop2.get(pop2.size() - 1));
 		}
-		
 		Collections.shuffle(breeders1);
 		Collections.shuffle(breeders2);
 		int size1 = breeders1.size();
 		int size2 = breeders2.size();
-		
 		for (int i = 0; i < size1 && i < size2; i++) {
 			Hopper parentA = breeders1.get(i);
 			parentA.increaseBreedCount();
@@ -180,41 +173,37 @@ public class Population extends Vector<Hopper> {
 		// Add the children to their respective populations.
 		for (Hopper h : children1) {
 			// Short-circuit if h is null.
-			synchronized (pop1) {
-				if (!pop1.add(h)) {
-					pop1.currentRejectedCreatures++;
-					pop1.lifetimeRejectedCreatures++;					
-				}
+			if (!pop1.add(h)) {
+				pop1.currentRejectedCreatures++;
+				pop1.lifetimeRejectedCreatures++;
 			}
 		}
 		for (Hopper h : children2) {
 			// Short-circuit if h is null.
-			synchronized (pop2) {
-				if (!pop2.add(h)) {
-					pop2.currentRejectedCreatures++;
-					pop2.lifetimeRejectedCreatures++;
-				}
+			if (!pop2.add(h)) {
+				pop2.currentRejectedCreatures++;
+				pop2.lifetimeRejectedCreatures++;
 			}
 		}
-		System.out.println("ended");
 	}
 	
 	/**
 	 * Update the population.
 	 */
-	public synchronized void update() {
+	public void update() {
 		generations++;
 		// Reseed the Population with new, random Hoppers to diversify.
 		if (generations % Helper.SEED_NEW_RANDOMS_GAP == 0) {
 			seedNewRandoms();
 		}
-		// Randomly select hill climbing or breeding this generation.
+		// Select hill climbing or breeding this generation.
 		if (Helper.choose() > 0) {
 			hillClimb();
 		} else {
 			moveBreeders();
 			breed();
 		}
+		
 		cull();
 		if (size() > 0) {
 			highestFitness = get(size() - 1).getFitness();
@@ -282,27 +271,27 @@ public class Population extends Vector<Hopper> {
 	 * Perform hill-climbing on all members of the Population.
 	 */
 	private void hillClimb() {
-		Vector<Hopper> climbers = new Vector<Hopper>();
-		climbers.addAll(this);
-		for (ListIterator<Hopper> i = climbers.listIterator(); i.hasNext(); ) {
-			Hopper original = i.next();
-			try {
-				Hopper newHotness = brain.performHillClimbing(original);
-				newHotness.hillClimbed();
-				// The != unary operator works here because we want to know if
-				// the two objects are, in fact, the same object.
-				if (newHotness != original) {
-					i.set(newHotness);
-					lifetimeHillClimbs++;
-				} else {
+		synchronized (this) {
+			for (ListIterator<Hopper> i = listIterator(); i.hasNext(); ) {
+				Hopper original = i.next();
+				try {
+					Hopper newHotness = brain.performHillClimbing(original);
+					newHotness.hillClimbed();
+					// The != unary operator works here because we want to know if
+					// the two objects are, in fact, the same object.
+					if (newHotness != original) {
+						i.set(newHotness);
+						lifetimeHillClimbs++;
+					} else {
+						currentFailedHillClimbs++;
+						lifetimeFailedHillClimbs++;
+					}
+				} catch (IllegalArgumentException | GeneticsException ex) {
 					currentFailedHillClimbs++;
 					lifetimeFailedHillClimbs++;
+	//				System.out.println(
+	//					"HillClimbing produced an illegal creature. Skipping.");
 				}
-			} catch (IllegalArgumentException | GeneticsException ex) {
-				currentFailedHillClimbs++;
-				lifetimeFailedHillClimbs++;
-//				System.out.println(
-//					"HillClimbing produced an illegal creature. Skipping.");
 			}
 		}
 	}
@@ -334,29 +323,32 @@ public class Population extends Vector<Hopper> {
 	 *            of over.
 	 */
 	private void moveBreeders(float over, float...under) {
-		synchronized (breeders) {
-			sort();
-			// Overperformers.
-			int size = size();
-			int stop = (int) (size - (over * size));
-			if (stop >= size) {
-				stop = 0;
-			}
-			
-			for (int i = size - 1; i >= stop && i > 0; i--) {
-				breeders.add(get(i));
-			}
-			// Underperformers.
-			int count = 0;
-			if (under.length > 0) {
-				count = (int) (size * under[0]);
-			} else {
-				count = (int) (size * (over / 2));
-			}
-			for (int i = 0; i < count && i < size(); i++) {
-				int index = Helper.RANDOM.nextInt(size());
-				breeders.add(get(index));
-			}
+		// If there's already Hoppers in the breeders collection, end early.
+		if (!breeders.isEmpty()) {
+			return;
+		}
+		
+		sort();
+		// Overperformers.
+		int size = size();
+		int stop = (int) (size - (over * size));
+		if (stop >= size) {
+			stop = 0;
+		}
+		
+		for (int i = size - 1; i >= stop && i > 0; i--) {
+			breeders.add(get(i));
+		}
+		// Underperformers.
+		int count = 0;
+		if (under.length > 0) {
+			count = (int) (size * under[0]);
+		} else {
+			count = (int) (size * (over / 2));
+		}
+		for (int i = 0; i < count && i < size(); i++) {
+			int index = Helper.RANDOM.nextInt(size());
+			breeders.add(get(index));
 		}
 	}
 	
@@ -364,9 +356,7 @@ public class Population extends Vector<Hopper> {
 	 * Move all Hoppers in the breeders list back into the general population.
 	 */
 	private void flushBreeders() {
-		synchronized (breeders) {
-			breeders.clear();
-		}
+		breeders.clear();
 	}
 	
 	/**
@@ -374,7 +364,7 @@ public class Population extends Vector<Hopper> {
 	 * 
 	 * @param n Number of individuals to kill off.
 	 */
-	public synchronized void cull() {
+	public void cull() {
 		sort();
 		if (size() > Helper.POPULATION_SIZE) {
 			removeRange(0, size() - Helper.POPULATION_SIZE);
@@ -385,7 +375,7 @@ public class Population extends Vector<Hopper> {
 	 * Sort this Population according to its natural ordering: ascending Hopper
 	 * fitness.
 	 */
-	private synchronized void sort() {
+	private void sort() {
 		synchronized (this) {
 			Collections.sort(this);
 		}
@@ -574,86 +564,6 @@ public class Population extends Vector<Hopper> {
 			return;
 		}
 	}
-	
-//	/**
-//	 * Override of addAll - individually adds all requested Hoppers to the
-//	 * Population only if their Genotypes, phenotypes and bodies are valid.
-//	 * 
-//	 * @param collection Collection of Hoppers to add.
-//	 * @return True if at least one Hopper was added, false if not.
-//	 */
-//	@SuppressWarnings("rawtypes")
-//	@Override
-//	public boolean addAll(Collection collection) {
-//		List<Hopper> hoppers = new ArrayList<Hopper>();
-//		// If an object in the collection is a Hopper, add it to the list.
-//		for (Object o : collection) {
-//			if (o != null && o.getClass() == this.getClass()) {
-//				Hopper h = (Hopper) o;
-//				if (h != null && h.getGenotype() != null
-//						&& h.getPhenotype() != null) {
-//					hoppers.add(h);
-//				}
-//			}
-//		}
-//		
-//		int count = 0;
-//		for (Hopper h : hoppers) {
-//			if (add(h)) {
-//				count++;
-//			}
-//		}
-//		return count > 0;
-//	}
-	
-//	/**
-//	 * Override of remove by index - synchronized.
-//	 * 
-//	 * @param index Index of Hopper to remove.
-//	 * @return Hopper at index.
-//	 */
-//	@Override
-//	public Hopper remove(int index) {
-//		synchronized (this) {
-//			return super.remove(index);
-//		}
-//	}
-	
-//	/**
-//	 * Override of get by index - returns a copy of the requested Hopper.
-//	 * 
-//	 * @param index Index of Hopper of which to return a copy.
-//	 * @return Deep clone of the Hopper at index.
-//	 */
-//	@Override
-//	public Hopper get(int index) {
-//		if (index < 0 || index >= size()) {
-//			return null;
-//		}
-//		synchronized (this) {
-//			try {
-//				return new Hopper(super.get(index));
-//			} catch (IllegalArgumentException | GeneticsException ex) {
-//				Log.error("Cloning Hopper for get failed.");
-//				return null;
-//			} catch (IndexOutOfBoundsException ex) {
-//				Log.error("Get tried to index out of bounds.");
-//				throw ex;
-//			}
-//		}
-//	}
-	
-//	/**
-//	 * Override of size returns the current size of the Population.
-//	 *
-//	 * @return Size of the population.
-//	 */
-//	@Override
-//	public int size() {
-//		synchronized (this) {
-//			return super.size();
-//		}
-//	}
 	
 	/**
 	 * Override of toString: returns an exportable representation of this

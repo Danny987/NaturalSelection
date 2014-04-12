@@ -530,16 +530,23 @@ public class Crossover {
 		// If a child is too similar to its parent, reject it.
 		int similar = 0;
 		for (int i = 0; i < childSize && i < parentSize; i++) {
-			Allele parentAllele = parent.get(i).getDominant();
-			Allele childAllele = child.get(i).getDominant();
-			if (!childAllele.equals(parentAllele)) {
+			Allele parentDominant = parent.get(i).getDominant();
+			Allele parentRecessive = parent.get(i).getRecessive();
+			Allele childDominant = child.get(i).getDominant();
+			Allele childRecessive = parent.get(i).getRecessive();
+
+			if (!childDominant.equals(parentDominant)) {
 				// Weight decreases are substantially larger than increases.
 				if (childFitness > parentFitness) {
-					childAllele.increaseWeight();
-					parentAllele.decreaseWeight();
+					childDominant.increaseWeight();
+					childRecessive.decreaseWeight();
+					parentDominant.decreaseWeight();
+					parentRecessive.increaseWeight();
 				} else if (parentFitness > childFitness) {
-					childAllele.decreaseWeight();
-					parentAllele.decreaseWeight();
+					childDominant.decreaseWeight();
+					childRecessive.increaseWeight();
+					parentDominant.decreaseWeight();
+					parentRecessive.increaseWeight();
 				}
 			} else {
 				similar++;

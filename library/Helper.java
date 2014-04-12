@@ -36,9 +36,6 @@ public class Helper {
 	// Allow up to 50 errors to accrue during random Genotype generation before
 	// giving up.
 	public static final int FAULT_TOLERENCE = 50;
-	// Max size of the Crossover weight table and age to remove weights.
-	public static final int WEIGHT_TABLE_CAPACITY = 1000;
-	public static final int MAX_WEIGHT_AGE = 10;
 	// Seed constants.
 	public static final int SEED_MAX_BLOCKS = 12;
 	public static final int SEED_MAX_SIZE = 10;
@@ -49,18 +46,16 @@ public class Helper {
 	public static final float MEDIAN_WEIGHT = 0.5f;
 	public static final float MAX_WEIGHT = 1.0f;
 	// Percentage by which to increase/decrease Allele weights.
-	public static final float WEIGHT_STEP_UP = 0.005f;
+	public static final float WEIGHT_STEP_UP = 0.01f;
 	public static final float WEIGHT_STEP_DOWN = 0.1f;
-//	public static final float WEIGHT_STEP_UP = 0.00f;
-//	public static final float WEIGHT_STEP_DOWN = 0.0f;
 	// How many generations between seeding of new random Hoppers.
-	public static final int SEED_NEW_RANDOMS_GAP = 1;
-	public static final float RANDOM_RESEED_PERCENTAGE = 0.1f;
+	public static final int SEED_NEW_RANDOMS_GAP = 10;
+	public static final float RANDOM_RESEED_PERCENTAGE = 0.2f;
 	// Amount of padding when evaluating fitness with the physics simulation.
 	public static final float TIME_STEP = Simulator.DEFAULT_TIME_STEP;
 	public static final int PADDING = 0;
 	// Maximum permitted percentage similarity between a child and its parent.
-	public static final float MAX_SIMILAR_PERCENTAGE = 0.9f;
+	public static final float MAX_SIMILAR_PERCENTAGE = 0.8f;
 	
 	/**
 	 * Sets the random number generator's seed.
