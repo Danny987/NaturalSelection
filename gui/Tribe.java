@@ -51,6 +51,7 @@ public class Tribe extends Thread {
         
         if(!random) try {
             randomHopper = new Hopper(population.get(Helper.RANDOM.nextInt(population.size() - 1)));
+            random = true;
         } catch (IllegalArgumentException | GeneticsException ex) {
             Log.error("Random Hopper Broke: " + ex);
         }
@@ -81,6 +82,7 @@ public class Tribe extends Thread {
     }
 
     public Hopper randomHopper() {
+        random = false;
         return randomHopper;
     }
 

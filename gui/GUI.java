@@ -48,7 +48,19 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private final int WIDTH = 700;
     private final int HEIGHT = 600;
     private Dimension size; //temp variable 
-
+    private int currentindex = 0;
+    private float[] intervals = {
+                                  .5f,
+                                  .6f,
+                                  .7f,
+                                  .75f,
+                                  .8f,
+                                  .82f,
+                                  .84f,
+                                  .86f,
+                                  .88f,
+                                  .90f, .91f, .92f, .93f, .94f, .95f, .96f, .97f, .975f, .98f, .985f, .99f
+    };
     //Controls
     private final PlayerControls controls = new PlayerControls();
     private final Map<String, Boolean> controlMap = controls.getInputs();
@@ -84,8 +96,6 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private JLabel tribeFitness;
     private JLabel bestFitness;          // Best fitness found from simulation
     private JLabel currentFitness;       // Current fitness from simulation
-    private JLabel totalHillclimbs;      // total number of hill climbs
-    private JLabel totalBreed;           // total number of crossover
     private JLabel time;                 // time since the start button was pressed
     private JLabel generations;          // number of hillclimb + crossover
     private JLabel generationsPerSecond; // generations / time
@@ -229,6 +239,10 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                     Hopper overachiever = t.getOverachiever();
                     if (overachiever != null) {
                         float foo = overachiever.getFitness();
+                        if(foo > intervals[currentindex]){
+                            Log.bestHopper(null, hopper);
+                            currentindex++;
+                        }
 
                         if (bestHopper == null) {
                             bestHopper = overachiever;

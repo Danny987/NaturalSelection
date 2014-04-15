@@ -149,7 +149,7 @@ public class Log {
             File f = fileChooser.getSelectedFile();
 
             try {
-                writer = new BufferedWriter(new FileWriter(f));
+                writer = new BufferedWriter(new FileWriter(f + "_" + hopper.getAge()));
                 writer.write(hopper.toString());
                 writer.close();
             } catch (IOException ex) {
@@ -159,6 +159,18 @@ public class Log {
         }
     }
 
+    public synchronized static void bestHopper(Component parent, Hopper hopper){
+        String name = directory + Helper.SEPARATOR + hopper.getName() + "_" + hopper.getAge();
+        try {
+                writer = new BufferedWriter(new FileWriter(name + "_" + hopper.getAge()));
+                writer.write(hopper.toString());
+                writer.close();
+            } catch (IOException ex) {
+                Log.popup(parent, "An error occured while saving " + hopper.getName());
+                Log.error(ex.toString());
+            }
+    }
+    
     /**
      * Load a user selected hopper
      *
