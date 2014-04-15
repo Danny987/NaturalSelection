@@ -196,7 +196,6 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         }
 
         if (e.getSource().equals(timer)) {
-
             if (!paused) {
                 time.setText(" Time: " + time());
                 totalGenerations = currentTribe.getGenerations();
@@ -277,16 +276,18 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
             //Pause all threads
             case "Pause":
                 paused = !paused;
-
-                for (Tribe t : tribeList) {
-                    t.interrupt();
-                }
-
+                
                 if (paused) {
                     pause.setText("Start");
+                    for(Tribe t: tribeList){
+                        t.interrupt();
+                    }
                 }
                 else {
                     pause.setText("Pause");
+                    for(Tribe t: tribeList){
+                        t.interrupt();
+                    }
                 }
 
                 if (graphicsPanel.animating()) {
@@ -410,11 +411,11 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         long mins = elapsedMins % 60;
         long secs = elapsedSecs % 60;
 
-//        Tribe t = tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1));
-//        Hopper hooper = t.randomHopper();
-//        if (hooper != null) {
-//            tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1)).addHopper(hooper);
-//        }
+        Tribe t = tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1));
+        Hopper hooper = t.randomHopper();
+        if (hooper != null) {
+            tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1)).addHopper(hooper);
+        }
 
         String h = hours > 9 ? hours + "" : ("0" + hours);
         String m = mins > 9 ? mins + "" : ("0" + mins);
@@ -692,6 +693,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         overallfitness = new JLabel("Overall Fitness: 0");
         overallfitness.setForeground(FONTCOLOR);
 
+        
         statsPanel.add(allcross);
         statsPanel.add(allhills);
         statsPanel.add(overallfitness);

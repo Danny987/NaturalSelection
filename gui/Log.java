@@ -56,7 +56,7 @@ public class Log {
         File dir = new File(directory);
         dir.mkdir();
         
-        File file = new File(directory + "\\" + "ERROR");
+        File file = new File(directory + Helper.SEPARATOR + "ERROR");
         try {
             file.createNewFile();
             files.put("ERROR", file);
@@ -73,7 +73,7 @@ public class Log {
     public synchronized static void error(String s) {
         try {
             writer = new BufferedWriter(new FileWriter(files.get("ERROR"), true));
-            writer.append(s + "\n");
+            writer.append(s + Helper.NEWLINE);
             writer.close();
         } catch (IOException ex) {
             Log.popup(null, "Error saving error file");
@@ -92,7 +92,7 @@ public class Log {
             file = files.get(tribeName);
         }
         else {
-            file = new File(directory + "\\" + tribeName);
+            file = new File(directory + Helper.SEPARATOR + tribeName);
             try {
                 file.createNewFile();
                 files.put(tribeName, file);
@@ -250,8 +250,9 @@ public class Log {
     public static void loadPopulation(Component parent, Population population) {
         int option = fileChooser.showOpenDialog(parent);
         Population p = new Population();
-
-        if (option != JFileChooser.CANCEL_OPTION) {
+        Log.popup(null, "Loading Creature Is Currently Broken.");
+        
+        if (option != JFileChooser.CANCEL_OPTION && false) {
             try {
                 File f = fileChooser.getSelectedFile();
                 String[] lineArray;

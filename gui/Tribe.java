@@ -4,8 +4,6 @@ import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Population;
 import creature.geeksquad.library.Helper;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -16,9 +14,18 @@ public class Tribe extends Thread {
     public static final int POPULATION_SIZE = 501;
     private final Population population;
 
-    private volatile boolean paused = true;
+    private boolean random = false;
+    private boolean paused = true;
     private boolean running = true;
-
+    
+    private Hopper overachiever;
+    private Hopper randomHopper;
+    private long totalHillClimbs;
+    private long totalCrossover;
+    private long lifeTimeFailes;
+    private long hillClimbFails;
+    private float fitness;
+    
     public Tribe(String name, Population population) {
         this.setName(name);
         this.population = population;
@@ -27,32 +34,37 @@ public class Tribe extends Thread {
     /**
      * Call things to run hill climbing and cross over.
      */
-    public void nextGeneration() {
-        synchronized (this) {
-            population.update();
+    public synchronized void nextGeneration() {
+        if(paused){
+            try{
+                wait();
+            } catch(InterruptedException ex){paused = !paused;}
         }
-//        population.hillClimb();
+        
+        population.update();
+        overachiever = population.getOverachiever();
+        totalHillClimbs = population.getLifetimeHillClimbs();
+        hillClimbFails = population.getLifetimeFailedHillClimbs();
+        lifeTimeFailes = population.getLifetimeDeadChildren();
+        totalCrossover = population.getLifetimeOffspring();
+        fitness = population.getAverageFitness();
+        
+        if(!random) try {
+            randomHopper = new Hopper(population.get(Helper.RANDOM.nextInt(population.size() - 1)));
+        } catch (IllegalArgumentException | GeneticsException ex) {
+            Log.error("Random Hopper Broke: " + ex);
+        }
     }
 
     @Override
     public void run() {
-
-        while (running) {
-            synchronized (this) {
-                // if the thread is interupted pause or unpause
-                if (Thread.interrupted()) {
-                    System.out.println(this.getName());
-                    paused = !paused;
-                }
-
-                // if not paused let them mutate
-                if (!paused) {
-                    nextGeneration();
-                }
-            }
+        while(running){
+            if(isInterrupted()) paused = !paused;
+            nextGeneration();
         }
     }
 
+    
     public int getGenerations() {
         return population.getGenerations();
     }
@@ -69,16 +81,7 @@ public class Tribe extends Thread {
     }
 
     public Hopper randomHopper() {
-        synchronized (population) {
-            Hopper hooper = null;
-            try {
-                hooper = new Hopper(population.get(Helper.RANDOM.nextInt(population.size() - 1)));
-            } catch (IllegalArgumentException | GeneticsException ex) {
-                Log.error(ex.toString());
-            }
-
-            return hooper;
-        }
+        return randomHopper;
     }
 
     public Population getPopulation() {
@@ -94,7 +97,7 @@ public class Tribe extends Thread {
     }
 
     public Hopper getOverachiever() {
-        return population.getOverachiever();
+        return overachiever;
     }
 
     /**
@@ -105,22 +108,22 @@ public class Tribe extends Thread {
     }
 
     public float getFitness() {
-        return population.getAverageFitness();
+        return fitness;
     }
 
     public long getFails() {
-        return population.getLifetimeDeadChildren();
+        return lifeTimeFailes;
     }
 
     public long gethillFails() {
-        return population.getLifetimeFailedHillClimbs();
+        return hillClimbFails;
     }
 
     public long gethills() {
-        return population.getLifetimeHillClimbs();
+        return totalHillClimbs;
     }
 
     public long getcross() {
-        return population.getLifetimeOffspring();
+        return totalCrossover;
     }
 }

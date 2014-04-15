@@ -18,8 +18,8 @@ public class Creatures {
     //main!
     public static void main(String args[]) {
         try {
-            Names.loadFiles();
             Log.initialize();
+            Names.loadFiles();
 
             final List<Tribe> tribeList = new ArrayList<>();
             final List<String> nameList = new ArrayList<>();
