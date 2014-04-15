@@ -225,6 +225,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                         generationindex[i] = gens;
                         Log.error("Gen: " + gens + " Min: " + t.min() + " Avg: " + t.getFitness() + " Max: " + t.max(), t.getName());
                     }
+                    i++;
                 }
 
             }
@@ -635,7 +636,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         ///////////////////////////////////////////////////////////
 
         // Make slider////////////////////////////////////////////
-        slider = new Slider("Creature", 0, currentTribe.getSize(), 1);
+        slider = new Slider("Creature", 0, currentTribe.getSize(), 0);
         slider.addChangeListener(this);
         ////////////////////////////////////////////////////////
 

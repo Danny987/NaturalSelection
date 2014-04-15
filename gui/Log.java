@@ -87,7 +87,7 @@ public class Log {
      * @param s
      * @param tribeName
      */
-    public synchronized static void error(String s, String tribeName) {
+    public static void error(String s, String tribeName) {
         File file;
         if (files.containsKey(tribeName)) {
             file = files.get(tribeName);

@@ -4,6 +4,8 @@ import creature.geeksquad.genetics.GeneticsException;
 import creature.geeksquad.genetics.Hopper;
 import creature.geeksquad.genetics.Population;
 import creature.geeksquad.library.Helper;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -18,20 +20,35 @@ public class Tribe extends Thread {
     private boolean paused = true;
     private boolean running = true;
     
+    private List<Hopper> list = new ArrayList<>();
     private Hopper overachiever;
     private Hopper randomHopper;
-    private long totalHillClimbs;
-    private long totalCrossover;
-    private long lifeTimeFailes;
-    private long hillClimbFails;
-    private float fitness;
-    private long generations;
-    private float min;
-    private float max;
+    private long totalHillClimbs = 0;
+    private long totalCrossover = 0;
+    private long lifeTimeFailes = 0;
+    private long hillClimbFails = 0;
+    private float fitness = 0;
+    private long generations = 0;
+    private float min = 0;
+    private float max = 0;
+    private int size = 0;
     
     public Tribe(String name, Population population) {
         this.setName(name);
-        this.population = population;
+        this.population = population;                                               
+        
+        overachiever = population.getOverachiever();
+        totalHillClimbs = population.getLifetimeHillClimbs();
+        hillClimbFails = population.getLifetimeFailedHillClimbs();
+        lifeTimeFailes = population.getLifetimeDeadChildren();
+        totalCrossover = population.getLifetimeOffspring();
+        fitness = population.getAverageFitness();
+        generations = population.getGenerations();
+        min = population.getUnderachiever().getFitness();
+        max = population.getHighestFitness();
+        size = population.size();
+        list.clear();
+        list.addAll(population);
     }
 
     /**
@@ -54,6 +71,9 @@ public class Tribe extends Thread {
         generations = population.getGenerations();
         min = population.getUnderachiever().getFitness();
         max = population.getHighestFitness();
+        size = population.size();
+        list.clear();
+        list.addAll(population);
         
         if(!random) try {
             randomHopper = new Hopper(population.get(Helper.RANDOM.nextInt(population.size() - 1)));
@@ -87,7 +107,7 @@ public class Tribe extends Thread {
      * @return hopper at index
      */
     public Hopper getHopper(int index) {
-        return population.get(index);
+        return list.get(index);
     }
 
     /**
@@ -120,7 +140,7 @@ public class Tribe extends Thread {
      * @return population size
      */
     public int getSize() {
-        return population.size();
+        return size;
     }
 
     /**
