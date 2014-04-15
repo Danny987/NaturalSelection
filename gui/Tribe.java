@@ -25,6 +25,9 @@ public class Tribe extends Thread {
     private long lifeTimeFailes;
     private long hillClimbFails;
     private float fitness;
+    private long generations;
+    private float min;
+    private float max;
     
     public Tribe(String name, Population population) {
         this.setName(name);
@@ -48,6 +51,9 @@ public class Tribe extends Thread {
         lifeTimeFailes = population.getLifetimeDeadChildren();
         totalCrossover = population.getLifetimeOffspring();
         fitness = population.getAverageFitness();
+        generations = population.getGenerations();
+        min = population.getUnderachiever().getFitness();
+        max = population.getHighestFitness();
         
         if(!random) try {
             randomHopper = new Hopper(population.get(Helper.RANDOM.nextInt(population.size() - 1)));
@@ -65,9 +71,12 @@ public class Tribe extends Thread {
         }
     }
 
-    
-    public int getGenerations() {
-        return population.getGenerations();
+    /**
+     * 
+     * @return  
+     */
+    public long getGenerations() {
+        return generations;
     }
 
     /**
@@ -81,23 +90,43 @@ public class Tribe extends Thread {
         return population.get(index);
     }
 
+    /**
+     * 
+     * @return random hopper
+     */
     public Hopper randomHopper() {
         random = false;
         return randomHopper;
     }
 
+    /**
+     * 
+     * @return the population 
+     */
     public Population getPopulation() {
         return population;
     }
 
+    /**
+     * Add hopper to population
+     * @param h 
+     */
     public void addHopper(Hopper h) {
         population.add(h);
     }
 
+    /**
+     * 
+     * @return population size
+     */
     public int getSize() {
         return population.size();
     }
 
+    /**
+     * 
+     * @return best hopper in population
+     */
     public Hopper getOverachiever() {
         return overachiever;
     }
@@ -109,23 +138,59 @@ public class Tribe extends Thread {
         running = false;
     }
 
+    /**
+     * 
+     * @return tribe fitness
+     */
     public float getFitness() {
         return fitness;
     }
 
+    /**
+     * 
+     * @return crossover fails
+     */
     public long getFails() {
         return lifeTimeFailes;
     }
 
+    /**
+     * 
+     * @return hill climb fails
+     */
     public long gethillFails() {
         return hillClimbFails;
     }
 
+    /**
+     * 
+     * @return total hill climbs
+     */
     public long gethills() {
         return totalHillClimbs;
     }
 
+    /**
+     * 
+     * @return total number of cross over generations 
+     */
     public long getcross() {
         return totalCrossover;
+    }
+    
+    /**
+     * the worse fitness in the population.
+     * @return 
+     */
+    public float min(){
+        return min;
+    }
+    
+    /**
+     * best fitness in population
+     * @return 
+     */
+    public float max(){
+        return max;
     }
 }

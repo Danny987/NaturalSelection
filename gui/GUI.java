@@ -50,16 +50,16 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private Dimension size; //temp variable 
     private int currentindex = 0;
     private float[] intervals = {
-                                  .5f,
-                                  .6f,
-                                  .7f,
-                                  .75f,
-                                  .8f,
-                                  .82f,
-                                  .84f,
-                                  .86f,
-                                  .88f,
-                                  .90f, .91f, .92f, .93f, .94f, .95f, .96f, .97f, .975f, .98f, .985f, .99f
+        .5f,
+        .6f,
+        .7f,
+        .75f,
+        .8f,
+        .82f,
+        .84f,
+        .86f,
+        .88f,
+        .90f, .91f, .92f, .93f, .94f, .95f, .96f, .97f, .975f, .98f, .985f, .99f
     };
     //Controls
     private final PlayerControls controls = new PlayerControls();
@@ -129,7 +129,8 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
     private float populationMergeTime = 0;
     private final float CROSS_OVER_WAIT = 60 * 1000;
     private float bestFitnessValue = 0f; //Best fitness value from simulation
-    private int totalGenerations = 0;    //total hillclimb + total crossover
+    private long totalGenerations = 0;    //total hillclimb + total crossover
+    private long[] generationindex = new long[Log.NUMB_CORES];
     private long startmilis;
     private long milistime = 0;
     private long waittime = 0;
@@ -217,6 +218,14 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                     String f = String.format("%.5f", (float) (totalGenerations / div));
                     generationsPerSecond.setText("Generations/Second: " + f);
                 }
+                int i = 0;
+                for (Tribe t : tribeList) {
+                    long gens = t.getGenerations();
+                    if (gens - generationindex[i] > 100) {
+                        generationindex[i] = gens;
+                        Log.error("Gen: " + gens + " Min: " + t.min() + " Avg: " + t.getFitness() + " Max: " + t.max(), t.getName());
+                    }
+                }
 
             }
             else {
@@ -224,44 +233,43 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                 startmilis = System.currentTimeMillis();
             }
 
-            if (paused) {
-                tribeFitness.setText("Tribe Fitness: " + String.format("%.5f", currentTribe.getFitness()));
+            tribeFitness.setText("Tribe Fitness: " + String.format("%.5f", currentTribe.getFitness()));
 
-                float best = 0;
-                float f = 0;
-                int i = 0;
-                long c = 0;
-                long h = 0;
-                long cf = 0;
-                long hf = 0;
+            float best = 0;
+            float f = 0;
+            int i = 0;
+            long c = 0;
+            long h = 0;
+            long cf = 0;
+            long hf = 0;
 
-                for (Tribe t : tribeList) {
-                    Hopper overachiever = t.getOverachiever();
-                    if (overachiever != null) {
-                        float foo = overachiever.getFitness();
-                        if(foo > intervals[currentindex]){
-                            Log.bestHopper(null, hopper);
-                            currentindex++;
-                        }
+            for (Tribe t : tribeList) {
 
-                        if (bestHopper == null) {
-                            bestHopper = overachiever;
-                        }
-
-                        if (best < foo) {
-                            bestHopper = overachiever;
-                            best = foo;
-                        }
+                Hopper overachiever = t.getOverachiever();
+                if (overachiever != null) {
+                    float foo = overachiever.getFitness();
+                    if (foo > intervals[currentindex]) {
+                        Log.bestHopper(null, hopper);
+                        currentindex++;
                     }
-                    f += t.getFitness();
 
-                    c += t.getcross();
-                    h += t.gethills();
+                    if (bestHopper == null) {
+                        bestHopper = overachiever;
+                    }
 
-                    cf += t.getFails();
-                    hf += t.gethillFails();
-                    i++;
+                    if (best < foo) {
+                        bestHopper = overachiever;
+                        best = foo;
+                    }
                 }
+                f += t.getFitness();
+
+                c += t.getcross();
+                h += t.gethills();
+
+                cf += t.getFails();
+                hf += t.gethillFails();
+                i++;
 
                 allhills.setText("Total Hillclimbs: " + h);
                 allcross.setText("Total Crossover: " + c);
@@ -270,6 +278,7 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
                 overallfitness.setText("Overall Fitness: " + f / i);
                 bestbestfitness.setText("Best Fitness: " + best);
             }
+
             return;
         }
 
@@ -290,16 +299,16 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
             //Pause all threads
             case "Pause":
                 paused = !paused;
-                
+
                 if (paused) {
                     pause.setText("Start");
-                    for(Tribe t: tribeList){
+                    for (Tribe t : tribeList) {
                         t.interrupt();
                     }
                 }
                 else {
                     pause.setText("Pause");
-                    for(Tribe t: tribeList){
+                    for (Tribe t : tribeList) {
                         t.interrupt();
                     }
                 }
@@ -425,12 +434,11 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         long mins = elapsedMins % 60;
         long secs = elapsedSecs % 60;
 
-        Tribe t = tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1));
-        Hopper hooper = t.randomHopper();
-        if (hooper != null) {
-            tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1)).addHopper(hooper);
-        }
-
+//        Tribe t = tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1));
+//        Hopper hooper = t.randomHopper();
+//        if (hooper != null) {
+//            tribeList.get(Helper.RANDOM.nextInt(tribeList.size() - 1)).addHopper(hooper);
+//        }
         String h = hours > 9 ? hours + "" : ("0" + hours);
         String m = mins > 9 ? mins + "" : ("0" + mins);
         String s = secs > 9 ? secs + "" : ("0" + secs);
@@ -707,7 +715,6 @@ public class GUI extends JFrame implements ActionListener, ChangeListener {
         overallfitness = new JLabel("Overall Fitness: 0");
         overallfitness.setForeground(FONTCOLOR);
 
-        
         statsPanel.add(allcross);
         statsPanel.add(allhills);
         statsPanel.add(overallfitness);

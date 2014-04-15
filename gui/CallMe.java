@@ -2,8 +2,6 @@
 package creature.geeksquad.gui;
 
 import creature.geeksquad.genetics.Population;
-import java.util.concurrent.Callable;
-
 /**
  *
  * @author Marcos

@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -32,7 +33,7 @@ public class Log {
     public static final int NUMB_CORES = Runtime.getRuntime().availableProcessors() > 8 ? 8
                                          : Runtime.getRuntime().availableProcessors();
 
-    private static BufferedWriter writer;
+    private static PrintWriter writer;
     private static BufferedReader reader;
     private static String directory = "logfile";
 
@@ -56,7 +57,7 @@ public class Log {
         File dir = new File(directory);
         dir.mkdir();
         
-        File file = new File(directory + Helper.SEPARATOR + "ERROR");
+        File file = new File(directory + Helper.SEPARATOR + "ERROR.txt");
         try {
             file.createNewFile();
             files.put("ERROR", file);
@@ -72,8 +73,8 @@ public class Log {
      */
     public synchronized static void error(String s) {
         try {
-            writer = new BufferedWriter(new FileWriter(files.get("ERROR"), true));
-            writer.append(s + Helper.NEWLINE);
+            writer = new PrintWriter(new FileWriter(files.get("ERROR"), true));
+            writer.println(s);
             writer.close();
         } catch (IOException ex) {
             Log.popup(null, "Error saving error file");
@@ -92,7 +93,7 @@ public class Log {
             file = files.get(tribeName);
         }
         else {
-            file = new File(directory + Helper.SEPARATOR + tribeName);
+            file = new File(directory + Helper.SEPARATOR + tribeName + ".txt");
             try {
                 file.createNewFile();
                 files.put(tribeName, file);
@@ -102,8 +103,8 @@ public class Log {
         }
 
         try {
-            writer = new BufferedWriter(new FileWriter(file, true));
-            writer.write(s);
+            writer = new PrintWriter(new FileWriter(file, true));
+            writer.println(s);
             writer.close();
         } catch (IOException ex) {
             Log.error(ex.toString());
@@ -124,8 +125,8 @@ public class Log {
             File f = fileChooser.getSelectedFile();
 
             try {
-                writer = new BufferedWriter(new FileWriter(f));
-                writer.write(tribeName + Helper.NEWLINE + population.toString());
+                writer = new PrintWriter(new FileWriter(f));
+                writer.print(tribeName + Helper.NEWLINE + population.toString());
                 writer.close();
             } catch (IOException ex) {
                 Log.popup(parent, "An error occured while saving " + tribeName + ".");
@@ -149,8 +150,8 @@ public class Log {
             File f = fileChooser.getSelectedFile();
 
             try {
-                writer = new BufferedWriter(new FileWriter(f + "_" + hopper.getAge()));
-                writer.write(hopper.toString());
+                writer = new PrintWriter(new FileWriter(f + "_" + hopper.getAge()));
+                writer.print(hopper.toString());
                 writer.close();
             } catch (IOException ex) {
                 Log.popup(parent, "An error occured while saving " + hopper.getName() + " in " + tribeName + ".");
@@ -159,11 +160,16 @@ public class Log {
         }
     }
 
+    /**
+     * Get the best hopper in the population
+     * @param parent 
+     * @param hopper 
+     */
     public synchronized static void bestHopper(Component parent, Hopper hopper){
         String name = directory + Helper.SEPARATOR + hopper.getName() + "_" + hopper.getAge();
         try {
-                writer = new BufferedWriter(new FileWriter(name + "_" + hopper.getAge()));
-                writer.write(hopper.toString());
+                writer = new PrintWriter(new FileWriter(name + "_" + hopper.getAge()));
+                writer.print(hopper.toString());
                 writer.close();
             } catch (IOException ex) {
                 Log.popup(parent, "An error occured while saving " + hopper.getName());
@@ -206,6 +212,15 @@ public class Log {
         return hopper;
     }
 
+    /**
+     * parse a hoppers string
+     * @param reader
+     * @param hopper
+     * @return Hopper 
+     * @throws GeneticsException
+     * @throws IllegalArgumentException
+     * @throws IOException 
+     */
     private static Hopper parseHopper(BufferedReader reader, Hopper hopper) throws GeneticsException, IllegalArgumentException, IOException {
         String line;
         String name;
@@ -320,6 +335,11 @@ public class Log {
         }
     }
 
+    /**
+     * Makes a JOptionPane to show a message
+     * @param parent
+     * @param message 
+     */
     public static void popup(Component parent, String message) {
         JOptionPane.showMessageDialog(parent, message);
     }

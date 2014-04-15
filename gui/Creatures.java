@@ -40,8 +40,8 @@ public class Creatures {
                 while (nameList.contains(name)) {
                     name = Names.getTribeName();
                 }
-                name = i++ +": " + name;
                 nameList.add(name);
+                name = i++ +"_" + name.replace(" ", "_");
                 tribe = new Tribe(name, p.getPopulation());
                 tribe.start();
                 tribeList.add(tribe);
