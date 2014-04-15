@@ -107,7 +107,7 @@ public class Population extends Vector<Hopper> {
 			}
 		}
 		sort();
-		overachiever = get(size());
+		overachiever = get(size() - 1);
 		underachiever = get(0);
 	}
 	
@@ -217,10 +217,11 @@ public class Population extends Vector<Hopper> {
 		}
 		
 		cull();
+		sort();
 		if (size() > 0) {
-			highestFitness = get(size() - 1).getFitness();
-			overachiever = get(size());
+			overachiever = get(size() - 1);
 			underachiever = get(0);
+			highestFitness = overachiever.getFitness();
 		}
 		calculateAverageFitness();
 	}
@@ -447,8 +448,8 @@ public class Population extends Vector<Hopper> {
 				h.setAge(h.getAge() + 1);
 				sum += h.getFitness();
 			}
-			averageFitness = sum / size;
 		}
+		averageFitness = sum / size;
 	}
 	
 	/**
