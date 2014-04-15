@@ -40,6 +40,9 @@ public class Population extends Vector<Hopper> {
 	private volatile long lifetimeRejectedCreatures;
 	private volatile long lifetimeFailedHillClimbs;
 	private volatile long failedRandomHoppers;
+	// Special Hoppers.
+	private volatile Hopper overachiever;
+	private volatile Hopper underachiever;
 	
 	/**
 	 * The default constructor creates an empty Population.
@@ -58,6 +61,8 @@ public class Population extends Vector<Hopper> {
 		failedRandomHoppers = 0l;
 		brain = new TribeBrain();
 		breeders = new Vector<Hopper>();
+		overachiever = null;
+		underachiever = null;
 	}
 	
 	/**
@@ -102,6 +107,8 @@ public class Population extends Vector<Hopper> {
 			}
 		}
 		sort();
+		overachiever = get(size());
+		underachiever = get(0);
 	}
 	
 	/**
@@ -212,6 +219,8 @@ public class Population extends Vector<Hopper> {
 		cull();
 		if (size() > 0) {
 			highestFitness = get(size() - 1).getFitness();
+			overachiever = get(size());
+			underachiever = get(0);
 		}
 		calculateAverageFitness();
 	}
@@ -457,12 +466,26 @@ public class Population extends Vector<Hopper> {
 	 */
 	public Hopper getOverachiever() {
 		Hopper newGuy = null;
-		sort();
 		try {
-			int size = size();
-			if (size > 0) {
-				newGuy = new Hopper(get(size - 1));
-			}
+			newGuy = new Hopper(overachiever);
+		// Should never fail since it's cloning a Hopper that's already
+		// valid.
+		} catch (IllegalArgumentException | GeneticsException e) {
+			Log.error("Cloning Hopper for getOverachiever failed.");
+//			System.out.println("Cloning Hopper for getOverachiever failed.");
+		}
+		return newGuy;
+	}
+	
+	/**
+	 * Get a clone of the Hopper with the lowest fitness.
+	 * 
+	 * @return Deep clone of Hopper with the lowest fitness.
+	 */
+	public Hopper getUnderachiever() {
+		Hopper newGuy = null;
+		try {
+			newGuy = new Hopper(underachiever);
 		// Should never fail since it's cloning a Hopper that's already
 		// valid.
 		} catch (IllegalArgumentException | GeneticsException e) {
@@ -638,8 +661,8 @@ public class Population extends Vector<Hopper> {
 	 * @param args Command-line arguments.
 	 */
 	public static void main(String[] args) {
-		Population pop1 = new Population(10000);
-		Population pop2 = new Population(10000);
+		Population pop1 = new Population(1000);
+		Population pop2 = new Population(1000);
 		interbreed(pop1, pop2);
 	}
 	
