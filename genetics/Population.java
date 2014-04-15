@@ -217,13 +217,15 @@ public class Population extends Vector<Hopper> {
 		}
 		
 		cull();
-		sort();
 		if (size() > 0) {
-			overachiever = get(size() - 1);
-			underachiever = get(0);
-			highestFitness = overachiever.getFitness();
+			synchronized (this) {
+				sort();
+				overachiever = get(size() - 1);
+				underachiever = get(0);
+				highestFitness = overachiever.getFitness();
+				calculateAverageFitness();
+			}
 		}
-		calculateAverageFitness();
 	}
 	
 	/**
